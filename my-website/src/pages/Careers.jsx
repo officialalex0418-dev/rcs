@@ -11,7 +11,7 @@ const Careers = () => {
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const response = await fetch('/api/careers/jobs');
+        const response = await fetch('https://rcs-backend.onrender.com/api/careers/jobs');
         const data = await response.json();
         if (data.success) {
           setJobs(data.data);

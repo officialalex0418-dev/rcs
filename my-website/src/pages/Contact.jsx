@@ -25,7 +25,7 @@ export default function Contact() {
 
     try {
       // 1. Send to Backend API
-      const apiResponse = await fetch('/api/inquiries', {
+      const apiResponse = await fetch('https://rcs-backend.onrender.com/api/inquiries', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

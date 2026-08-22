@@ -4,7 +4,7 @@ import { Link, NavLink } from "react-router-dom";
 
 const navigation = [
   ["Services", "/services"], ["Projects", "/projects"], ["Products", "/products"],
-  ["About", "/about"], ["Insights", "/insights"], ["Contact", "/contact"],
+  ["About", "/about"], ["Careers", "/careers"], ["Insights", "/insights"], ["Contact", "/contact"],
 ];
 
 export default function Navbar() {

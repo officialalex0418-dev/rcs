@@ -22,11 +22,35 @@ export default function Contact() {
       return;
     }
     setIsSending(true); setState({ type: "", message: "" });
-    const message = [`Company: ${form.company || "Not provided"}`, `Phone: ${form.phone || "Not provided"}`, `Service: ${form.service || "Not selected"}`, `Budget: ${form.budget || "Not provided"}`, "", form.projectDetails].join("\n");
+
     try {
-      await emailjs.send(serviceId, templateId, { from_name: form.name, from_email: form.email, subject: `New RCS inquiry: ${form.service || "General"}`, message, to_email: company.email, company: form.company, phone: form.phone, service: form.service, budget: form.budget, project_details: form.projectDetails }, { publicKey });
+      // 1. Send to Backend API
+      const apiResponse = await fetch('/api/inquiries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          company: form.company,
+          service: form.service,
+          budget: form.budget,
+          message: form.projectDetails,
+          subject: `New RCS inquiry: ${form.service || "General"}`
+        })
+      });
+
+      if (!apiResponse.ok) throw new Error('API submission failed');
+
+      // 2. Send EmailJS (Optional/Secondary)
+      if (serviceId && templateId && publicKey) {
+        const message = [`Company: ${form.company || "Not provided"}`, `Phone: ${form.phone || "Not provided"}`, `Service: ${form.service || "Not selected"}`, `Budget: ${form.budget || "Not provided"}`, "", form.projectDetails].join("\n");
+        await emailjs.send(serviceId, templateId, { from_name: form.name, from_email: form.email, subject: `New RCS inquiry: ${form.service || "General"}`, message, to_email: company.email, company: form.company, phone: form.phone, service: form.service, budget: form.budget, project_details: form.projectDetails }, { publicKey });
+      }
+
       setForm(initialForm); setState({ type: "success", message: "Thank you—your message has been sent. RCS will be in touch soon." });
-    } catch {
+    } catch (error) {
+      console.error('Form submission error:', error);
       setState({ type: "error", message: "Your message could not be sent. Please try again or contact RCS directly by email or phone." });
     } finally { setIsSending(false); }
   }

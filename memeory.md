@@ -1,18 +1,18 @@
-# Memory & Performance Management
+# RCS Platform Performance & Memory Management
 
-## Overview
-This application is designed to be lightweight and fast, leveraging the performance benefits of **Vite** and **React**.
+## Frontend Efficiency
+- **Lazy Loading:** Public images are lazy-loaded to optimize initial paint.
+- **Vite Bundling:** Efficient tree-shaking and minification for production builds.
+- **Client-Side Routing:** React Router v7 ensures smooth transitions without server round-trips for UI updates.
+- **Stateless Admin:** JWT authentication avoids server-side session overhead.
 
-## Performance Strategies
-- **Fast Refresh:** Vite's Hot Module Replacement (HMR) ensures a fast development experience.
-- **Production Optimization:** Vite performs tree-shaking and asset minification during the build process to reduce the bundle size.
-- **Client-Side Routing:** `react-router-dom` enables seamless transitions between pages without full page reloads, saving bandwidth and improving user experience.
+## Backend Optimization
+- **Mongoose Indexing:** Critical fields like `slug`, `email`, and `status` are indexed for fast lookups.
+- **Server-Side Pagination:** Admin tables (Applications, Inquiries) use pagination to prevent large memory spikes.
+- **Middleware Overhead:** Lightweight authentication middleware minimizes per-request latency.
+- **Database Pooling:** Managed connections via Mongoose prevent connection leaks.
 
-## Memory Management
-- **State Handling:** Uses React's `useState` and `useEffect` for efficient component-level state management.
-- **Garbage Collection:** Standard JavaScript garbage collection handles the lifecycle of React components and event listeners.
-- **Scroll Management:** The `ScrollToTop` component in `App.jsx` handles window scrolling efficiently during route transitions.
-
-## Asset Optimization
-- Images and icons (via Lucide) are loaded on demand.
-- Static data is kept in a centralized `site.js` to avoid redundant memory usage across different components.
+## Resource Management
+- **Audit Logs:** System actions are logged asynchronously to avoid blocking the main thread.
+- **Static Assets:** Optimized WebP images are used in the public gallery to reduce bandwidth.
+- **State Management:** Component-level React state prevents global re-render bottlenecks.

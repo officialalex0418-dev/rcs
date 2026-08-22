@@ -1,0 +1,17 @@
+import express from 'express';
+import { createInquiry, getInquiries, updateInquiry } from '../controllers/inquiryController.js';
+import { protect, authorize } from '../middleware/auth.js';
+
+const router = express.Router();
+
+// Public route
+router.post('/', createInquiry);
+
+// Protected routes
+router.use(protect);
+router.use(authorize('SUPER_ADMIN', 'ADMIN', 'SALES'));
+
+router.get('/', getInquiries);
+router.patch('/:id', updateInquiry);
+
+export default router;

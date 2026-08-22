@@ -1,35 +1,37 @@
-# Project Documentation
-
-## Project Name: Royal Consultancy Services
-A professional consultancy website showcasing services, projects, and insights.
+# RCS Project Documentation
 
 ## Getting Started
 
 ### Prerequisites
-- Node.js (Latest LTS recommended)
-- npm or yarn
+- Node.js (v18+)
+- MongoDB (Running locally or on Atlas)
 
-### Installation
-```bash
-cd my-website
-npm install
-```
+### Setup & Installation
+1. **Frontend**:
+   ```bash
+   cd my-website
+   npm install
+   npm run dev
+   ```
+2. **Backend**:
+   ```bash
+   cd server
+   npm install
+   # Configure .env with MONGODB_URI and JWT_SECRET
+   npm run dev
+   ```
 
-### Development
-```bash
-npm run dev
-```
+## Admin Portal
+- **Login**: Access via `/admin/login`.
+- **Default Roles**: Super Admin, Admin, HR Manager, Project Manager, Sales.
+- **Features**: Kanban boards for Recruitment and CRM, Gallery manager, and Project health tracker.
 
-### Production Build
-```bash
-npm run build
-```
+## API Reference
+- `POST /api/auth/login`: Administrative sign-in.
+- `GET /api/careers/jobs`: Public job listings.
+- `POST /api/careers/apply`: Public application submission.
+- `POST /api/inquiries`: Public inquiry submission.
+- `GET /api/projects`: Internal project list (Admin only).
 
-## Key Components
-- **Navbar:** Sticky navigation with links to all major pages.
-- **Footer:** Contains contact information, social links, and legal links.
-- **Seo:** A reusable component for managing meta tags and search engine optimization.
-- **ProjectDetail:** Dynamic route for viewing individual project details based on slugs.
-
-## External Services
-- **EmailJS:** Used in the `Contact.jsx` page to handle form submissions directly from the client.
+## Public Website
+The public site at `rcs.com.np` (simulated) fetches dynamic content for Careers and Gallery from the backend, ensuring content can be updated without code changes.

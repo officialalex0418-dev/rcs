@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
+import { seedAdmin } from './seedAdmin.js';
 
 // Routes
 import authRoutes from './routes/authRoutes.js';
@@ -26,7 +27,10 @@ app.use(morgan('dev'));
 // Database Connection
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/rcs_db';
 mongoose.connect(MONGODB_URI)
-  .then(() => console.log('Connected to MongoDB'))
+  .then(() => {
+    console.log('Connected to MongoDB');
+    seedAdmin(); // Automatically seed admin on startup
+  })
   .catch(err => console.error('MongoDB connection error:', err));
 
 // Routes

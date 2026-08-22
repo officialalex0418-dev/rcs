@@ -16,7 +16,8 @@ const CareerDetail = () => {
   useEffect(() => {
     const fetchJob = async () => {
       try {
-        const response = await fetch(`https://rcs-backend.onrender.com/api/careers/jobs`); // In production, we'd fetch by slug
+        const backendUrl = import.meta.env.VITE_API_URL || '';
+        const response = await fetch(`${backendUrl}/api/careers/jobs`); // In production, we'd fetch by slug
         const data = await response.json();
         if (data.success) {
           const found = data.data.find(j => j.slug === slug);
@@ -39,7 +40,8 @@ const CareerDetail = () => {
     setStatus({ type: '', message: '' });
 
     try {
-      const response = await fetch('https://rcs-backend.onrender.com/api/careers/apply', {
+      const backendUrl = import.meta.env.VITE_API_URL || '';
+      const response = await fetch(`${backendUrl}/api/careers/apply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...form, job: job._id })

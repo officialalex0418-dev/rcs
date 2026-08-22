@@ -11,7 +11,8 @@ const Careers = () => {
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const response = await fetch('https://rcs-backend.onrender.com/api/careers/jobs');
+        const backendUrl = import.meta.env.VITE_API_URL || '';
+        const response = await fetch(`${backendUrl}/api/careers/jobs`);
         const data = await response.json();
         if (data.success) {
           setJobs(data.data);

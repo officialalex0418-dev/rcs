@@ -25,7 +25,8 @@ export default function Contact() {
 
     try {
       // 1. Send to Backend API
-      const apiResponse = await fetch('https://rcs-backend.onrender.com/api/inquiries', {
+      const backendUrl = import.meta.env.VITE_API_URL || '';
+      const apiResponse = await fetch(`${backendUrl}/api/inquiries`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

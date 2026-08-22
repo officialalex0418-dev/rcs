@@ -37,38 +37,66 @@ function ScrollToTop() {
 }
 
 function Site() {
-  return <div className="app-shell"><ScrollToTop /><Navbar /><main><Routes>
-    <Route path="/" element={<Home />} /><Route path="/services" element={<Services />} />
-    <Route path="/projects" element={<Projects />} /><Route path="/projects/:slug" element={<ProjectDetail />} />
-    <Route path="/products" element={<Products />} /><Route path="/about" element={<About />} />
-    <Route path="/careers" element={<Careers />} /><Route path="/careers/:slug" element={<CareerDetail />} />
-    <Route path="/insights" element={<Insights />} /><Route path="/contact" element={<Contact />} />
-    <Route path="/privacy" element={<Legal type="privacy" />} /><Route path="/terms" element={<Legal type="terms" />} />
+  const { pathname } = useLocation();
+  const isAdmin = pathname.startsWith('/admin');
 
-    {/* Admin Routes */}
-    <Route path="/admin/login" element={<AdminLogin />} />
-    <Route
-      path="/admin"
-      element={
-        <ProtectedRoute>
-          <AdminLayout />
-        </ProtectedRoute>
-      }
-    >
-      <Route index element={<AdminDashboard />} />
-      <Route path="careers" element={<JobsList />} />
-      <Route path="careers/new" element={<JobForm />} />
-      <Route path="careers/edit/:id" element={<JobForm />} />
-      <Route path="applications" element={<ApplicationsList />} />
-      <Route path="inquiries" element={<InquiriesList />} />
-      <Route path="gallery" element={<GalleryManager />} />
-      <Route path="projects" element={<ProjectManager />} />
-      <Route path="reports" element={<Reports />} />
-      <Route path="settings" element={<div className="p-6 text-2xl">System Settings Coming Soon</div>} />
-    </Route>
+  if (isAdmin) {
+    return (
+      <div className="app-shell">
+        <ScrollToTop />
+        <main>
+          <Routes>
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute>
+                  <AdminLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<AdminDashboard />} />
+              <Route path="careers" element={<JobsList />} />
+              <Route path="careers/new" element={<JobForm />} />
+              <Route path="careers/edit/:id" element={<JobForm />} />
+              <Route path="applications" element={<ApplicationsList />} />
+              <Route path="inquiries" element={<InquiriesList />} />
+              <Route path="gallery" element={<GalleryManager />} />
+              <Route path="projects" element={<ProjectManager />} />
+              <Route path="reports" element={<Reports />} />
+              <Route path="settings" element={<div className="p-6 text-2xl font-bold">System Settings Coming Soon</div>} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </main>
+      </div>
+    );
+  }
 
-    <Route path="*" element={<NotFound />} />
-  </Routes></main><Footer /></div>;
+  return (
+    <div className="app-shell">
+      <ScrollToTop />
+      <Navbar />
+      <main>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/services" element={<Services />} />
+          <Route path="/projects" element={<Projects />} />
+          <Route path="/projects/:slug" element={<ProjectDetail />} />
+          <Route path="/products" element={<Products />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/careers" element={<Careers />} />
+          <Route path="/careers/:slug" element={<CareerDetail />} />
+          <Route path="/insights" element={<Insights />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/privacy" element={<Legal type="privacy" />} />
+          <Route path="/terms" element={<Legal type="terms" />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </main>
+      <Footer />
+    </div>
+  );
 }
 
 export default function App() { return <BrowserRouter><Site /></BrowserRouter>; }

@@ -12,6 +12,10 @@ import careerRoutes from './routes/careerRoutes.js';
 import inquiryRoutes from './routes/inquiryRoutes.js';
 import projectRoutes from './routes/projectRoutes.js';
 import galleryRoutes from './routes/galleryRoutes.js';
+import employeeRoutes from './routes/employeeRoutes.js';
+import payrollRoutes from './routes/payrollRoutes.js';
+import supportRoutes from './routes/supportRoutes.js';
+import taskRoutes from './routes/taskRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -39,6 +43,10 @@ app.use('/api/careers', careerRoutes);
 app.use('/api/inquiries', inquiryRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/gallery', galleryRoutes);
+app.use('/api/employees', employeeRoutes);
+app.use('/api/payroll', payrollRoutes);
+app.use('/api/support', supportRoutes);
+app.use('/api/tasks', taskRoutes);
 
 // Basic Route
 app.get('/', (req, res) => {

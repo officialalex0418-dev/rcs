@@ -23,8 +23,24 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'SALES', 'PROJECT_MANAGER', 'CONTENT_MANAGER', 'STAFF'],
+    enum: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'SALES', 'PROJECT_MANAGER', 'CONTENT_MANAGER', 'DEVELOPER', 'DESIGNER', 'STAFF'],
     default: 'STAFF'
+  },
+  designation: String,
+  phone: String,
+  joiningDate: {
+    type: Date,
+    default: Date.now
+  },
+  baseSalary: {
+    type: Number,
+    default: 0
+  },
+  bankDetails: {
+    accountName: String,
+    accountNumber: String,
+    bankName: String,
+    ifscCode: String
   },
   permissions: [{
     type: String

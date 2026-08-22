@@ -27,6 +27,10 @@ import InquiriesList from "./admin/pages/InquiriesList";
 import GalleryManager from "./admin/pages/GalleryManager";
 import ProjectManager from "./admin/pages/ProjectManager";
 import Reports from "./admin/pages/Reports";
+import EmployeeManager from "./admin/pages/EmployeeManager";
+import TaskManager from "./admin/pages/TaskManager";
+import PayrollManager from "./admin/pages/PayrollManager";
+import SupportManager from "./admin/pages/SupportManager";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -56,15 +60,19 @@ function Site() {
               }
             >
               <Route index element={<AdminDashboard />} />
+              <Route path="projects" element={<ProjectManager />} />
+              <Route path="inquiries" element={<InquiriesList />} />
+              <Route path="employees" element={<EmployeeManager />} />
+              <Route path="gallery" element={<GalleryManager />} />
+              <Route path="tasks" element={<TaskManager />} />
+              <Route path="payroll" element={<PayrollManager />} />
+              <Route path="reports" element={<Reports />} />
+              <Route path="support" element={<SupportManager />} />
+              <Route path="settings" element={<div className="p-8 text-2xl font-bold">System Settings Coming Soon</div>} />
               <Route path="careers" element={<JobsList />} />
               <Route path="careers/new" element={<JobForm />} />
               <Route path="careers/edit/:id" element={<JobForm />} />
               <Route path="applications" element={<ApplicationsList />} />
-              <Route path="inquiries" element={<InquiriesList />} />
-              <Route path="gallery" element={<GalleryManager />} />
-              <Route path="projects" element={<ProjectManager />} />
-              <Route path="reports" element={<Reports />} />
-              <Route path="settings" element={<div className="p-6 text-2xl font-bold">System Settings Coming Soon</div>} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

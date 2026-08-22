@@ -10,8 +10,14 @@ const router = express.Router();
 router.use(protect);
 router.use(authorize('SUPER_ADMIN', 'ADMIN', 'PROJECT_MANAGER'));
 
-router.get('/', getProjects);
-router.post('/', createProject);
+router.route('/')
+  .get(getProjects)
+  .post(createProject);
+
+router.route('/:id')
+  .put(updateProject)
+  .delete(deleteProject);
+
 router.get('/:projectId/tasks', getProjectTasks);
 router.post('/:projectId/tasks', createTask);
 

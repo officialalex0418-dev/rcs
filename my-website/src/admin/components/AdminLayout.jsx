@@ -39,11 +39,13 @@ const AdminLayout = () => {
   const navItems = [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/admin' },
     { label: 'Projects', icon: Folder, path: '/admin/projects' },
-    { label: 'Careers', icon: Briefcase, path: '/admin/careers' },
-    { label: 'Applications', icon: Users, path: '/admin/applications' },
     { label: 'Inquiries', icon: MessageSquare, path: '/admin/inquiries' },
+    { label: 'Employees', icon: Users, path: '/admin/employees' },
     { label: 'Gallery', icon: ImageIcon, path: '/admin/gallery' },
+    { label: 'Task Management', icon: Briefcase, path: '/admin/tasks' },
+    { label: 'Payroll', icon: TrendingUp, path: '/admin/payroll' },
     { label: 'Reports', icon: BarChart3, path: '/admin/reports' },
+    { label: 'Support', icon: Bell, path: '/admin/support' },
   ];
 
   return (

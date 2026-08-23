@@ -2,10 +2,5 @@ name = "rcs-frontend"
 compatibility_date = "2024-01-01"
 pages_build_output_dir = "dist"
 
-[site]
-bucket = "./dist"
-entry-point = "workers-site"
-
-# SPA Routing for Cloudflare Pages/Workers
-# If you are using Cloudflare Pages, the _redirects file handles this.
-# If using Workers with a site bucket, this is a basic configuration.
+# Note: For Cloudflare Pages, routing is handled by public/_redirects.
+# Manual [site] configuration is not required for Pages projects.

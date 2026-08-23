@@ -53,7 +53,10 @@ We use Cloudflare for frontend hosting to ensure high performance and reliable S
 
 #### Option A: Cloudflare Pages (Recommended)
 1. Connect your GitHub repository to Cloudflare Pages.
-2. Set the build command to `npm run build` and the output directory to `dist`.
+2. **Build Settings**:
+   - **Framework preset**: `Vite` (or None)
+   - **Build command**: `npm run build`
+   - **Build output directory**: `dist`
 3. The `public/_redirects` file will automatically handle SPA routing.
 
 #### Option B: Manual Wrangler Deployment

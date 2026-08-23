@@ -17,7 +17,10 @@
    ```bash
    cd server
    npm install
-   # Configure .env with MONGODB_URI and JWT_SECRET
+   # Configure .env with the following:
+   # MONGODB_URI=your_mongodb_uri
+   # JWT_SECRET=your_jwt_secret
+   # RESEND_API_KEY=your_resend_api_key (optional for startup, required for emails)
    npm run dev
    ```
 

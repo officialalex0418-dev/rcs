@@ -4,7 +4,12 @@ import User from '../models/User.js';
 import crypto from 'crypto';
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Initialize Resend safely to prevent crash if API key is missing
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+
+if (!resend) {
+  console.warn('RESEND_API_KEY is missing. Email features will be disabled.');
+}
 
 // Jobs
 export const getJobs = async (req, res, next) => {
@@ -107,24 +112,28 @@ export const updateApplicationStatus = async (req, res, next) => {
 
         // Send email via Resend
         try {
-          await resend.emails.send({
-            from: 'RCS Careers <careers@rcs.com.np>',
-            to: [application.email],
-            subject: 'Welcome to Royal Consultancy Services - Your Portal Credentials',
-            html: `<div style="font-family: sans-serif; line-height: 1.6;">
-                    <h2>Congratulations!</h2>
-                    <p>You have been hired as <strong>${application.job?.title || 'a Team Member'}</strong> at Royal Consultancy Services.</p>
-                    <p>Your staff portal account has been created. Use the credentials below to login:</p>
-                    <div style="background: #f4f4f4; padding: 20px; border-radius: 10px; margin: 20px 0;">
-                      <p style="margin: 0;"><strong>Email:</strong> ${application.email}</p>
-                      <p style="margin: 0;"><strong>Password:</strong> ${generatedPassword}</p>
-                      <p style="margin: 0;"><strong>Employee ID:</strong> ${newId}</p>
-                    </div>
-                    <p>Please change your password after your first login.</p>
-                    <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
-                    <p style="color: #666; font-size: 12px;">This is an automated onboarding email from RCS Management.</p>
-                  </div>`
-          });
+          if (resend) {
+            await resend.emails.send({
+              from: 'RCS Careers <careers@rcs.com.np>',
+              to: [application.email],
+              subject: 'Welcome to Royal Consultancy Services - Your Portal Credentials',
+              html: `<div style="font-family: sans-serif; line-height: 1.6;">
+                      <h2>Congratulations!</h2>
+                      <p>You have been hired as <strong>${application.job?.title || 'a Team Member'}</strong> at Royal Consultancy Services.</p>
+                      <p>Your staff portal account has been created. Use the credentials below to login:</p>
+                      <div style="background: #f4f4f4; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                        <p style="margin: 0;"><strong>Email:</strong> ${application.email}</p>
+                        <p style="margin: 0;"><strong>Password:</strong> ${generatedPassword}</p>
+                        <p style="margin: 0;"><strong>Employee ID:</strong> ${newId}</p>
+                      </div>
+                      <p>Please change your password after your first login.</p>
+                      <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
+                      <p style="color: #666; font-size: 12px;">This is an automated onboarding email from RCS Management.</p>
+                    </div>`
+            });
+          } else {
+            console.error('Failed to send hiring email: Resend is not configured (missing API key)');
+          }
         } catch (emailErr) {
           console.error('Failed to send hiring email:', emailErr);
         }

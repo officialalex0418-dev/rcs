@@ -1,7 +1,12 @@
 import Inquiry from '../models/Inquiry.js';
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Initialize Resend safely to prevent crash if API key is missing
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+
+if (!resend) {
+  console.warn('RESEND_API_KEY is missing in inquiryController. Email replies will be disabled.');
+}
 
 export const createInquiry = async (req, res, next) => {
   try {
@@ -44,6 +49,10 @@ export const replyToInquiry = async (req, res, next) => {
     const inquiry = await Inquiry.findById(req.params.id);
 
     if (!inquiry) return res.status(404).json({ success: false, message: 'Inquiry not found' });
+
+    if (!resend) {
+      return res.status(500).json({ success: false, message: 'Email service is not configured on the server.' });
+    }
 
     // Send email via Resend
     const { data, error } = await resend.emails.send({

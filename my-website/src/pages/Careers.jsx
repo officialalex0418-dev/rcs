@@ -76,9 +76,9 @@ const Careers = () => {
             </div>
 
             <div className="lg:col-span-5 relative">
-              <div className="relative z-10 aspect-[4/5] rounded-[3rem] overflow-hidden shadow-2xl border-[12px] border-white">
+              <div className="relative z-10 aspect-square rounded-[3rem] overflow-hidden shadow-2xl border-[12px] border-white">
                 <img
-                  src="https://images.unsplash.com/photo-1522071823991-b9671f9d7f1f?auto=format&fit=crop&q=80&w=1000"
+                  src="/Hero.png"
                   alt="Team Collaboration"
                   className="w-full h-full object-cover scale-105 hover:scale-100 transition-transform duration-700"
                 />
@@ -86,7 +86,7 @@ const Careers = () => {
               </div>
 
               {/* Floating Team Card */}
-              <div className="absolute -bottom-10 -left-10 bg-white/90 backdrop-blur-md p-8 rounded-[2.5rem] shadow-2xl border border-white/20 max-w-[300px] hidden md:block animate-float">
+              <div className="absolute -bottom-6 -left-6 z-20 bg-white/95 backdrop-blur-md p-6 rounded-[2.5rem] shadow-2xl border border-white/20 max-w-[280px] hidden md:block animate-float">
                 <div className="flex flex-col gap-4">
                   <div className="flex -space-x-3">
                     {[1, 2, 3, 4].map((i) => (
@@ -115,7 +115,7 @@ const Careers = () => {
       </section>
 
       {/* Horizontal Job Vacancy Cards */}
-      <section className="py-32 bg-white relative">
+      <section id="openings" className="py-32 bg-white relative">
         <div className="shell">
           <div className="flex flex-col md:flex-row justify-between items-end mb-20 gap-8">
             <div className="max-w-xl">
@@ -151,38 +151,27 @@ const Careers = () => {
                 {jobs.map((job) => (
                   <div
                     key={job._id}
-                    className="group relative bg-white border border-slate-100 p-8 md:p-10 rounded-[2.5rem] hover:shadow-2xl hover:shadow-emerald-900/5 hover:border-emerald-600/20 transition-all duration-500 overflow-hidden"
+                    className="bg-white border border-slate-200 p-6 md:p-8 rounded-[1.5rem] hover:border-emerald-600/30 hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300 group"
                   >
-                    {/* Hover Decorative Background */}
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-50 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-
-                    <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-10">
-                      <div className="flex flex-col md:flex-row items-start md:items-center gap-8 flex-1">
-                        <div className="w-20 h-20 rounded-3xl bg-slate-50 text-slate-900 flex items-center justify-center shrink-0 transition-all duration-500 group-hover:bg-emerald-600 group-hover:text-white group-hover:rotate-6">
-                          <Briefcase size={32} />
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
+                      <div className="flex items-center gap-6 flex-1">
+                        <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 transition-colors group-hover:bg-emerald-600 group-hover:text-white">
+                          <Briefcase size={28} />
                         </div>
-                        <div className="flex-1">
-                          <div className="flex flex-wrap gap-2 mb-3">
-                            <span className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-[9px] font-black uppercase tracking-wider border border-emerald-100">
-                              {job.department || 'Technology'}
-                            </span>
-                            {job.isNew && (
-                              <span className="px-2 py-0.5 rounded-md bg-orange-50 text-orange-700 text-[9px] font-black uppercase tracking-wider border border-orange-100">
-                                New
-                              </span>
-                            )}
-                          </div>
-                          <h3 className="text-2xl font-black text-slate-900 group-hover:text-emerald-800 transition-colors mb-4">
+                        <div>
+                          <h3 className="text-xl font-black text-slate-900 mb-2 group-hover:text-emerald-700 transition-colors">
                             {job.title}
                           </h3>
-                          <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
-                            <span className="flex items-center gap-2 text-[11px] font-bold text-slate-400">
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                            <span className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400">
                               <MapPin size={14} className="text-emerald-500" /> {job.location}
                             </span>
-                            <span className="flex items-center gap-2 text-[11px] font-bold text-slate-400">
-                              <UserCheck size={14} className="text-emerald-500" /> {job.experienceLevel || '2-4 Years'}
+                            <div className="w-1 h-1 rounded-full bg-slate-200 hidden md:block"></div>
+                            <span className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400">
+                              <UserCheck size={14} className="text-emerald-500" /> {job.experienceLevel || '1-2 Years'}
                             </span>
-                            <span className="flex items-center gap-2 text-[11px] font-bold text-slate-400">
+                            <div className="w-1 h-1 rounded-full bg-slate-200 hidden md:block"></div>
+                            <span className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400">
                               <Clock size={14} className="text-emerald-500" /> {job.employmentType}
                             </span>
                           </div>
@@ -191,20 +180,20 @@ const Careers = () => {
 
                       <Link
                         to={`/careers/${job.slug}`}
-                        className="h-16 px-10 rounded-2xl bg-slate-900 text-white text-[11px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-emerald-700 transition-all active:scale-95 shadow-xl shadow-slate-900/10 group-hover:shadow-emerald-900/20"
+                        className="bg-[#0a3622] text-white px-8 py-4 rounded-2xl text-[11px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-emerald-700 transition-all active:scale-95 shadow-lg shadow-[#0a3622]/10 shrink-0"
                       >
-                        Details <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                        Apply Now <ArrowRight size={16} />
                       </Link>
                     </div>
                   </div>
                 ))}
 
                 <div className="pt-12 flex justify-center">
-                  <button className="group flex items-center gap-4 px-10 py-5 bg-white border-2 border-slate-100 rounded-[2rem] text-[11px] font-black uppercase tracking-widest text-slate-900 hover:border-emerald-600 transition-all">
-                    Explore all 12 roles
-                    <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-colors">
-                      <ArrowRight size={14} />
-                    </div>
+                  <button
+                    onClick={() => document.getElementById('openings')?.scrollIntoView({ behavior: 'smooth' })}
+                    className="flex items-center gap-2 px-8 py-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm"
+                  >
+                    View All Openings <ArrowRight size={16} />
                   </button>
                 </div>
               </>

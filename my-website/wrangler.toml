@@ -1,0 +1,11 @@
+name = "rcs"
+main = "src/worker.js"
+compatibility_date = "2024-01-01"
+
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+
+# Use Workers to serve the site on rcs.com.np
+# Ensure the Worker route is set to rcs.com.np/* in the Cloudflare Dashboard
+# if not automatically handled by wrangler deploy.

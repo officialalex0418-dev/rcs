@@ -16,6 +16,7 @@ const JobsList = () => {
   const [deptFilter, setDeptFilter] = useState('All Departments');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [activeMenu, setActiveMenu] = useState(null);
 
   const fetchData = async () => {
     try {
@@ -48,7 +49,38 @@ const JobsList = () => {
 
   useEffect(() => {
     fetchData();
+    const handleClickOutside = () => setActiveMenu(null);
+    window.addEventListener('click', handleClickOutside);
+    return () => window.removeEventListener('click', handleClickOutside);
   }, []);
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this vacancy? This action cannot be undone.')) return;
+
+    try {
+      let backendUrl = import.meta.env.VITE_API_URL || '';
+      if (backendUrl.endsWith('/')) {
+        backendUrl = backendUrl.slice(0, -1);
+      }
+      const token = localStorage.getItem('rcs_admin_token');
+      const response = await fetch(`${backendUrl}/api/careers/jobs/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert('Vacancy deleted successfully');
+        fetchData();
+      } else {
+        alert(data.message || 'Failed to delete vacancy');
+      }
+    } catch (err) {
+      console.error('Failed to delete job:', err);
+      alert('Network error');
+    }
+  };
 
   const handleStatusToggle = async (id, currentStatus) => {
     try {
@@ -245,11 +277,34 @@ const JobsList = () => {
                       {new Date(job.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </span>
                   </td>
-                  <td className="px-8 py-5 text-right">
+                  <td className="px-8 py-5 text-right relative">
                     <div className="flex justify-end gap-2">
-                      <button className="p-2 text-slate-400 hover:text-slate-900 transition-all rounded-lg hover:bg-slate-100">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveMenu(activeMenu === job._id ? null : job._id);
+                        }}
+                        className="p-2 text-slate-400 hover:text-slate-900 transition-all rounded-lg hover:bg-slate-100"
+                      >
                         <MoreVertical size={18} />
                       </button>
+
+                      {activeMenu === job._id && (
+                        <div className="absolute right-8 top-12 w-32 bg-white rounded-xl shadow-xl border border-slate-100 z-50 py-1 overflow-hidden">
+                          <Link
+                            to={`/admin/careers/edit/${job._id}`}
+                            className="w-full flex items-center gap-2 px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition-all"
+                          >
+                            <Edit2 size={14} /> Edit
+                          </Link>
+                          <button
+                            onClick={() => handleDelete(job._id)}
+                            className="w-full flex items-center gap-2 px-4 py-2 text-xs font-bold text-slate-600 hover:bg-red-50 hover:text-red-600 transition-all border-t border-slate-50"
+                          >
+                            <Trash2 size={14} /> Delete
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </td>
                 </tr>

@@ -1,6 +1,6 @@
 import express from 'express';
 import {
-  getJobs, createJob, updateJob,
+  getJobs, createJob, updateJob, deleteJob,
   applyForJob, getApplications, updateApplicationStatus
 } from '../controllers/careerController.js';
 import { protect, authorize } from '../middleware/auth.js';
@@ -18,6 +18,7 @@ router.use(authorize('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER'));
 
 router.post('/jobs', createJob);
 router.put('/jobs/:id', updateJob);
+router.delete('/jobs/:id', deleteJob);
 router.get('/applications', getApplications);
 router.patch('/applications/:id/status', updateApplicationStatus);
 

@@ -1,5 +1,6 @@
 export default {
   async fetch(request, env, ctx) {
+    // Production Worker: Serves static assets from 'dist' and handles React SPA routing
     const url = new URL(request.url);
 
     try {

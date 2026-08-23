@@ -1,6 +1,6 @@
 import express from 'express';
 import {
-  getProjects, createProject,
+  getProjects, createProject, updateProject, deleteProject,
   getProjectTasks, createTask
 } from '../controllers/projectController.js';
 import { protect, authorize } from '../middleware/auth.js';

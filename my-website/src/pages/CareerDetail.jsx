@@ -10,6 +10,7 @@ const CareerDetail = () => {
   const [form, setForm] = useState({
     firstName: '', lastName: '', email: '', phone: '', portfolioUrl: '', linkedInUrl: '', githubUrl: '', coverLetter: ''
   });
+  const [resume, setResume] = useState(null);
   const [isSending, setIsSending] = useState(false);
   const [status, setStatus] = useState({ type: '', message: '' });
 
@@ -33,6 +34,7 @@ const CareerDetail = () => {
   }, [slug]);
 
   const onChange = (e) => setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  const onFileChange = (e) => setResume(e.target.files[0]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -41,18 +43,37 @@ const CareerDetail = () => {
 
     try {
       const backendUrl = import.meta.env.VITE_API_URL || '';
-      const response = await fetch(`${backendUrl}/api/careers/apply`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, job: job._id })
+      const formData = new FormData();
+
+      // Append form fields
+      Object.keys(form).forEach(key => {
+        formData.append(key, form[key]);
       });
 
-      if (!response.ok) throw new Error('Submission failed');
+      formData.append('job', job._id);
+
+      // Append file
+      if (resume) {
+        formData.append('resume', resume);
+      }
+
+      const response = await fetch(`${backendUrl}/api/careers/apply`, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Submission failed');
+      }
 
       setStatus({ type: 'success', message: 'Application submitted successfully! Our HR team will review it and get back to you.' });
       setForm({ firstName: '', lastName: '', email: '', phone: '', portfolioUrl: '', linkedInUrl: '', githubUrl: '', coverLetter: '' });
+      setResume(null);
+      // Reset file input manually if needed
+      e.target.reset();
     } catch (err) {
-      setStatus({ type: 'error', message: 'Failed to submit application. Please try again or email us directly.' });
+      setStatus({ type: 'error', message: err.message || 'Failed to submit application. Please try again or email us directly.' });
     } finally {
       setIsSending(false);
     }
@@ -116,6 +137,18 @@ const CareerDetail = () => {
                 </div>
                 <input type="email" placeholder="Email Address" name="email" value={form.email} onChange={onChange} required className="w-full px-4 py-2 border border-gray-200 rounded-lg" />
                 <input placeholder="Phone Number" name="phone" value={form.phone} onChange={onChange} className="w-full px-4 py-2 border border-gray-200 rounded-lg" />
+
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Resume / CV (PDF, DOC, DOCX)</label>
+                  <input
+                    type="file"
+                    onChange={onFileChange}
+                    required
+                    accept=".pdf,.doc,.docx"
+                    className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-white text-sm"
+                  />
+                </div>
+
                 <input placeholder="LinkedIn URL" name="linkedInUrl" value={form.linkedInUrl} onChange={onChange} className="w-full px-4 py-2 border border-gray-200 rounded-lg" />
                 <input placeholder="Portfolio URL" name="portfolioUrl" value={form.portfolioUrl} onChange={onChange} className="w-full px-4 py-2 border border-gray-200 rounded-lg" />
                 <textarea placeholder="Tell us why you're a good fit..." name="coverLetter" value={form.coverLetter} onChange={onChange} rows="4" className="w-full px-4 py-2 border border-gray-200 rounded-lg"></textarea>

@@ -54,7 +54,17 @@ export const deleteJob = async (req, res, next) => {
 // Applications
 export const applyForJob = async (req, res, next) => {
   try {
-    const application = await Application.create(req.body);
+    const applicationData = { ...req.body };
+
+    if (req.file) {
+      applicationData.resume = {
+        url: `/uploads/resumes/${req.file.filename}`,
+        fileName: req.file.originalname,
+        storageKey: req.file.filename
+      };
+    }
+
+    const application = await Application.create(applicationData);
     res.status(201).json({ success: true, data: application });
   } catch (err) {
     next(err);

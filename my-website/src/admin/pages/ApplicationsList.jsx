@@ -208,7 +208,18 @@ const ApplicationsList = () => {
                         <option value="HIRED">Hire (Onboard)</option>
                         <option value="REJECTED">Reject</option>
                       </select>
-                      <button className="p-2.5 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm">
+                      {app.resume?.url && (
+                        <a
+                          href={`${import.meta.env.VITE_API_URL || ''}${app.resume.url}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-2.5 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                          title="Download Resume"
+                        >
+                          <Download size={18} />
+                        </a>
+                      )}
+                      <button className="p-2.5 bg-slate-50 text-slate-500 rounded-xl hover:bg-slate-900 hover:text-white transition-all shadow-sm">
                         <FileText size={18} />
                       </button>
                     </div>

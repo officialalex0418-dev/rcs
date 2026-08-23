@@ -19,7 +19,10 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-950 p-4 font-sans fixed inset-0 z-[10000]">
+    <div
+      className="min-h-screen flex items-center justify-center bg-slate-950 p-4 font-sans relative"
+      style={{ minHeight: '100vh', width: '100%', display: 'flex', backgroundColor: '#020617' }}
+    >
       {/* Background Decor */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[120px]"></div>

@@ -39,9 +39,12 @@ const AdminLayout = () => {
   ];
 
   return (
-    <div className="flex h-screen bg-slate-50 font-sans text-slate-900 overflow-hidden fixed inset-0 z-[9999]">
+    <div
+      className="flex h-screen bg-slate-50 font-sans text-slate-900 overflow-hidden"
+      style={{ minHeight: '100vh', width: '100%', display: 'flex' }}
+    >
       {/* Sidebar */}
-      <aside className="w-64 bg-slate-900 text-slate-300 flex flex-col shadow-xl">
+      <aside className="w-64 bg-slate-900 text-slate-300 flex flex-col shadow-xl flex-shrink-0">
         <div className="p-6 flex items-center gap-3 border-b border-slate-800">
           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">R</div>
           <h2 className="text-xl font-bold text-white tracking-tight">RCS Admin</h2>

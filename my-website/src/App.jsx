@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useLocation, Outlet } from "react-router-dom";
 import Footer from "./components/Footer";
 import Navbar from "./components/Navbar";
 import About from "./pages/About";
@@ -40,21 +40,19 @@ function ScrollToTop() {
   return null;
 }
 
-import { Outlet } from "react-router-dom";
-
 const PublicLayout = () => (
-  <>
+  <div className="app-shell">
     <Navbar />
     <main>
       <Outlet />
     </main>
     <Footer />
-  </>
+  </div>
 );
 
 function Site() {
   return (
-    <div className="app-shell">
+    <>
       <ScrollToTop />
       <Routes>
         {/* Admin Portal - Login */}
@@ -102,7 +100,7 @@ function Site() {
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
-    </div>
+    </>
   );
 }
 

@@ -40,13 +40,27 @@ function ScrollToTop() {
   return null;
 }
 
+import { Outlet } from "react-router-dom";
+
+const PublicLayout = () => (
+  <>
+    <Navbar />
+    <main>
+      <Outlet />
+    </main>
+    <Footer />
+  </>
+);
+
 function Site() {
   return (
     <div className="app-shell">
       <ScrollToTop />
       <Routes>
-        {/* Admin Portal Routes */}
+        {/* Admin Portal - Login */}
         <Route path="/admin/login" element={<AdminLogin />} />
+
+        {/* Admin Portal - Protected Area */}
         <Route
           path="/admin"
           element={
@@ -71,33 +85,22 @@ function Site() {
           <Route path="applications" element={<ApplicationsList />} />
         </Route>
 
-        {/* Public Website Routes */}
-        <Route
-          path="/*"
-          element={
-            <>
-              <Navbar />
-              <main>
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/services" element={<Services />} />
-                  <Route path="/projects" element={<Projects />} />
-                  <Route path="/projects/:slug" element={<ProjectDetail />} />
-                  <Route path="/products" element={<Products />} />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/careers" element={<Careers />} />
-                  <Route path="/careers/:slug" element={<CareerDetail />} />
-                  <Route path="/insights" element={<Insights />} />
-                  <Route path="/contact" element={<Contact />} />
-                  <Route path="/privacy" element={<Legal type="privacy" />} />
-                  <Route path="/terms" element={<Legal type="terms" />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </main>
-              <Footer />
-            </>
-          }
-        />
+        {/* Public Website */}
+        <Route path="/" element={<PublicLayout />}>
+          <Route index element={<Home />} />
+          <Route path="services" element={<Services />} />
+          <Route path="projects" element={<Projects />} />
+          <Route path="projects/:slug" element={<ProjectDetail />} />
+          <Route path="products" element={<Products />} />
+          <Route path="about" element={<About />} />
+          <Route path="careers" element={<Careers />} />
+          <Route path="careers/:slug" element={<CareerDetail />} />
+          <Route path="insights" element={<Insights />} />
+          <Route path="contact" element={<Contact />} />
+          <Route path="privacy" element={<Legal type="privacy" />} />
+          <Route path="terms" element={<Legal type="terms" />} />
+          <Route path="*" element={<NotFound />} />
+        </Route>
       </Routes>
     </div>
   );

@@ -12,6 +12,20 @@ import {
   Zap
 } from 'lucide-react';
 
+const statColors = {
+  blue: 'bg-blue-50 text-blue-600',
+  purple: 'bg-purple-50 text-purple-600',
+  amber: 'bg-amber-50 text-amber-600',
+  emerald: 'bg-emerald-50 text-emerald-600',
+};
+
+const activityColors = {
+  purple: 'bg-purple-50 text-purple-500',
+  amber: 'bg-amber-50 text-amber-500',
+  blue: 'bg-blue-50 text-blue-500',
+  emerald: 'bg-emerald-50 text-emerald-500',
+};
+
 const AdminDashboard = () => {
   return (
     <div className="p-8 bg-slate-50 min-h-screen">
@@ -44,10 +58,10 @@ const AdminDashboard = () => {
         ].map((stat, i) => (
           <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 group hover:border-blue-500/50 transition-all">
             <div className="flex justify-between items-start mb-4">
-              <div className={`p-3 rounded-xl bg-${stat.color}-50 text-${stat.color}-600 group-hover:scale-110 transition-transform`}>
+              <div className={`p-3 rounded-xl ${statColors[stat.color] || 'bg-slate-50 text-slate-600'} group-hover:scale-110 transition-transform`}>
                 <stat.icon size={24} />
               </div>
-              <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md bg-${stat.color}-50 text-${stat.color}-600`}>
+              <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md ${statColors[stat.color] || 'bg-slate-50 text-slate-600'}`}>
                 Live
               </span>
             </div>
@@ -80,7 +94,7 @@ const AdminDashboard = () => {
               { type: 'JOB', user: 'HR Manager', action: 'published new job', target: 'UI/UX Designer', time: '2 days ago', color: 'emerald' },
             ].map((activity, i) => (
               <div key={i} className="p-5 flex items-start gap-4 hover:bg-slate-50 transition group">
-                <div className={`mt-1 p-2 rounded-lg bg-${activity.color}-50 text-${activity.color}-500 group-hover:scale-110 transition-transform`}>
+                <div className={`mt-1 p-2 rounded-lg ${activityColors[activity.color] || 'bg-slate-50 text-slate-500'} group-hover:scale-110 transition-transform`}>
                   {activity.type === 'APPLICATION' && <Users size={16} />}
                   {activity.type === 'INQUIRY' && <MessageSquare size={16} />}
                   {activity.type === 'PROJECT' && <Clock size={16} />}

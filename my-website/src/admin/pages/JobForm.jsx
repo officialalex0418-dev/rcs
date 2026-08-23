@@ -17,6 +17,7 @@ const JobForm = () => {
     description: '',
     requirements: '',
     responsibilities: '',
+    benefits: '',
     status: 'Active'
   });
 
@@ -24,7 +25,10 @@ const JobForm = () => {
     if (id) {
       const fetchJob = async () => {
         try {
-          const backendUrl = import.meta.env.VITE_API_URL || '';
+          let backendUrl = import.meta.env.VITE_API_URL || '';
+          if (backendUrl.endsWith('/')) {
+            backendUrl = backendUrl.slice(0, -1);
+          }
           const token = localStorage.getItem('rcs_admin_token');
           const response = await fetch(`${backendUrl}/api/careers/jobs?admin=true`, {
              headers: { 'Authorization': `Bearer ${token}` }
@@ -35,10 +39,13 @@ const JobForm = () => {
             if (job) {
               setFormData({
                 ...job,
-                requirements: job.requirements.join('\n'),
-                responsibilities: job.responsibilities.join('\n')
+                requirements: Array.isArray(job.requirements) ? job.requirements.join('\n') : '',
+                responsibilities: Array.isArray(job.responsibilities) ? job.responsibilities.join('\n') : '',
+                benefits: Array.isArray(job.benefits) ? job.benefits.join('\n') : ''
               });
             }
+          } else {
+            console.error('Failed to fetch job:', data.message);
           }
         } catch (err) {
           console.error('Failed to fetch job:', err);
@@ -53,18 +60,30 @@ const JobForm = () => {
     setLoading(true);
 
     try {
-      const backendUrl = import.meta.env.VITE_API_URL || '';
+      let backendUrl = import.meta.env.VITE_API_URL || '';
+      if (backendUrl.endsWith('/')) {
+        backendUrl = backendUrl.slice(0, -1);
+      }
+
       const token = localStorage.getItem('rcs_admin_token');
+      if (!token) {
+        alert('Session expired. Please login again.');
+        navigate('/admin/login');
+        return;
+      }
 
       const payload = {
         ...formData,
-        requirements: formData.requirements.split('\n').filter(r => r.trim()),
-        responsibilities: formData.responsibilities.split('\n').filter(r => r.trim()),
+        requirements: typeof formData.requirements === 'string' ? formData.requirements.split('\n').filter(r => r.trim()) : formData.requirements,
+        responsibilities: typeof formData.responsibilities === 'string' ? formData.responsibilities.split('\n').filter(r => r.trim()) : formData.responsibilities,
+        benefits: typeof formData.benefits === 'string' ? formData.benefits.split('\n').filter(b => b.trim()) : formData.benefits,
         slug: formData.title.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '') + '-' + Date.now().toString().slice(-4)
       };
 
       const url = id ? `${backendUrl}/api/careers/jobs/${id}` : `${backendUrl}/api/careers/jobs`;
       const method = id ? 'PUT' : 'POST';
+
+      console.log(`Submitting to ${url} using ${method}`, payload);
 
       const response = await fetch(url, {
         method,
@@ -75,11 +94,23 @@ const JobForm = () => {
         body: JSON.stringify(payload)
       });
 
+      const text = await response.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (parseErr) {
+        console.error('Failed to parse response as JSON:', text);
+        throw new Error('Server returned an invalid response. Please check if the backend is running.');
+      }
+
       if (response.ok) {
         navigate('/admin/careers');
+      } else {
+        alert(data.message || 'Failed to save job');
       }
     } catch (err) {
       console.error('Failed to save job:', err);
+      alert(`Error: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -175,6 +206,46 @@ const JobForm = () => {
                   <option>Part-time</option>
                   <option>Contract</option>
                   <option>Internship</option>
+                  <option>Freelance</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <label className="text-xs font-black text-slate-700 uppercase tracking-widest ml-1">Work Mode</label>
+                <select
+                  className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-sm font-bold appearance-none cursor-pointer"
+                  value={formData.workMode}
+                  onChange={(e) => setFormData({...formData, workMode: e.target.value})}
+                >
+                  <option>On-site</option>
+                  <option>Remote</option>
+                  <option>Hybrid</option>
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-black text-slate-700 uppercase tracking-widest ml-1">Experience Level</label>
+                <input
+                  className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-sm font-bold"
+                  placeholder="e.g. 2+ years"
+                  value={formData.experienceLevel}
+                  onChange={(e) => setFormData({...formData, experienceLevel: e.target.value})}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-black text-slate-700 uppercase tracking-widest ml-1">Status</label>
+                <select
+                  className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-sm font-bold appearance-none cursor-pointer"
+                  value={formData.status}
+                  onChange={(e) => setFormData({...formData, status: e.target.value})}
+                >
+                  <option>Active</option>
+                  <option>Draft</option>
+                  <option>Closed</option>
+                  <option>Archived</option>
                 </select>
               </div>
             </div>
@@ -215,6 +286,17 @@ const JobForm = () => {
                   onChange={(e) => setFormData({...formData, requirements: e.target.value})}
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-black text-slate-700 uppercase tracking-widest ml-1">Benefits (One per line)</label>
+              <textarea
+                rows="4"
+                className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-3xl outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-sm font-medium leading-relaxed"
+                placeholder="Perks and benefits..."
+                value={formData.benefits}
+                onChange={(e) => setFormData({...formData, benefits: e.target.value})}
+              />
             </div>
           </div>
 

@@ -24,19 +24,25 @@ export const getJobs = async (req, res, next) => {
 
 export const createJob = async (req, res, next) => {
   try {
+    console.log('Creating job with body:', req.body);
     const job = await Job.create({ ...req.body, createdBy: req.user.id });
+    console.log('Job created successfully:', job._id);
     res.status(201).json({ success: true, data: job });
   } catch (err) {
+    console.error('Error in createJob:', err);
     next(err);
   }
 };
 
 export const updateJob = async (req, res, next) => {
   try {
+    console.log('Updating job', req.params.id, 'with body:', req.body);
     const job = await Job.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
     if (!job) return res.status(404).json({ success: false, message: 'Job not found' });
+    console.log('Job updated successfully:', job._id);
     res.status(200).json({ success: true, data: job });
   } catch (err) {
+    console.error('Error in updateJob:', err);
     next(err);
   }
 };

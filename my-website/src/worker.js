@@ -1,29 +1,25 @@
 export default {
   async fetch(request, env, ctx) {
-    // Production Worker: Serves static assets from 'dist' and handles React SPA routing
     const url = new URL(request.url);
 
     try {
       // 1. Attempt to serve the requested asset
-      // The ASSETS binding is automatically created when using the [assets] configuration in wrangler.toml
       const response = await env.ASSETS.fetch(request);
 
-      // 2. If the asset exists and is not a 404, return it
-      if (response.status !== 404) {
+      // 2. If it's a real file (has an extension) and it's a 404, return it
+      if (response.status === 404 && url.pathname.includes('.')) {
         return response;
       }
 
-      // 3. SPA Routing: If it's a 404 but looks like a navigation request (no file extension), serve index.html
-      const isFileRequest = url.pathname.includes('.');
-      if (!isFileRequest) {
-        // Fetch index.html from assets and serve it
-        return await env.ASSETS.fetch(new Request(new URL('/index.html', url.origin)));
+      // 3. If it's a 404 or a navigation request, serve index.html (SPA routing)
+      if (response.status === 404 || !url.pathname.includes('.')) {
+        const indexResponse = await env.ASSETS.fetch(new Request(new URL('/index.html', url.origin)));
+        return new Response(indexResponse.body, indexResponse);
       }
 
-      // 4. Otherwise, return the original 404
       return response;
     } catch (e) {
-      return new Response("Error serving asset: " + e.message, { status: 500 });
+      return new Response("RCS Worker Error: " + e.message, { status: 500 });
     }
   },
 };

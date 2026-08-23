@@ -39,6 +39,16 @@ const projectSchema = new mongoose.Schema({
     max: 100,
     default: 0
   },
+  // Dynamic Business Sarthi Fields
+  extraFields: [{
+    label: String,
+    value: String
+  }],
+  mediaGallery: [{
+    type: { type: String, enum: ['IMAGE', 'VIDEO'] },
+    url: String,
+    publicId: String
+  }],
   // Public Portfolio Connection
   publicPortfolio: {
     showPublic: { type: Boolean, default: false },

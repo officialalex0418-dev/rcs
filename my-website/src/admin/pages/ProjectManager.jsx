@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Calendar, CheckCircle2, AlertCircle, Clock, Users, ChevronRight, Briefcase, Filter, ArrowUpRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Plus, Search, Calendar, CheckCircle2, AlertCircle, Clock, Users, ChevronRight, Briefcase, Filter, ArrowUpRight, Edit2 } from 'lucide-react';
 
 const ProjectManager = () => {
   const [projects, setProjects] = useState([]);
@@ -49,10 +50,13 @@ const ProjectManager = () => {
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Active Projects</h1>
           <p className="text-slate-500 font-medium">Manage client engagements and delivery health.</p>
         </div>
-        <button className="flex items-center gap-2 bg-blue-600 px-5 py-2.5 rounded-xl text-sm font-bold text-white hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20">
+        <Link
+          to="/admin/projects/new"
+          className="flex items-center gap-2 bg-blue-600 px-5 py-2.5 rounded-xl text-sm font-bold text-white hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20"
+        >
           <Plus size={20} />
           Create New Project
-        </button>
+        </Link>
       </div>
 
       {/* Project Filters */}
@@ -138,9 +142,17 @@ const ProjectManager = () => {
                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter leading-none mb-1">Milestone</p>
                    <p className="text-xs font-bold text-slate-900">{project.targetDate ? new Date(project.targetDate).toLocaleDateString() : 'TBD'}</p>
                 </div>
-                <button className="flex items-center gap-1 text-sm font-black text-blue-600 hover:text-blue-700 bg-blue-50 px-4 py-2 rounded-xl transition-all">
-                  Manage <ArrowUpRight size={16} />
-                </button>
+                <div className="flex gap-2">
+                  <Link
+                    to={`/admin/projects/edit/${project._id}`}
+                    className="flex items-center gap-1 text-sm font-black text-blue-600 hover:text-blue-700 bg-blue-50 px-4 py-2 rounded-xl transition-all"
+                  >
+                    <Edit2 size={16} />
+                  </Link>
+                  <button className="flex items-center gap-1 text-sm font-black text-slate-600 hover:text-slate-900 bg-slate-100 px-4 py-2 rounded-xl transition-all">
+                    Manage <ArrowUpRight size={16} />
+                  </button>
+                </div>
               </div>
             </div>
           </div>

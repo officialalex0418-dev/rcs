@@ -26,6 +26,7 @@ import ApplicationsList from "./admin/pages/ApplicationsList";
 import InquiriesList from "./admin/pages/InquiriesList";
 import GalleryManager from "./admin/pages/GalleryManager";
 import ProjectManager from "./admin/pages/ProjectManager";
+import ProjectForm from "./admin/pages/ProjectForm";
 import Reports from "./admin/pages/Reports";
 import EmployeeManager from "./admin/pages/EmployeeManager";
 import TaskManager from "./admin/pages/TaskManager";
@@ -69,6 +70,8 @@ function Site() {
         >
           <Route index element={<AdminDashboard />} />
           <Route path="projects" element={<ProjectManager />} />
+          <Route path="projects/new" element={<ProjectForm />} />
+          <Route path="projects/edit/:id" element={<ProjectForm />} />
           <Route path="inquiries" element={<InquiriesList />} />
           <Route path="employees" element={<EmployeeManager />} />
           <Route path="gallery" element={<GalleryManager />} />

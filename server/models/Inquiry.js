@@ -40,6 +40,12 @@ const inquirySchema = new mongoose.Schema({
   },
   followUpDate: Date,
   lastContactedAt: Date,
+  thread: [{
+    sender: { type: String, enum: ['ADMIN', 'USER'], default: 'USER' },
+    message: String,
+    subject: String,
+    timestamp: { type: Date, default: Date.now }
+  }],
   notes: [{
     author: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     content: String,

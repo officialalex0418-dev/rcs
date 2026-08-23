@@ -1,2 +1,3 @@
-# SPA routing for Cloudflare Pages
+# Standard SPA routing for Cloudflare Pages
+# The 200 status code tells Cloudflare to serve index.html for any route not matched by a real file
 /*    /index.html   200

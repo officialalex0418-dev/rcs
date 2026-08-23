@@ -31,7 +31,17 @@ const applicationSchema = new mongoose.Schema({
   coverLetter: String,
   status: {
     type: String,
-    enum: ['NEW', 'SCREENING', 'SHORTLISTED', 'INTERVIEW', 'OFFER', 'HIRED', 'REJECTED', 'WITHDRAWN'],
+    enum: [
+      'NEW',
+      'SHORTLISTED',
+      'INTERVIEW_ROUND_1',
+      'INTERVIEW_ROUND_2',
+      'INTERVIEW_ROUND_3',
+      'SELECTED',
+      'HIRED',
+      'REJECTED',
+      'WITHDRAWN'
+    ],
     default: 'NEW'
   },
   notes: [{

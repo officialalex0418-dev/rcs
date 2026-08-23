@@ -38,8 +38,8 @@ const jobSchema = new mongoose.Schema({
   benefits: [String],
   status: {
     type: String,
-    enum: ['Draft', 'Published', 'Paused', 'Closed', 'Archived'],
-    default: 'Draft'
+    enum: ['Active', 'Closed', 'Draft', 'Archived'],
+    default: 'Active'
   },
   deadline: Date,
   featured: {

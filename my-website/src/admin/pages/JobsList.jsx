@@ -1,98 +1,139 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Search, Edit2, Trash2, Eye } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Eye, Briefcase, MapPin, Building2, ToggleLeft, ToggleRight, MoreVertical } from 'lucide-react';
 
 const JobsList = () => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Placeholder data - will be replaced with API call
+  const fetchJobs = async () => {
+    try {
+      const backendUrl = import.meta.env.VITE_API_URL || '';
+      const token = localStorage.getItem('rcs_admin_token');
+      const response = await fetch(`${backendUrl}/api/careers/jobs?admin=true`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      if (data.success) setJobs(data.data);
+    } catch (err) {
+      console.error('Failed to fetch jobs:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchJobs = async () => {
-      // simulate API delay
-      setTimeout(() => {
-        setJobs([
-          { _id: '1', title: 'Senior React Developer', department: 'Engineering', location: 'Remote', status: 'Published', createdAt: '2026-08-20' },
-          { _id: '2', title: 'UI/UX Designer', department: 'Design', location: 'Kathmandu', status: 'Draft', createdAt: '2026-08-21' },
-          { _id: '3', title: 'Project Manager', department: 'Operations', location: 'Hybrid', status: 'Published', createdAt: '2026-08-22' },
-        ]);
-        setLoading(true); // Wait, this should be false, but I'll fix it in the next step or keep as is for now if I just want to show UI
-        setLoading(false);
-      }, 500);
-    };
     fetchJobs();
   }, []);
 
+  const handleStatusToggle = async (id, currentStatus) => {
+    try {
+      const newStatus = currentStatus === 'Active' ? 'Closed' : 'Active';
+      const backendUrl = import.meta.env.VITE_API_URL || '';
+      const token = localStorage.getItem('rcs_admin_token');
+      const response = await fetch(`${backendUrl}/api/careers/jobs/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+      if (response.ok) fetchJobs();
+    } catch (err) {
+      console.error('Failed to toggle status:', err);
+    }
+  };
+
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Job Openings</h1>
+    <div className="p-8 bg-slate-50 min-h-screen font-sans">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+        <div>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Vacancy Management</h1>
+          <p className="text-slate-500 font-medium">Create and manage job postings for Royal Consultancy.</p>
+        </div>
         <Link
           to="/admin/careers/new"
-          className="bg-blue-600 text-white px-4 py-2 rounded-md flex items-center gap-2 hover:bg-blue-700 transition"
+          className="flex items-center gap-2 bg-blue-600 px-5 py-2.5 rounded-xl text-sm font-bold text-white hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20"
         >
-          <Plus size={20} />
-          Add New Job
+          <Plus size={18} />
+          Post New Vacancy
         </Link>
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="p-4 border-b border-gray-200 bg-gray-50 flex items-center">
-          <div className="relative flex-1 max-w-md">
-            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
-              <Search size={18} />
-            </span>
+      <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex flex-col md:flex-row gap-4 items-center justify-between">
+          <div className="relative flex-1 max-w-md w-full">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input
               type="text"
-              placeholder="Search jobs..."
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              placeholder="Search by role or department..."
+              className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500/20"
             />
+          </div>
+          <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
+            <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+            {jobs.filter(j => j.status === 'Active').length} Active Roles
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Job Title</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Posted Date</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+        <div className="overflow-x-auto text-left">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-100 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                <th className="px-8 py-5">Job Profile</th>
+                <th className="px-8 py-5">Department & Type</th>
+                <th className="px-8 py-5">Engagement Status</th>
+                <th className="px-8 py-5 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="divide-y divide-slate-50">
               {loading ? (
-                <tr>
-                  <td colSpan="6" className="px-6 py-4 text-center text-gray-500">Loading jobs...</td>
-                </tr>
+                <tr><td colSpan="4" className="px-8 py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">Accessing Job Vault...</td></tr>
               ) : jobs.length === 0 ? (
-                <tr>
-                  <td colSpan="6" className="px-6 py-4 text-center text-gray-500">No jobs found</td>
+                <tr><td colSpan="4" className="px-8 py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">No Vacancies Found</td></tr>
+              ) : jobs.map((job) => (
+                <tr key={job._id} className="hover:bg-slate-50/50 transition-all group">
+                  <td className="px-8 py-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                        <Briefcase size={24} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-black text-slate-900 leading-tight mb-1">{job.title}</p>
+                        <span className="text-xs text-slate-400 font-bold flex items-center gap-1.5"><MapPin size={12} /> {job.location}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-8 py-6">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5"><Building2 size={12} className="text-slate-400" /> {job.department}</span>
+                      <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 w-fit px-2 py-0.5 rounded">{job.employmentType}</span>
+                    </div>
+                  </td>
+                  <td className="px-8 py-6">
+                    <button
+                      onClick={() => handleStatusToggle(job._id, job.status)}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${
+                        job.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-100 text-slate-500 border-slate-200'
+                      }`}
+                    >
+                      {job.status === 'Active' ? <ToggleRight size={16} /> : <ToggleLeft size={16} />}
+                      {job.status}
+                    </button>
+                  </td>
+                  <td className="px-8 py-6 text-right">
+                    <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                      <Link to={`/admin/careers/edit/${job._id}`} className="p-2.5 bg-slate-50 text-slate-500 rounded-xl hover:bg-slate-900 hover:text-white transition-all shadow-sm">
+                        <Edit2 size={18} />
+                      </Link>
+                      <button className="p-2.5 bg-slate-50 text-red-500 rounded-xl hover:bg-red-600 hover:text-white transition-all shadow-sm">
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </td>
                 </tr>
-              ) : (
-                jobs.map((job) => (
-                  <tr key={job._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{job.title}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{job.department}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{job.location}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        job.status === 'Published' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {job.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(job.createdAt).toLocaleDateString()}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
-                      <button className="text-gray-400 hover:text-blue-600"><Eye size={18} /></button>
-                      <button className="text-gray-400 hover:text-green-600"><Edit2 size={18} /></button>
-                      <button className="text-gray-400 hover:text-red-600"><Trash2 size={18} /></button>
-                    </td>
-                  </tr>
-                ))
-              )}
+              ))}
             </tbody>
           </table>
         </div>

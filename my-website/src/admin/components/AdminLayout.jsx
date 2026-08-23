@@ -13,7 +13,8 @@ import {
   Bell,
   Search,
   User,
-  TrendingUp
+  TrendingUp,
+  FileText
 } from 'lucide-react';
 
 const AdminLayout = () => {
@@ -32,6 +33,8 @@ const AdminLayout = () => {
     { label: 'Projects', icon: Folder, path: '/admin/projects' },
     { label: 'Inquiries', icon: MessageSquare, path: '/admin/inquiries' },
     { label: 'Employees', icon: Users, path: '/admin/employees' },
+    { label: 'Vacancy', icon: Briefcase, path: '/admin/careers' },
+    { label: 'Applications', icon: FileText, path: '/admin/applications' },
     { label: 'Gallery', icon: ImageIcon, path: '/admin/gallery' },
     { label: 'Task Management', icon: Briefcase, path: '/admin/tasks' },
     { label: 'Payroll', icon: TrendingUp, path: '/admin/payroll' },

@@ -1,90 +1,223 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Eye, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Search, Eye, Mail, Phone, Calendar, Filter, CheckCircle2, User, FileText, Download, UserPlus, X, ShieldCheck } from 'lucide-react';
 
 const ApplicationsList = () => {
   const [applications, setApplications] = useState([]);
+  const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [filterJob, setFilterJob] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+
+  const [hiredCredentials, setHiredCredentials] = useState(null);
+
+  const fetchData = async () => {
+    try {
+      const backendUrl = import.meta.env.VITE_API_URL || '';
+      const token = localStorage.getItem('rcs_admin_token');
+
+      const [appRes, jobRes] = await Promise.all([
+        fetch(`${backendUrl}/api/careers/applications?job=${filterJob}&status=${filterStatus}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        fetch(`${backendUrl}/api/careers/jobs?admin=true`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+      ]);
+
+      const appData = await appRes.json();
+      const jobData = await jobRes.json();
+
+      if (appData.success) setApplications(appData.data);
+      if (jobData.success) setJobs(jobData.data);
+    } catch (err) {
+      console.error('Failed to fetch data:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    // simulate API delay
-    setTimeout(() => {
-      setApplications([
-        { _id: '1', candidateName: 'John Doe', position: 'Senior React Developer', status: 'NEW', appliedDate: '2026-08-22' },
-        { _id: '2', candidateName: 'Jane Smith', position: 'UI/UX Designer', status: 'SHORTLISTED', appliedDate: '2026-08-21' },
-        { _id: '3', candidateName: 'Mike Johnson', position: 'Project Manager', status: 'REJECTED', appliedDate: '2026-08-20' },
-      ]);
-      setLoading(false);
-    }, 500);
-  }, []);
+    fetchData();
+  }, [filterJob, filterStatus]);
 
-  const getStatusBadge = (status) => {
+  const handleStatusChange = async (id, newStatus) => {
+    try {
+      const backendUrl = import.meta.env.VITE_API_URL || '';
+      const token = localStorage.getItem('rcs_admin_token');
+      const response = await fetch(`${backendUrl}/api/careers/applications/${id}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        if (newStatus === 'HIRED' && data.credentials) {
+          setHiredCredentials(data.credentials);
+        }
+        fetchData();
+      }
+    } catch (err) {
+      console.error('Failed to update status:', err);
+    }
+  };
+
+  const getStatusColor = (status) => {
     switch (status) {
-      case 'NEW': return <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">New</span>;
-      case 'SHORTLISTED': return <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">Shortlisted</span>;
-      case 'REJECTED': return <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-medium">Rejected</span>;
-      default: return <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs font-medium">{status}</span>;
+      case 'NEW': return 'bg-blue-50 text-blue-700 border-blue-100';
+      case 'SHORTLISTED': return 'bg-purple-50 text-purple-700 border-purple-100';
+      case 'SELECTED': return 'bg-emerald-50 text-emerald-700 border-emerald-100';
+      case 'HIRED': return 'bg-slate-900 text-white border-slate-900';
+      case 'REJECTED': return 'bg-red-50 text-red-700 border-red-100';
+      default: return 'bg-amber-50 text-amber-700 border-amber-100';
     }
   };
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Job Applications</h1>
-        <div className="flex gap-2">
-          <button className="bg-white border border-gray-300 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-50">Export CSV</button>
+    <div className="p-8 bg-slate-50 min-h-screen font-sans relative">
+      {/* Hiring Success Modal */}
+      {hiredCredentials && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[1000] flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200">
+            <div className="p-8 text-center">
+              <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <ShieldCheck size={40} />
+              </div>
+              <h2 className="text-2xl font-black text-slate-900 mb-2">Personnel Onboarded!</h2>
+              <p className="text-slate-500 font-medium mb-8">The candidate has been hired and a staff portal account has been provisioned.</p>
+
+              <div className="bg-slate-50 rounded-2xl p-6 mb-8 space-y-4 text-left border border-slate-100">
+                <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Login Email</p>
+                  <p className="font-bold text-slate-900">{hiredCredentials.email}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Temporary Password</p>
+                  <p className="font-mono font-black text-blue-600 text-lg tracking-wider">{hiredCredentials.password}</p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setHiredCredentials(null)}
+                className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-slate-900/10 transition-transform active:scale-95"
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
+        <div>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Recruitment Pipeline</h1>
+          <p className="text-slate-500 font-medium mt-1">Monitor candidate applications and manage onboarding.</p>
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="p-4 border-b border-gray-200 bg-gray-50 flex gap-4">
-          <div className="relative flex-1 max-w-md">
-            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
-              <Search size={18} />
-            </span>
-            <input
-              type="text"
-              placeholder="Search candidates..."
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md sm:text-sm"
-            />
-          </div>
-          <select className="border border-gray-300 rounded-md px-3 py-2 text-sm">
-            <option>All Statuses</option>
-            <option>New</option>
-            <option>Shortlisted</option>
-            <option>Interview</option>
-            <option>Hired</option>
-            <option>Rejected</option>
-          </select>
+      {/* Filters */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+          <input
+            type="text"
+            placeholder="Search by candidate name..."
+            className="w-full pl-12 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-blue-500/10 transition-all text-sm font-bold"
+          />
         </div>
+        <select
+          className="px-4 py-3.5 bg-white border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-blue-500/10 transition-all text-sm font-bold appearance-none cursor-pointer"
+          value={filterJob}
+          onChange={(e) => setFilterJob(e.target.value)}
+        >
+          <option value="">All Job Vacancies</option>
+          {jobs.map(job => <option key={job._id} value={job._id}>{job.title}</option>)}
+        </select>
+        <select
+          className="px-4 py-3.5 bg-white border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-blue-500/10 transition-all text-sm font-bold appearance-none cursor-pointer"
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value)}
+        >
+          <option value="">All Pipeline Stages</option>
+          <option value="NEW">New Application</option>
+          <option value="SHORTLISTED">Shortlisted</option>
+          <option value="INTERVIEW_ROUND_1">Interview Round 1</option>
+          <option value="INTERVIEW_ROUND_2">Interview Round 2</option>
+          <option value="INTERVIEW_ROUND_3">Interview Round 3</option>
+          <option value="SELECTED">Final Selection</option>
+          <option value="HIRED">Hired (Onboarded)</option>
+        </select>
+      </div>
 
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Candidate</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Position</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Applied Date</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {loading ? (
-              <tr><td colSpan="5" className="px-6 py-4 text-center">Loading...</td></tr>
-            ) : applications.map((app) => (
-              <tr key={app._id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{app.candidateName}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-gray-500">{app.position}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(app.status)}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-gray-500">{app.appliedDate}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                  <button className="text-blue-600 hover:text-blue-900"><Eye size={18} /></button>
-                  <button className="text-green-600 hover:text-green-900"><CheckCircle size={18} /></button>
-                  <button className="text-red-600 hover:text-red-900"><XCircle size={18} /></button>
-                </td>
+      <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="overflow-x-auto text-left">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-100 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                <th className="px-8 py-5">Candidate Profile</th>
+                <th className="px-8 py-5">Applied For</th>
+                <th className="px-8 py-5">Current Stage</th>
+                <th className="px-8 py-5 text-right">Pipeline Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {loading ? (
+                <tr><td colSpan="4" className="px-8 py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">Scanning Applicant Pool...</td></tr>
+              ) : applications.length === 0 ? (
+                <tr><td colSpan="4" className="px-8 py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">No applicants found for this criteria</td></tr>
+              ) : applications.map((app) => (
+                <tr key={app._id} className="hover:bg-slate-50/50 transition-all group">
+                  <td className="px-8 py-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-600 flex items-center justify-center font-black text-lg">
+                        {app.firstName.charAt(0)}
+                      </div>
+                      <div>
+                        <p className="text-sm font-black text-slate-900 leading-tight mb-1">{app.firstName} {app.lastName}</p>
+                        <div className="flex items-center gap-3">
+                           <span className="text-[11px] text-slate-400 font-bold flex items-center gap-1.5"><Mail size={12} /> {app.email}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-8 py-6">
+                    <p className="text-sm font-black text-slate-800 leading-snug">{app.job?.title || 'Unknown'}</p>
+                    <span className="text-[11px] text-slate-400 font-bold flex items-center gap-1.5 mt-1.5"><Calendar size={12} /> {new Date(app.createdAt).toLocaleDateString()}</span>
+                  </td>
+                  <td className="px-8 py-6">
+                    <span className={`px-3 py-1.5 inline-flex text-[10px] font-black uppercase tracking-widest rounded-xl border ${getStatusColor(app.status)}`}>
+                      {app.status.replace(/_/g, ' ')}
+                    </span>
+                  </td>
+                  <td className="px-8 py-6 text-right">
+                    <div className="flex justify-end gap-2">
+                      <select
+                        onChange={(e) => handleStatusChange(app._id, e.target.value)}
+                        className="p-2.5 bg-white border border-slate-200 rounded-xl text-xs font-black uppercase tracking-widest outline-none hover:border-blue-500 cursor-pointer"
+                        value={app.status}
+                      >
+                        <option value="NEW">New</option>
+                        <option value="SHORTLISTED">Shortlist</option>
+                        <option value="INTERVIEW_ROUND_1">Interview R1</option>
+                        <option value="INTERVIEW_ROUND_2">Interview R2</option>
+                        <option value="INTERVIEW_ROUND_3">Interview R3</option>
+                        <option value="SELECTED">Select</option>
+                        <option value="HIRED">Hire (Onboard)</option>
+                        <option value="REJECTED">Reject</option>
+                      </select>
+                      <button className="p-2.5 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm">
+                        <FileText size={18} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

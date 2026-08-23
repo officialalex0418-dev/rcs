@@ -6,6 +6,5 @@ compatibility_date = "2024-01-01"
 directory = "./dist"
 binding = "ASSETS"
 
-# Use Workers to serve the site on rcs.com.np
-# Ensure the Worker route is set to rcs.com.np/* in the Cloudflare Dashboard
-# if not automatically handled by wrangler deploy.
+# The Worker script at src/worker.js handles SPA routing.
+# No _redirects file is needed as it can cause loop errors during Worker builds.

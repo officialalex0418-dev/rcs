@@ -66,5 +66,6 @@ If you are using Cloudflare Workers directly:
 3. Deploy: `npx wrangler pages deploy dist`
 
 ### 3. Troubleshooting
+- **Build Error: Missing entry-point**: This happens if Cloudflare tries to run a manual deploy command. In your Pages project settings under **Builds & deployments**, ensure the **"Deploy command"** field is completely **empty**.
 - **Cache**: If changes don't appear, go to the Cloudflare dashboard and "Purge Everything" under Caching.
 - **Environment Variables**: Ensure `VITE_API_URL` is set in the Cloudflare Dashboard under Settings -> Environment Variables.

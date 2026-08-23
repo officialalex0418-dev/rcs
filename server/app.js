@@ -24,9 +24,11 @@ dotenv.config();
 const app = express();
 
 // Middleware
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: false,
+}));
 app.use(cors({
-  origin: ['https://rcs.com.np', 'https://www.rcs.com.np', 'http://localhost:5173', 'http://localhost:3000'],
+  origin: true, // Allow all origins temporarily for easier deployment debugging
   credentials: true
 }));
 app.use(express.json());

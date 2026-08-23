@@ -16,7 +16,14 @@ const AdminLogin = () => {
     setError('');
 
     try {
-      const backendUrl = import.meta.env.VITE_API_URL || '';
+      let backendUrl = import.meta.env.VITE_API_URL || '';
+      // Sanitize backendUrl: remove trailing slash if it exists
+      if (backendUrl.endsWith('/')) {
+        backendUrl = backendUrl.slice(0, -1);
+      }
+
+      console.log('Attempting login at:', `${backendUrl}/api/auth/login`);
+
       const response = await fetch(`${backendUrl}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -32,7 +39,8 @@ const AdminLogin = () => {
         setError(data.message || 'Login failed. Please try again.');
       }
     } catch (err) {
-      setError('Connection to security server failed. Please check your network.');
+      console.error('Login error:', err);
+      setError(`Connection failed: ${err.message}. Ensure your backend is running.`);
     } finally {
       setLoading(false);
     }

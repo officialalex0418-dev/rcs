@@ -2,7 +2,10 @@ import Task from '../models/Task.js';
 
 export const getTasks = async (req, res, next) => {
   try {
-    const tasks = await Task.find().populate('assignedTo project').sort('-createdAt');
+    const filters = {};
+    if (req.query.assignedTo) filters.assignedTo = req.query.assignedTo;
+
+    const tasks = await Task.find(filters).populate('assignedTo project').sort('-createdAt');
     res.status(200).json({ success: true, data: tasks });
   } catch (err) {
     next(err);
@@ -20,7 +23,21 @@ export const createTask = async (req, res, next) => {
 
 export const updateTask = async (req, res, next) => {
   try {
-    const task = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const { subtasks } = req.body;
+    let progress = req.body.progress;
+
+    // Auto-calculate progress if subtasks are provided
+    if (subtasks && subtasks.length > 0) {
+      const completedCount = subtasks.filter(st => st.completed).length;
+      progress = Math.round((completedCount / subtasks.length) * 100);
+    }
+
+    const task = await Task.findByIdAndUpdate(
+      req.params.id,
+      { ...req.body, progress },
+      { new: true }
+    );
+
     res.status(200).json({ success: true, data: task });
   } catch (err) {
     next(err);

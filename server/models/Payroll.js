@@ -18,11 +18,27 @@ const payrollSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
+  dailyAllowance: {
+    type: Number,
+    default: 0
+  },
+  daysWorked: {
+    type: Number,
+    default: 30
+  },
   bonus: {
     type: Number,
     default: 0
   },
-  deductions: {
+  leaveDeductions: {
+    type: Number,
+    default: 0
+  },
+  taxDeductions: {
+    type: Number,
+    default: 0
+  },
+  otherAllowances: {
     type: Number,
     default: 0
   },

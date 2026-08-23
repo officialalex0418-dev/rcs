@@ -26,6 +26,16 @@ const taskSchema = new mongoose.Schema({
     default: 'MEDIUM'
   },
   dueDate: Date,
+  subtasks: [{
+    title: String,
+    completed: { type: Boolean, default: false }
+  }],
+  progress: {
+    type: Number,
+    min: 0,
+    max: 100,
+    default: 0
+  },
   completedAt: Date
 }, {
   timestamps: true

@@ -20,7 +20,7 @@ export default function Navbar() {
   return <header className={`site-header ${isScrolled ? "site-header--scrolled" : ""}`}>
     <div className="shell site-header__inner">
       <Link to="/" className="brand" aria-label="RCS home">
-        <img src="Logo.png" width="48" height="48" alt="RCS logo" />
+        <img src="/Logo.png" width="48" height="48" alt="RCS logo" />
         <span><strong>RCS</strong><small>Royal Consultancy Services</small></span>
       </Link>
       <nav className="desktop-nav" aria-label="Primary navigation">

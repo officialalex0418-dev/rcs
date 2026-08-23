@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Briefcase, MapPin, Clock, Send, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Briefcase, MapPin, Clock, Send, CheckCircle2, Sparkles } from 'lucide-react';
 import Seo from '../components/Seo';
 
 const CareerDetail = () => {

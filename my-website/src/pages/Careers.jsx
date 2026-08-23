@@ -2,11 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Briefcase, MapPin, Clock, ArrowRight,
-  Users, Target, Heart, CheckCircle2,
-  Zap, UserCheck, Sparkles, Star, Rocket
+  Users, Target, CheckCircle2,
+  Zap, UserCheck
 } from 'lucide-react';
 import Seo from '../components/Seo';
-import { company } from '../data/site';
 
 const Careers = () => {
   const [jobs, setJobs] = useState([]);

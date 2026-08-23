@@ -6,6 +6,26 @@ export default {
   ],
   theme: {
     extend: {
+      animation: {
+        'float': 'float 3s ease-in-out infinite',
+        'bounce-slow': 'bounce-slow 3s infinite',
+      },
+      keyframes: {
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-10px)' },
+        },
+        'bounce-slow': {
+          '0%, 100%': {
+            transform: 'translateY(-5%)',
+            animationTimingFunction: 'cubic-bezier(0.8, 0, 1, 1)',
+          },
+          '50%': {
+            transform: 'translateY(0)',
+            animationTimingFunction: 'cubic-bezier(0, 0, 0.2, 1)',
+          },
+        },
+      },
       colors: {
         slate: {
           50: '#f8fafc',

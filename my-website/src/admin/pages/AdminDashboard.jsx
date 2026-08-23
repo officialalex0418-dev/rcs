@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Users,
   Briefcase,
@@ -27,6 +27,21 @@ const activityColors = {
 };
 
 const AdminDashboard = () => {
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        // Placeholder for future real-time stats fetch
+        setLoading(false);
+      } catch (err) {
+        console.error('Failed to fetch dashboard stats:', err);
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
   return (
     <div className="p-8 bg-slate-50 min-h-screen">
       {/* Header Section */}

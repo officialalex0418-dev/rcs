@@ -8,14 +8,34 @@ const AdminLogin = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    // Placeholder login logic
-    setTimeout(() => {
-      localStorage.setItem('rcs_admin_token', 'dummy_token');
-      navigate('/admin');
-    }, 1000);
+    setError('');
+
+    try {
+      const backendUrl = import.meta.env.VITE_API_URL || '';
+      const response = await fetch(`${backendUrl}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        localStorage.setItem('rcs_admin_token', data.token);
+        navigate('/admin');
+      } else {
+        setError(data.message || 'Login failed. Please try again.');
+      }
+    } catch (err) {
+      setError('Connection to security server failed. Please check your network.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -39,6 +59,13 @@ const AdminLogin = () => {
               <h1 className="text-3xl font-black text-slate-900 tracking-tight">Admin Login</h1>
               <p className="text-slate-500 mt-2 font-medium">Royal Consultancy Services</p>
             </div>
+
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm font-bold flex items-center gap-2">
+                <div className="w-1.5 h-1.5 bg-red-600 rounded-full animate-pulse"></div>
+                {error}
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">

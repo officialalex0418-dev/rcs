@@ -12,7 +12,8 @@ import {
   Folder,
   Bell,
   Search,
-  User
+  User,
+  TrendingUp
 } from 'lucide-react';
 
 const AdminLayout = () => {

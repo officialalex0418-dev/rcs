@@ -60,10 +60,10 @@ We use Cloudflare for frontend hosting to ensure high performance and reliable S
 3. The `public/_redirects` file will automatically handle SPA routing.
 
 #### Option B: Manual Wrangler Deployment
-If you are using Cloudflare Workers directly:
+If you need to trigger a manual push:
 1. Install Wrangler: `npm install -g wrangler`
 2. Login: `npx wrangler login`
-3. Deploy: `npx wrangler pages deploy dist`
+3. Deploy: `npm run deploy`
 
 ### 3. Troubleshooting
 - **Build Error: Missing entry-point**: This happens if Cloudflare tries to run a manual deploy command. In your Pages project settings under **Builds & deployments**, ensure the **"Deploy command"** field is completely **empty**.

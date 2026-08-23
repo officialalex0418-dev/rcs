@@ -1,28 +1,8 @@
-# Robust SPA Routing for cPanel
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
-
-  # 1. Force HTTPS and WWW (Recommended for SEO and path consistency)
-  # RewriteCond %{HTTPS} off [OR]
-  # RewriteCond %{HTTP_HOST} !^www\. [NC]
-  # RewriteRule ^(.*)$ https://www.rcs.com.np/$1 [L,R=301]
-
-  # 2. If the request is for a real file or directory, serve it
-  RewriteCond %{REQUEST_FILENAME} -f [OR]
-  RewriteCond %{REQUEST_FILENAME} -d
-  RewriteRule ^ - [L]
-
-  # 3. Otherwise, send all requests to index.html
-  # This handles the client-side routing in React
-  RewriteRule ^ index.html [L]
-</IfModule>
-
-# 4. Prevent directory listing
-Options -Indexes
-
-# 5. Set correct MIME types for assets
-<IfModule mod_mime.c>
-  AddType application/javascript .js
-  AddType text/css .css
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /index.html [L]
 </IfModule>

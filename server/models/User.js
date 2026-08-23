@@ -28,11 +28,21 @@ const userSchema = new mongoose.Schema({
   },
   designation: String,
   phone: String,
+  address: String,
+  panNumber: String,
+  employeeId: {
+    type: String,
+    unique: true
+  },
   joiningDate: {
     type: Date,
     default: Date.now
   },
-  baseSalary: {
+  basicSalary: {
+    type: Number,
+    default: 0
+  },
+  dailyAllowance: {
     type: Number,
     default: 0
   },

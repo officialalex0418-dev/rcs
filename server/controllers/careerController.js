@@ -2,6 +2,9 @@ import Job from '../models/Job.js';
 import Application from '../models/Application.js';
 import User from '../models/User.js';
 import crypto from 'crypto';
+import { Resend } from 'resend';
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Jobs
 export const getJobs = async (req, res, next) => {
@@ -82,19 +85,49 @@ export const updateApplicationStatus = async (req, res, next) => {
       const existingUser = await User.findOne({ email: application.email });
 
       if (!existingUser) {
+        // Generate RCS ID
+        const lastUser = await User.findOne({ employeeId: /^RCS/ }).sort({ employeeId: -1 });
+        let newId = 'RCS001';
+        if (lastUser && lastUser.employeeId) {
+          const currentNum = parseInt(lastUser.employeeId.replace('RCS', ''));
+          newId = `RCS${(currentNum + 1).toString().padStart(3, '0')}`;
+        }
+
         generatedPassword = crypto.randomBytes(4).toString('hex'); // 8 char password
 
         await User.create({
           name: `${application.firstName} ${application.lastName}`,
           email: application.email,
           password: generatedPassword,
+          employeeId: newId,
           role: 'STAFF',
-          designation: application.job.title,
+          designation: application.job?.title || 'Team Member',
           phone: application.phone
         });
 
-        // TODO: Integrate Resend API to send email
-        console.log(`Email sent to ${application.email} with password: ${generatedPassword}`);
+        // Send email via Resend
+        try {
+          await resend.emails.send({
+            from: 'RCS Careers <careers@rcs.com.np>',
+            to: [application.email],
+            subject: 'Welcome to Royal Consultancy Services - Your Portal Credentials',
+            html: `<div style="font-family: sans-serif; line-height: 1.6;">
+                    <h2>Congratulations!</h2>
+                    <p>You have been hired as <strong>${application.job?.title || 'a Team Member'}</strong> at Royal Consultancy Services.</p>
+                    <p>Your staff portal account has been created. Use the credentials below to login:</p>
+                    <div style="background: #f4f4f4; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                      <p style="margin: 0;"><strong>Email:</strong> ${application.email}</p>
+                      <p style="margin: 0;"><strong>Password:</strong> ${generatedPassword}</p>
+                      <p style="margin: 0;"><strong>Employee ID:</strong> ${newId}</p>
+                    </div>
+                    <p>Please change your password after your first login.</p>
+                    <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
+                    <p style="color: #666; font-size: 12px;">This is an automated onboarding email from RCS Management.</p>
+                  </div>`
+          });
+        } catch (emailErr) {
+          console.error('Failed to send hiring email:', emailErr);
+        }
       }
     }
 
@@ -109,4 +142,3 @@ export const updateApplicationStatus = async (req, res, next) => {
     next(err);
   }
 };
-

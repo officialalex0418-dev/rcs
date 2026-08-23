@@ -229,9 +229,9 @@ const JobForm = () => {
              <button
                type="submit"
                disabled={loading}
-               className="flex items-center gap-2 bg-slate-900 text-white px-10 py-3.5 rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl shadow-slate-900/10 disabled:opacity-50"
+               className="flex items-center gap-2 bg-slate-900 text-white px-10 py-3.5 rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-emerald-600 transition-all shadow-xl shadow-slate-900/10 disabled:opacity-50"
              >
-               {loading ? 'Processing...' : <><Save size={18} /> Save Vacancy</>}
+               {loading ? 'Publishing...' : <><Save size={18} /> Publish Vacancy</>}
              </button>
           </div>
         </form>

@@ -11,7 +11,20 @@ export const getEmployees = async (req, res, next) => {
 
 export const createEmployee = async (req, res, next) => {
   try {
-    const employee = await User.create(req.body);
+    // Generate RCS ID
+    const lastUser = await User.findOne({ employeeId: /^RCS/ }).sort({ employeeId: -1 });
+    let newId = 'RCS001';
+    if (lastUser && lastUser.employeeId) {
+      const currentNum = parseInt(lastUser.employeeId.replace('RCS', ''));
+      newId = `RCS${(currentNum + 1).toString().padStart(3, '0')}`;
+    }
+
+    const employee = await User.create({
+      ...req.body,
+      employeeId: newId,
+      password: req.body.password || 'RCS@2026' // Default password if not provided
+    });
+
     res.status(201).json({ success: true, data: employee });
   } catch (err) {
     next(err);

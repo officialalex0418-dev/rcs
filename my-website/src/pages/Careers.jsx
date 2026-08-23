@@ -11,7 +11,10 @@ const Careers = () => {
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const backendUrl = import.meta.env.VITE_API_URL || '';
+        let backendUrl = import.meta.env.VITE_API_URL || '';
+        if (backendUrl.endsWith('/')) {
+          backendUrl = backendUrl.slice(0, -1);
+        }
         const response = await fetch(`${backendUrl}/api/careers/jobs`);
         const data = await response.json();
         if (data.success) {

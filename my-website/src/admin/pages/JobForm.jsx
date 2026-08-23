@@ -104,6 +104,7 @@ const JobForm = () => {
       }
 
       if (response.ok) {
+        alert(id ? 'Vacancy updated successfully!' : 'Vacancy published successfully!');
         navigate('/admin/careers');
       } else {
         alert(data.message || 'Failed to save job');

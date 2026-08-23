@@ -24,12 +24,34 @@ export const getJobs = async (req, res, next) => {
 
 export const createJob = async (req, res, next) => {
   try {
-    console.log('Creating job with body:', req.body);
-    const job = await Job.create({ ...req.body, createdBy: req.user.id });
-    console.log('Job created successfully:', job._id);
+    console.log('--- NEW VACANCY PUBLISH ATTEMPT ---');
+    console.log('Auth User ID:', req.user?.id);
+    console.log('Payload:', JSON.stringify(req.body, null, 2));
+
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ success: false, message: 'Authentication failed. User ID missing.' });
+    }
+
+    const jobData = { ...req.body, createdBy: req.user.id };
+
+    const job = await Job.create(jobData);
+
+    console.log('SUCCESS: Job created with ID:', job._id);
     res.status(201).json({ success: true, data: job });
   } catch (err) {
-    console.error('Error in createJob:', err);
+    console.error('ERROR in createJob:', err);
+
+    // Check for Mongoose validation errors
+    if (err.name === 'ValidationError') {
+      const messages = Object.values(err.errors).map(val => val.message);
+      return res.status(400).json({ success: false, message: messages.join(', ') });
+    }
+
+    // Check for duplicate slug
+    if (err.code === 11000) {
+      return res.status(400).json({ success: false, message: 'A job with this title already exists. Please try a different title.' });
+    }
+
     next(err);
   }
 };

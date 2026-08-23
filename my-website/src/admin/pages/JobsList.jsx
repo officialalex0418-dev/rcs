@@ -8,7 +8,10 @@ const JobsList = () => {
 
   const fetchJobs = async () => {
     try {
-      const backendUrl = import.meta.env.VITE_API_URL || '';
+      let backendUrl = import.meta.env.VITE_API_URL || '';
+      if (backendUrl.endsWith('/')) {
+        backendUrl = backendUrl.slice(0, -1);
+      }
       const token = localStorage.getItem('rcs_admin_token');
       const response = await fetch(`${backendUrl}/api/careers/jobs?admin=true`, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -29,7 +32,10 @@ const JobsList = () => {
   const handleStatusToggle = async (id, currentStatus) => {
     try {
       const newStatus = currentStatus === 'Active' ? 'Closed' : 'Active';
-      const backendUrl = import.meta.env.VITE_API_URL || '';
+      let backendUrl = import.meta.env.VITE_API_URL || '';
+      if (backendUrl.endsWith('/')) {
+        backendUrl = backendUrl.slice(0, -1);
+      }
       const token = localStorage.getItem('rcs_admin_token');
       const response = await fetch(`${backendUrl}/api/careers/jobs/${id}`, {
         method: 'PUT',

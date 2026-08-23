@@ -35,3 +35,23 @@
 
 ## Public Website
 The public site at `rcs.com.np` (simulated) fetches dynamic content for Careers and Gallery from the backend, ensuring content can be updated without code changes.
+
+## Deployment (cPanel)
+
+### 1. Build the Project
+Run the following command in the `my-website` directory:
+```bash
+npm run build
+```
+This generates a `dist` folder.
+
+### 2. Upload to cPanel
+1. Log in to your cPanel File Manager.
+2. Navigate to `public_html` (or your subdomain folder).
+3. Upload all files and folders *inside* the `dist` directory.
+4. Ensure the `.htaccess` file is also uploaded. This handles the Single Page Application (SPA) routing.
+
+### 3. Troubleshooting "Not Loading"
+- **Relative Paths**: We have configured `vite.config.js` with `base: './'` to ensure assets load correctly if the site is in a subfolder.
+- **Routing**: If you get 404s on subpages, verify that `.htaccess` is present and contains the rewrite rules.
+- **Cache**: Clear your browser cache or use Incognito mode after re-uploading.

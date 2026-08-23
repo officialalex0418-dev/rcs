@@ -10,8 +10,7 @@ import {
   ArrowRight,
   Plus,
   Zap,
-  BarChart3,
-  TrendingDown
+  BarChart3
 } from 'lucide-react';
 
 const statColors = {
@@ -43,8 +42,9 @@ const AdminDashboard = () => {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();
-        if (data.success) {
-          setStats(data.data);
+        if (data.success && data.data) {
+          // Use spread to preserve defaults if some keys are missing from API
+          setStats(prev => ({ ...prev, ...data.data }));
         }
       } catch (err) {
         console.error('Failed to fetch dashboard stats:', err);
@@ -54,7 +54,6 @@ const AdminDashboard = () => {
     };
     fetchStats();
 
-    // Efficient Polling: Refresh stats every 30 seconds
     const interval = setInterval(fetchStats, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -65,7 +64,7 @@ const AdminDashboard = () => {
     { label: 'Live Vacancies', value: stats.openVacancies, icon: Briefcase, color: 'rose', sub: 'Hiring active' },
     { label: 'Applications', value: stats.totalApplications, icon: Users, color: 'purple', sub: 'In recruitment funnel' },
     { label: 'Pending Tasks', value: stats.activeTasks, icon: Zap, color: 'emerald', sub: 'Team execution' },
-    { label: 'Payroll Paid', value: `Rs. ${stats.totalPaidPayroll.toLocaleString()}`, icon: TrendingUp, color: 'indigo', sub: 'Financial summary' },
+    { label: 'Payroll Paid', value: `Rs. ${(stats.totalPaidPayroll || 0).toLocaleString()}`, icon: TrendingUp, color: 'indigo', sub: 'Financial summary' },
   ];
 
   return (
@@ -87,7 +86,7 @@ const AdminDashboard = () => {
         {statCards.map((stat, i) => (
           <div key={i} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 hover:border-blue-500/30 transition-all group">
             <div className="flex justify-between items-start mb-4">
-              <div className={`p-3 rounded-2xl ${statColors[stat.color]} group-hover:scale-110 transition-transform`}>
+              <div className={`p-3 rounded-2xl ${statColors[stat.color] || 'bg-slate-50 text-slate-600'} group-hover:scale-110 transition-transform`}>
                 <stat.icon size={24} />
               </div>
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Global</span>
@@ -99,13 +98,12 @@ const AdminDashboard = () => {
         ))}
       </div>
 
-      {/* Placeholder for Recent Activity and System Status */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
          <div className="lg:col-span-2 bg-white rounded-3xl border border-slate-200 p-8">
             <h2 className="text-xl font-black text-slate-900 mb-6 tracking-tight">Operations Stream</h2>
             <div className="flex flex-col items-center justify-center py-20 text-slate-400">
                <BarChart3 size={48} className="mb-4 opacity-20" />
-               <p className="text-sm font-bold uppercase tracking-widest text-xs">Activity Feed coming in next update</p>
+               <p className="text-[10px] font-black uppercase tracking-widest">Activity Feed coming in next update</p>
             </div>
          </div>
          <div className="space-y-6">

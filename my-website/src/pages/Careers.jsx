@@ -106,7 +106,7 @@ const Careers = () => {
             </ul>
           </div>
           <div className="aspect-video bg-gray-200 rounded-2xl overflow-hidden relative">
-            <img src="/team1.png" alt="RCS Team Collaboration" className="w-full h-full object-cover" />
+            <img src="team1.png" alt="RCS Team Collaboration" className="w-full h-full object-cover" />
           </div>
         </div>
       </section>

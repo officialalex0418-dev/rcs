@@ -44,3 +44,8 @@ VITE_EMAILJS_PUBLIC_KEY=
 The site includes route-level title/description/canonical/Open Graph metadata, Organization and WebSite structured data, `public/robots.txt`, and `public/sitemap.xml`.
 
 Because the app uses browser routes, configure the production host to return `index.html` for unknown application routes. That keeps direct links such as `/projects/business-sarthi` working after deployment.
+
+### cPanel Specifics
+The project is configured to use relative asset paths (`base: './'` in `vite.config.js`). When deploying to cPanel:
+1. Upload the *contents* of the `dist` folder.
+2. Ensure `.htaccess` (from the `public` folder) is in the root of your web directory.

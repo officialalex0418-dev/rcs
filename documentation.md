@@ -59,16 +59,24 @@ This generates the `dist` folder.
 - The Worker script at `src/worker.js` handles serving static assets from the `dist` folder and provides SPA routing (mapping unknown paths to `index.html`).
 - Ensure the Worker is routed to `rcs.com.np/*` in the Cloudflare Dashboard.
 
-## CI/CD (GitHub Actions)
+## CI/CD (Cloudflare Automatic Deployment)
 
-The frontend is configured to deploy automatically to Cloudflare whenever you push to the `main` branch.
+The frontend is configured to deploy automatically via Cloudflare's GitHub integration.
 
-### 1. Set up GitHub Secrets
-Go to your GitHub repository -> **Settings** -> **Secrets and variables** -> **Actions** and add the following secrets:
-- `CLOUDFLARE_API_TOKEN`: Create a token at [dash.cloudflare.com/profile/api-tokens](https://dash.cloudflare.com/profile/api-tokens) using the **"Edit Cloudflare Workers"** template.
-- `CLOUDFLARE_ACCOUNT_ID`: Found on your Cloudflare dashboard overview page.
-- `VITE_API_URL`: Your backend API URL (e.g., `https://rcs-ajbn.onrender.com`).
-- `VITE_EMAILJS_SERVICE_ID`, `VITE_EMAILJS_TEMPLATE_ID`, `VITE_EMAILJS_PUBLIC_KEY`: From your EmailJS dashboard.
+### 1. Connection
+1. In the **Cloudflare Dashboard**, go to **Workers & Pages**.
+2. Connect your GitHub repository and select the `rcs` repo.
+3. Configure the following build settings:
+   - **Project Name**: `rcs`
+   - **Production branch**: `main`
+   - **Build command**: `npm run build`
+   - **Build output directory**: `dist`
+   - **Root directory**: `my-website`
+
+### 2. Environment Variables
+Ensure the following variables are set in the Cloudflare Dashboard under **Settings** -> **Environment Variables**:
+- `VITE_API_URL`: `https://rcs-ajbn.onrender.com`
+- `VITE_EMAILJS_SERVICE_ID`, `VITE_EMAILJS_TEMPLATE_ID`, `VITE_EMAILJS_PUBLIC_KEY`: Your EmailJS settings.
 
 ### 4. Troubleshooting
 - **Hello World appearing**: If you see "Hello world", it means the default starter worker is active. Running `npm run deploy` will replace it with the RCS project worker.

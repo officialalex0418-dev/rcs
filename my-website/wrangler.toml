@@ -1,9 +1,0 @@
-name = "rcs"
-compatibility_date = "2024-01-01"
-pages_build_output_dir = "dist"
-
-[assets]
-directory = "./dist"
-
-# Note: For Cloudflare Pages, routing is handled by public/_redirects.
-# Manual [site] configuration is not required for Pages projects.

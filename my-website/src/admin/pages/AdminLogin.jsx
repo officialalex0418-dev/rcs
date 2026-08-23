@@ -8,16 +8,6 @@ const AdminLogin = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Inject Tailwind CDN
-  useEffect(() => {
-    if (!document.getElementById('tailwind-cdn')) {
-      const script = document.createElement('script');
-      script.id = 'tailwind-cdn';
-      script.src = 'https://cdn.tailwindcss.com';
-      document.head.appendChild(script);
-    }
-  }, []);
-
   const handleSubmit = (e) => {
     e.preventDefault();
     setLoading(true);

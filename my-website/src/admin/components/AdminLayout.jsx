@@ -19,16 +19,6 @@ const AdminLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Inject Tailwind CDN for Admin UI
-  useEffect(() => {
-    if (!document.getElementById('tailwind-cdn')) {
-      const script = document.createElement('script');
-      script.id = 'tailwind-cdn';
-      script.src = 'https://cdn.tailwindcss.com';
-      document.head.appendChild(script);
-    }
-  }, []);
-
   const handleLogout = () => {
     localStorage.removeItem('rcs_admin_token');
     navigate('/admin/login');

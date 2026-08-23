@@ -41,68 +41,64 @@ function ScrollToTop() {
 }
 
 function Site() {
-  const { pathname } = useLocation();
-  const isAdmin = pathname.startsWith('/admin');
-
-  if (isAdmin) {
-    return (
-      <div className="app-shell">
-        <ScrollToTop />
-        <main>
-          <Routes>
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route
-              path="/admin"
-              element={
-                <ProtectedRoute>
-                  <AdminLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<AdminDashboard />} />
-              <Route path="projects" element={<ProjectManager />} />
-              <Route path="inquiries" element={<InquiriesList />} />
-              <Route path="employees" element={<EmployeeManager />} />
-              <Route path="gallery" element={<GalleryManager />} />
-              <Route path="tasks" element={<TaskManager />} />
-              <Route path="payroll" element={<PayrollManager />} />
-              <Route path="reports" element={<Reports />} />
-              <Route path="support" element={<SupportManager />} />
-              <Route path="settings" element={<div className="p-8 text-2xl font-bold">System Settings Coming Soon</div>} />
-              <Route path="careers" element={<JobsList />} />
-              <Route path="careers/new" element={<JobForm />} />
-              <Route path="careers/edit/:id" element={<JobForm />} />
-              <Route path="applications" element={<ApplicationsList />} />
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </main>
-      </div>
-    );
-  }
-
   return (
     <div className="app-shell">
       <ScrollToTop />
-      <Navbar />
-      <main>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/services" element={<Services />} />
-          <Route path="/projects" element={<Projects />} />
-          <Route path="/projects/:slug" element={<ProjectDetail />} />
-          <Route path="/products" element={<Products />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/careers" element={<Careers />} />
-          <Route path="/careers/:slug" element={<CareerDetail />} />
-          <Route path="/insights" element={<Insights />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/privacy" element={<Legal type="privacy" />} />
-          <Route path="/terms" element={<Legal type="terms" />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </main>
-      <Footer />
+      <Routes>
+        {/* Admin Portal Routes */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <AdminLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<AdminDashboard />} />
+          <Route path="projects" element={<ProjectManager />} />
+          <Route path="inquiries" element={<InquiriesList />} />
+          <Route path="employees" element={<EmployeeManager />} />
+          <Route path="gallery" element={<GalleryManager />} />
+          <Route path="tasks" element={<TaskManager />} />
+          <Route path="payroll" element={<PayrollManager />} />
+          <Route path="reports" element={<Reports />} />
+          <Route path="support" element={<SupportManager />} />
+          <Route path="settings" element={<div className="p-8 text-2xl font-bold">System Settings Coming Soon</div>} />
+          <Route path="careers" element={<JobsList />} />
+          <Route path="careers/new" element={<JobForm />} />
+          <Route path="careers/edit/:id" element={<JobForm />} />
+          <Route path="applications" element={<ApplicationsList />} />
+        </Route>
+
+        {/* Public Website Routes */}
+        <Route
+          path="/*"
+          element={
+            <>
+              <Navbar />
+              <main>
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/services" element={<Services />} />
+                  <Route path="/projects" element={<Projects />} />
+                  <Route path="/projects/:slug" element={<ProjectDetail />} />
+                  <Route path="/products" element={<Products />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/careers" element={<Careers />} />
+                  <Route path="/careers/:slug" element={<CareerDetail />} />
+                  <Route path="/insights" element={<Insights />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/privacy" element={<Legal type="privacy" />} />
+                  <Route path="/terms" element={<Legal type="terms" />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </main>
+              <Footer />
+            </>
+          }
+        />
+      </Routes>
     </div>
   );
 }

@@ -1,2 +1,1 @@
-# SPA Fallback
-/* /index.html 200
+# This file is intentionally empty to allow Cloudflare Workers Assets to handle SPA routing via wrangler config.

@@ -63,12 +63,25 @@ const JobsList = () => {
         backendUrl = backendUrl.slice(0, -1);
       }
       const token = localStorage.getItem('rcs_admin_token');
+
+      console.log(`Attempting to delete job: ${id} at ${backendUrl}/api/careers/jobs/${id}`);
+
       const response = await fetch(`${backendUrl}/api/careers/jobs/${id}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
       });
 
-      const data = await response.json();
+      const text = await response.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        console.error('Server response was not JSON:', text);
+        throw new Error(`Server returned an invalid response (${response.status}). Please ensure the backend is updated and running.`);
+      }
 
       if (response.ok) {
         alert('Vacancy deleted successfully');
@@ -78,7 +91,7 @@ const JobsList = () => {
       }
     } catch (err) {
       console.error('Failed to delete job:', err);
-      alert('Network error');
+      alert(`Delete Error: ${err.message}`);
     }
   };
 

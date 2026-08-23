@@ -39,22 +39,29 @@
 ## Public Website
 The public site at `rcs.com.np` (simulated) fetches dynamic content for Careers and Gallery from the backend, ensuring content can be updated without code changes.
 
-## Deployment (cPanel)
+## Deployment (Cloudflare Workers / Pages)
 
 ### 1. Build the Project
 Run the following command in the `my-website` directory:
 ```bash
 npm run build
 ```
-This generates a `dist` folder.
+This generates a `dist` folder with optimized and hashed assets.
 
-### 2. Upload to cPanel
-1. Log in to your cPanel File Manager.
-2. Navigate to `public_html` (or your subdomain folder).
-3. Upload all files and folders *inside* the `dist` directory.
-4. Ensure the `.htaccess` file is also uploaded. This handles the Single Page Application (SPA) routing.
+### 2. Deploy to Cloudflare
+We use Cloudflare for frontend hosting to ensure high performance and reliable SPA routing.
 
-### 3. Troubleshooting "Not Loading"
-- **Relative Paths**: We have configured `vite.config.js` with `base: './'` to ensure assets load correctly if the site is in a subfolder.
-- **Routing**: If you get 404s on subpages, verify that `.htaccess` is present and contains the rewrite rules.
-- **Cache**: Clear your browser cache or use Incognito mode after re-uploading.
+#### Option A: Cloudflare Pages (Recommended)
+1. Connect your GitHub repository to Cloudflare Pages.
+2. Set the build command to `npm run build` and the output directory to `dist`.
+3. The `public/_redirects` file will automatically handle SPA routing.
+
+#### Option B: Manual Wrangler Deployment
+If you are using Cloudflare Workers directly:
+1. Install Wrangler: `npm install -g wrangler`
+2. Login: `npx wrangler login`
+3. Deploy: `npx wrangler pages deploy dist`
+
+### 3. Troubleshooting
+- **Cache**: If changes don't appear, go to the Cloudflare dashboard and "Purge Everything" under Caching.
+- **Environment Variables**: Ensure `VITE_API_URL` is set in the Cloudflare Dashboard under Settings -> Environment Variables.

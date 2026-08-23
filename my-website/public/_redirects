@@ -1,1 +1,2 @@
-# This file is intentionally empty to allow Cloudflare Workers Assets to handle SPA routing via wrangler config.
+# SPA routing for Cloudflare Pages
+/*    /index.html   200

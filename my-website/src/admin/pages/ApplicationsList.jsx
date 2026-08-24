@@ -1,10 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Eye, Mail, Phone, Calendar, Filter, CheckCircle2, User, FileText, Download, UserPlus, X, ShieldCheck } from 'lucide-react';
+import {
+  Search, Eye, Mail, Phone, Calendar, Filter,
+  CheckCircle2, User, FileText, Download, UserPlus,
+  X, ShieldCheck, Briefcase, LayoutGrid, Send, Clock,
+  ChevronDown, MoreVertical
+} from 'lucide-react';
 
 const ApplicationsList = () => {
   const [applications, setApplications] = useState([]);
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
   const [filterJob, setFilterJob] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
 
@@ -12,11 +18,19 @@ const ApplicationsList = () => {
 
   const fetchData = async () => {
     try {
-      const backendUrl = import.meta.env.VITE_API_URL || '';
+      setLoading(true);
+      let backendUrl = import.meta.env.VITE_API_URL || '';
+      if (backendUrl.endsWith('/')) {
+        backendUrl = backendUrl.slice(0, -1);
+      }
       const token = localStorage.getItem('rcs_admin_token');
 
+      const queryParams = new URLSearchParams();
+      if (filterJob) queryParams.append('job', filterJob);
+      if (filterStatus) queryParams.append('status', filterStatus);
+
       const [appRes, jobRes] = await Promise.all([
-        fetch(`${backendUrl}/api/careers/applications?job=${filterJob}&status=${filterStatus}`, {
+        fetch(`${backendUrl}/api/careers/applications?${queryParams.toString()}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         }),
         fetch(`${backendUrl}/api/careers/jobs?admin=true`, {
@@ -42,7 +56,10 @@ const ApplicationsList = () => {
 
   const handleStatusChange = async (id, newStatus) => {
     try {
-      const backendUrl = import.meta.env.VITE_API_URL || '';
+      let backendUrl = import.meta.env.VITE_API_URL || '';
+      if (backendUrl.endsWith('/')) {
+        backendUrl = backendUrl.slice(0, -1);
+      }
       const token = localStorage.getItem('rcs_admin_token');
       const response = await fetch(`${backendUrl}/api/careers/applications/${id}/status`, {
         method: 'PATCH',
@@ -75,6 +92,19 @@ const ApplicationsList = () => {
       default: return 'bg-amber-50 text-amber-700 border-amber-100';
     }
   };
+
+  const filteredApplications = applications.filter(app => {
+    const fullName = `${app.firstName} ${app.lastName}`.toLowerCase();
+    return fullName.includes(searchTerm.toLowerCase()) ||
+           app.email.toLowerCase().includes(searchTerm.toLowerCase());
+  });
+
+  const stats = [
+    { label: 'Total Vacancies', value: jobs.length, sub: 'All time posted', icon: Briefcase, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { label: 'Active Vacancies', value: jobs.filter(j => j.status === 'Active').length, sub: 'Currently active', icon: LayoutGrid, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { label: 'Applications Received', value: applications.length, sub: 'Total applications', icon: Send, color: 'text-purple-600', bg: 'bg-purple-50' },
+    { label: 'Expired Vacancies', value: jobs.filter(j => j.status === 'Closed' || j.status === 'Archived').length, sub: 'No longer active', icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' }
+  ];
 
   return (
     <div className="p-8 bg-slate-50 min-h-screen font-sans relative">
@@ -118,6 +148,24 @@ const ApplicationsList = () => {
         </div>
       </div>
 
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        {stats.map((stat, i) => (
+          <div key={i} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-5">
+            <div className={`w-14 h-14 rounded-2xl ${stat.bg} ${stat.color} flex items-center justify-center`}>
+              <stat.icon size={28} />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">{stat.label}</p>
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-black text-slate-900">{stat.value}</span>
+                <span className="text-[10px] font-bold text-slate-400">{stat.sub}</span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
       {/* Filters */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <div className="relative">
@@ -126,30 +174,38 @@ const ApplicationsList = () => {
             type="text"
             placeholder="Search by candidate name..."
             className="w-full pl-12 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-blue-500/10 transition-all text-sm font-bold"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <select
-          className="px-4 py-3.5 bg-white border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-blue-500/10 transition-all text-sm font-bold appearance-none cursor-pointer"
-          value={filterJob}
-          onChange={(e) => setFilterJob(e.target.value)}
-        >
-          <option value="">All Job Vacancies</option>
-          {jobs.map(job => <option key={job._id} value={job._id}>{job.title}</option>)}
-        </select>
-        <select
-          className="px-4 py-3.5 bg-white border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-blue-500/10 transition-all text-sm font-bold appearance-none cursor-pointer"
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
-        >
-          <option value="">All Pipeline Stages</option>
-          <option value="NEW">New Application</option>
-          <option value="SHORTLISTED">Shortlisted</option>
-          <option value="INTERVIEW_ROUND_1">Interview Round 1</option>
-          <option value="INTERVIEW_ROUND_2">Interview Round 2</option>
-          <option value="INTERVIEW_ROUND_3">Interview Round 3</option>
-          <option value="SELECTED">Final Selection</option>
-          <option value="HIRED">Hired (Onboarded)</option>
-        </select>
+        <div className="relative">
+          <select
+            className="w-full px-4 py-3.5 bg-white border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-blue-500/10 transition-all text-sm font-bold appearance-none cursor-pointer"
+            value={filterJob}
+            onChange={(e) => setFilterJob(e.target.value)}
+          >
+            <option value="">All Job Vacancies</option>
+            {jobs.map(job => <option key={job._id} value={job._id}>{job.title}</option>)}
+          </select>
+          <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
+        </div>
+        <div className="relative">
+          <select
+            className="w-full px-4 py-3.5 bg-white border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-blue-500/10 transition-all text-sm font-bold appearance-none cursor-pointer"
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+          >
+            <option value="">All Pipeline Stages</option>
+            <option value="NEW">New Application</option>
+            <option value="SHORTLISTED">Shortlisted</option>
+            <option value="INTERVIEW_ROUND_1">Interview Round 1</option>
+            <option value="INTERVIEW_ROUND_2">Interview Round 2</option>
+            <option value="INTERVIEW_ROUND_3">Interview Round 3</option>
+            <option value="SELECTED">Final Selection</option>
+            <option value="HIRED">Hired (Onboarded)</option>
+          </select>
+          <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
+        </div>
       </div>
 
       <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
@@ -166,9 +222,9 @@ const ApplicationsList = () => {
             <tbody className="divide-y divide-slate-50">
               {loading ? (
                 <tr><td colSpan="4" className="px-8 py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">Scanning Applicant Pool...</td></tr>
-              ) : applications.length === 0 ? (
+              ) : filteredApplications.length === 0 ? (
                 <tr><td colSpan="4" className="px-8 py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">No applicants found for this criteria</td></tr>
-              ) : applications.map((app) => (
+              ) : filteredApplications.map((app) => (
                 <tr key={app._id} className="hover:bg-slate-50/50 transition-all group">
                   <td className="px-8 py-6">
                     <div className="flex items-center gap-4">
@@ -219,8 +275,8 @@ const ApplicationsList = () => {
                           <Download size={18} />
                         </a>
                       )}
-                      <button className="p-2.5 bg-slate-50 text-slate-500 rounded-xl hover:bg-slate-900 hover:text-white transition-all shadow-sm">
-                        <FileText size={18} />
+                      <button className="p-2 text-slate-400 hover:text-slate-900 transition-all rounded-lg hover:bg-slate-100">
+                        <MoreVertical size={18} />
                       </button>
                     </div>
                   </td>

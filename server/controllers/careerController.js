@@ -82,6 +82,10 @@ export const deleteJob = async (req, res, next) => {
 // Applications
 export const applyForJob = async (req, res, next) => {
   try {
+    console.log('--- NEW JOB APPLICATION ---');
+    console.log('Body:', req.body);
+    console.log('File:', req.file);
+
     const applicationData = { ...req.body };
 
     if (req.file) {
@@ -93,8 +97,10 @@ export const applyForJob = async (req, res, next) => {
     }
 
     const application = await Application.create(applicationData);
+    console.log('SUCCESS: Application saved with ID:', application._id);
     res.status(201).json({ success: true, data: application });
   } catch (err) {
+    console.error('ERROR in applyForJob:', err);
     next(err);
   }
 };
@@ -102,12 +108,17 @@ export const applyForJob = async (req, res, next) => {
 export const getApplications = async (req, res, next) => {
   try {
     const filters = {};
-    if (req.query.job) filters.job = req.query.job;
-    if (req.query.status) filters.status = req.query.status;
+    if (req.query.job && req.query.job !== '') filters.job = req.query.job;
+    if (req.query.status && req.query.status !== '') filters.status = req.query.status;
+
+    console.log('Fetching applications with filters:', filters);
 
     const applications = await Application.find(filters).populate('job').sort('-createdAt');
+    console.log(`Found ${applications.length} applications`);
+
     res.status(200).json({ success: true, data: applications });
   } catch (err) {
+    console.error('ERROR in getApplications:', err);
     next(err);
   }
 };

@@ -93,6 +93,17 @@ const ApplicationsList = () => {
     }
   };
 
+  const getResumeUrl = (url) => {
+    if (!url) return '#';
+    let backendUrl = import.meta.env.VITE_API_URL || '';
+    if (backendUrl.endsWith('/')) {
+      backendUrl = backendUrl.slice(0, -1);
+    }
+    // Ensure url starts with a slash if it doesn't
+    const cleanUrl = url.startsWith('/') ? url : `/${url}`;
+    return `${backendUrl}${cleanUrl}`;
+  };
+
   const filteredApplications = applications.filter(app => {
     const fullName = `${app.firstName} ${app.lastName}`.toLowerCase();
     return fullName.includes(searchTerm.toLowerCase()) ||
@@ -265,15 +276,25 @@ const ApplicationsList = () => {
                         <option value="REJECTED">Reject</option>
                       </select>
                       {app.resume?.url && (
-                        <a
-                          href={`${import.meta.env.VITE_API_URL || ''}${app.resume.url}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-2.5 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm"
-                          title="Download Resume"
-                        >
-                          <Download size={18} />
-                        </a>
+                        <div className="flex gap-2">
+                          <a
+                            href={getResumeUrl(app.resume.url)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
+                            title="View Resume"
+                          >
+                            <Eye size={18} />
+                          </a>
+                          <a
+                            href={getResumeUrl(app.resume.url)}
+                            download={app.resume.fileName || 'resume'}
+                            className="p-2.5 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                            title="Download Resume"
+                          >
+                            <Download size={18} />
+                          </a>
+                        </div>
                       )}
                       <button className="p-2 text-slate-400 hover:text-slate-900 transition-all rounded-lg hover:bg-slate-100">
                         <MoreVertical size={18} />

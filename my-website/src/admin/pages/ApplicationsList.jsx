@@ -95,13 +95,16 @@ const ApplicationsList = () => {
 
   const getResumeUrl = (url) => {
     if (!url) return '#';
-    let backendUrl = import.meta.env.VITE_API_URL || '';
-    if (backendUrl.endsWith('/')) {
-      backendUrl = backendUrl.slice(0, -1);
+    let base = import.meta.env.VITE_API_URL || '';
+    if (base.endsWith('/')) {
+      base = base.slice(0, -1);
     }
-    // Ensure url starts with a slash if it doesn't
+    // If the API URL ends with /api, strip it for static file access
+    if (base.endsWith('/api')) {
+      base = base.slice(0, -4);
+    }
     const cleanUrl = url.startsWith('/') ? url : `/${url}`;
-    return `${backendUrl}${cleanUrl}`;
+    return `${base}${cleanUrl}`;
   };
 
   const filteredApplications = applications.filter(app => {

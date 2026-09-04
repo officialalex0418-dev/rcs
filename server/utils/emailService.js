@@ -3,9 +3,14 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const apiKey = process.env.RESEND_API_KEY;
+const resend = apiKey ? new Resend(apiKey) : null;
 
 export const sendOnboardingEmail = async (email, name, temporaryPassword) => {
+  if (!resend) {
+    console.warn('Onboarding email not sent: RESEND_API_KEY is missing.');
+    return { success: false, error: 'API Key missing' };
+  }
   try {
     const { data, error } = await resend.emails.send({
       from: 'RCS Onboarding <onboarding@resend.dev>', // Using resend.dev for testing/default

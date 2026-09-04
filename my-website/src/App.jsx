@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { BrowserRouter, Route, Routes, useLocation, Outlet } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useLocation, Outlet, Navigate } from "react-router-dom";
 import Footer from "./components/Footer";
 import Navbar from "./components/Navbar";
 import About from "./pages/About";
@@ -18,7 +18,7 @@ import CareerDetail from "./pages/CareerDetail";
 // Admin Pages
 import AdminLayout from "./admin/components/AdminLayout";
 import AdminDashboard from "./admin/pages/AdminDashboard";
-import AdminLogin from "./admin/pages/AdminLogin";
+import Login from "./admin/pages/Login";
 import ProtectedRoute from "./admin/components/ProtectedRoute";
 import JobsList from "./admin/pages/JobsList";
 import JobForm from "./admin/pages/JobForm";
@@ -32,6 +32,8 @@ import EmployeeManager from "./admin/pages/EmployeeManager";
 import TaskManager from "./admin/pages/TaskManager";
 import PayrollManager from "./admin/pages/PayrollManager";
 import SupportManager from "./admin/pages/SupportManager";
+import ChangePassword from "./pages/ChangePassword";
+import EmployeeDashboard from "./pages/EmployeeDashboard";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -56,14 +58,15 @@ function Site() {
     <>
       <ScrollToTop />
       <Routes>
-        {/* Admin Portal - Login */}
-        <Route path="/admin/login" element={<AdminLogin />} />
+        {/* Auth Routes */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/admin/login" element={<Navigate to="/login" replace />} />
 
         {/* Admin Portal - Protected Area */}
         <Route
           path="/admin"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['ADMIN', 'SUPER_ADMIN']}>
               <AdminLayout />
             </ProtectedRoute>
           }
@@ -85,6 +88,25 @@ function Site() {
           <Route path="careers/edit/:id" element={<JobForm />} />
           <Route path="applications" element={<ApplicationsList />} />
         </Route>
+
+        {/* Employee Portal */}
+        <Route
+          path="/change-password"
+          element={
+            <ProtectedRoute>
+              <ChangePassword />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={['STAFF']}>
+              <EmployeeDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/employee/dashboard" element={<Navigate to="/dashboard" replace />} />
 
         {/* Public Website */}
         <Route path="/" element={<PublicLayout />}>

@@ -1,119 +1,43 @@
-import React, { useEffect } from 'react';
-import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import {
-  LayoutDashboard,
-  Briefcase,
-  Users,
-  MessageSquare,
-  Image as ImageIcon,
-  Settings,
-  LogOut,
-  BarChart3,
-  Folder,
-  Bell,
-  Search,
-  User,
-  TrendingUp,
-  FileText
-} from 'lucide-react';
+import React from 'react';
+import { Outlet } from 'react-router-dom';
+import { Bell, Search, User } from 'lucide-react';
+import AdminSidebar from './AdminSidebar';
 
 const AdminLayout = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  const handleLogout = () => {
-    localStorage.removeItem('rcs_admin_token');
-    navigate('/admin/login');
-  };
-
-  const isActive = (path) => location.pathname === path || (path !== '/admin' && location.pathname.startsWith(path));
-
-  const navItems = [
-    { label: 'Dashboard', icon: LayoutDashboard, path: '/admin' },
-    { label: 'Projects', icon: Folder, path: '/admin/projects' },
-    { label: 'Inquiries', icon: MessageSquare, path: '/admin/inquiries' },
-    { label: 'Employees', icon: Users, path: '/admin/employees' },
-    { label: 'Vacancy', icon: Briefcase, path: '/admin/careers' },
-    { label: 'Applications', icon: FileText, path: '/admin/applications' },
-    { label: 'Gallery', icon: ImageIcon, path: '/admin/gallery' },
-    { label: 'Task Management', icon: Briefcase, path: '/admin/tasks' },
-    { label: 'Payroll', icon: TrendingUp, path: '/admin/payroll' },
-    { label: 'Reports', icon: BarChart3, path: '/admin/reports' },
-    { label: 'Support', icon: Bell, path: '/admin/support' },
-  ];
-
   return (
-    <div
-      className="flex h-screen bg-slate-50 font-sans text-slate-900 overflow-hidden"
-      style={{ minHeight: '100vh', width: '100%', display: 'flex' }}
-    >
+    <div className="flex h-screen bg-[#F8FAFC] font-sans text-slate-900 overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-64 bg-slate-900 text-slate-300 flex flex-col shadow-xl flex-shrink-0">
-        <div className="p-6 flex items-center gap-3 border-b border-slate-800">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">R</div>
-          <h2 className="text-xl font-bold text-white tracking-tight">RCS Admin</h2>
-        </div>
-
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          <p className="px-4 py-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Main Menu</p>
-          {navItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 group ${
-                isActive(item.path)
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20'
-                : 'hover:bg-slate-800 hover:text-white'
-              }`}
-            >
-              <item.icon size={20} className={isActive(item.path) ? 'text-white' : 'text-slate-500 group-hover:text-blue-400'} />
-              <span className="font-medium">{item.label}</span>
-            </Link>
-          ))}
-        </nav>
-
-        <div className="p-4 space-y-4 border-t border-slate-800">
-          <Link to="/admin/settings" className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition-colors group">
-            <Settings size={20} className="text-slate-500 group-hover:text-white" />
-            <span className="font-medium">Settings</span>
-          </Link>
-          <button
-            onClick={handleLogout}
-            className="flex items-center space-x-3 px-4 py-3 w-full rounded-lg text-red-400 hover:bg-red-500/10 transition-colors font-medium group"
-          >
-            <LogOut size={20} />
-            <span>Sign Out</span>
-          </button>
-        </div>
-      </aside>
+      <AdminSidebar />
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-slate-50">
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden ml-64">
         {/* Top Header */}
-        <header className="h-16 bg-white border-b border-slate-200 flex justify-between items-center px-8 z-10">
+        <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 flex justify-between items-center px-8 z-10 sticky top-0">
           <div className="flex items-center flex-1 max-w-xl">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <div className="relative w-full group">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors" size={18} />
               <input
                 type="text"
-                placeholder="Search anything..."
-                className="w-full pl-10 pr-4 py-2 bg-slate-100 border-none rounded-full text-sm focus:ring-2 focus:ring-blue-500/20 transition-all outline-none"
+                placeholder="Search resources, files, data..."
+                className="w-full pl-12 pr-4 py-2.5 bg-slate-100/50 border border-transparent rounded-2xl text-sm focus:bg-white focus:border-blue-500/20 focus:ring-4 focus:ring-blue-500/5 transition-all outline-none font-medium"
               />
             </div>
           </div>
 
-          <div className="flex items-center space-x-5">
-            <button className="relative p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all">
+          <div className="flex items-center space-x-6">
+            <button className="relative p-2.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all">
               <Bell size={20} />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+              <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
             </button>
+
             <div className="h-8 w-px bg-slate-200"></div>
-            <div className="flex items-center gap-3 group cursor-pointer">
+
+            <div className="flex items-center gap-4 group cursor-pointer p-1.5 pr-3 hover:bg-slate-50 rounded-2xl transition-all">
               <div className="text-right hidden sm:block">
                 <p className="text-sm font-bold text-slate-900 leading-none">Laxmi Admin</p>
-                <p className="text-[11px] text-slate-500 mt-1 uppercase font-bold tracking-tighter">Super Admin</p>
+                <p className="text-[10px] text-slate-400 mt-1 uppercase font-bold tracking-widest">Super Admin</p>
               </div>
-              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-blue-600/20 group-hover:scale-105 transition-transform">
                 <User size={20} />
               </div>
             </div>
@@ -121,7 +45,7 @@ const AdminLayout = () => {
         </header>
 
         {/* Page Area */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar">
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-8">
           <Outlet />
         </div>
       </main>
@@ -129,8 +53,8 @@ const AdminLayout = () => {
       <style dangerouslySetInnerHTML={{ __html: `
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
       `}} />
     </div>
   );

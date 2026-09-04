@@ -23,6 +23,28 @@
   text-rendering: optimizeLegibility;
 }
 
+@layer components {
+  .glass {
+    @apply bg-white/70 backdrop-blur-md border border-white/30 shadow-lg;
+  }
+
+  .premium-gradient {
+    background: linear-gradient(135deg, #3B82F6 0%, #4F46E5 55%, #7C3AED 100%);
+  }
+
+  .premium-card {
+    @apply bg-white rounded-[28px] border border-premium-border shadow-sm transition-all duration-300;
+  }
+
+  .premium-card:hover {
+    @apply shadow-xl -translate-y-1;
+  }
+
+  .premium-input {
+    @apply w-full h-[56px] px-12 rounded-[16px] border border-premium-border bg-white text-premium-text transition-all duration-200 focus:outline-none focus:border-premium-indigo focus:ring-4 focus:ring-premium-indigo/10;
+  }
+}
+
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; scroll-padding-top: 6rem; }
 body { margin: 0; min-width: 320px; overflow-x: hidden; background: var(--paper); color: var(--ink); }

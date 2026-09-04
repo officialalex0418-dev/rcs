@@ -1,22 +1,42 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Edit2, Trash2, Shield, Mail, Phone, Calendar, MapPin, CreditCard, Wallet, X, UserPlus, Save } from 'lucide-react';
+import {
+  Plus,
+  Search,
+  Edit2,
+  Trash2,
+  Mail,
+  Phone,
+  MapPin,
+  CreditCard,
+  Wallet,
+  Briefcase,
+  Building2,
+  Loader2,
+  AlertCircle
+} from 'lucide-react';
+import Button from '../components/Button';
+import Input from '../components/Input';
+import Modal from '../components/Modal';
 
 const EmployeeManager = () => {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [editingId, setId] = useState(null);
+  const [editingId, setEditingId] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
 
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    role: 'STAFF',
-    designation: '',
     phone: '',
     address: '',
     panNumber: '',
-    basicSalary: 0,
-    dailyAllowance: 0,
+    department: '',
+    designation: '',
+    basicSalary: '',
+    dailyAllowance: '',
   });
 
   const fetchEmployees = async () => {
@@ -30,6 +50,7 @@ const EmployeeManager = () => {
       if (data.success) setEmployees(data.data);
     } catch (err) {
       console.error('Failed to fetch employees:', err);
+      setError('Could not load personnel data.');
     } finally {
       setLoading(false);
     }
@@ -39,8 +60,23 @@ const EmployeeManager = () => {
     fetchEmployees();
   }, []);
 
+  const validateForm = () => {
+    if (!formData.name || !formData.email || !formData.phone) return 'Primary details are required.';
+    if (!/\S+@\S+\.\S+/.test(formData.email)) return 'Invalid email format.';
+    return null;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError(null);
+
     try {
       const backendUrl = import.meta.env.VITE_API_URL || '';
       const token = localStorage.getItem('rcs_admin_token');
@@ -56,176 +92,158 @@ const EmployeeManager = () => {
         body: JSON.stringify(formData)
       });
 
+      const data = await response.json();
       if (response.ok) {
         setShowModal(false);
-        setFormData({ name: '', email: '', role: 'STAFF', designation: '', phone: '', address: '', panNumber: '', basicSalary: 0, dailyAllowance: 0 });
-        setId(null);
+        resetForm();
         fetchEmployees();
+      } else {
+        setError(data.message || 'Failed to save employee profile.');
       }
     } catch (err) {
-      console.error('Failed to save employee:', err);
+      setError('Network error. Please check your connection.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleEdit = (emp) => {
-    setFormData(emp);
-    setId(emp._id);
+    setFormData({
+      name: emp.name || '',
+      email: emp.email || '',
+      phone: emp.phone || '',
+      address: emp.address || '',
+      panNumber: emp.panNumber || '',
+      department: emp.department || '',
+      designation: emp.designation || '',
+      basicSalary: emp.basicSalary || '',
+      dailyAllowance: emp.dailyAllowance || '',
+    });
+    setEditingId(emp._id);
     setShowModal(true);
   };
 
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      email: '',
+      phone: '',
+      address: '',
+      panNumber: '',
+      department: '',
+      designation: '',
+      basicSalary: '',
+      dailyAllowance: '',
+    });
+    setEditingId(null);
+    setError(null);
+  };
+
+  const filteredEmployees = employees.filter(emp =>
+    emp.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    emp.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    emp.designation?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
-    <div className="p-8 bg-slate-50 min-h-screen font-sans">
-      {/* Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[1000] flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-               <h2 className="text-xl font-black text-slate-900 tracking-tight">{editingId ? 'Refine Staff Profile' : 'Onboard New Employee'}</h2>
-               <button onClick={() => { setShowModal(false); setId(null); }} className="p-2 hover:bg-red-50 hover:text-red-500 rounded-xl transition-all"><X size={20} /></button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="p-8 space-y-6">
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Identity</label>
-                    <input required className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-blue-500/10 transition-all text-sm font-bold" placeholder="e.g. Ramesh Thapa" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Corporate Email</label>
-                    <input required type="email" className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-blue-500/10 transition-all text-sm font-bold" placeholder="name@rcs.com.np" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
-                  </div>
-               </div>
-
-               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Assigned Role</label>
-                    <select className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none" value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})}>
-                      <option value="STAFF">Staff</option>
-                      <option value="DEVELOPER">Developer</option>
-                      <option value="DESIGNER">Designer</option>
-                      <option value="PROJECT_MANAGER">Project Manager</option>
-                      <option value="ADMIN">Admin</option>
-                    </select>
-                  </div>
-                  <div className="space-y-1.5 col-span-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Current Designation</label>
-                    <input className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl outline-none text-sm font-bold" placeholder="e.g. Senior Backend Engineer" value={formData.designation} onChange={e => setFormData({...formData, designation: e.target.value})} />
-                  </div>
-               </div>
-
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Permanent Address</label>
-                    <div className="relative">
-                      <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                      <input className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl outline-none text-sm font-bold" placeholder="City, Country" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
-                    </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">PAN Identifier</label>
-                    <div className="relative">
-                      <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                      <input className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl outline-none text-sm font-bold" placeholder="9-digit PAN" value={formData.panNumber} onChange={e => setFormData({...formData, panNumber: e.target.value})} />
-                    </div>
-                  </div>
-               </div>
-
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-blue-50/50 rounded-3xl border border-blue-100/50">
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-blue-600 uppercase tracking-widest ml-1">Basic Salary (Monthly)</label>
-                    <div className="relative">
-                      <Wallet className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-400" size={16} />
-                      <input type="number" className="w-full pl-11 pr-4 py-3.5 bg-white border border-blue-100 rounded-2xl outline-none text-sm font-black text-blue-900" value={formData.basicSalary} onChange={e => setFormData({...formData, basicSalary: Number(e.target.value)})} />
-                    </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-blue-600 uppercase tracking-widest ml-1">Daily Allowance</label>
-                    <div className="relative">
-                      <Plus className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-400" size={16} />
-                      <input type="number" className="w-full pl-11 pr-4 py-3.5 bg-white border border-blue-100 rounded-2xl outline-none text-sm font-black text-blue-900" value={formData.dailyAllowance} onChange={e => setFormData({...formData, dailyAllowance: Number(e.target.value)})} />
-                    </div>
-                  </div>
-               </div>
-
-               <div className="flex justify-end gap-3 pt-4">
-                  <button type="button" onClick={() => setShowModal(false)} className="px-8 py-4 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-colors">Discard</button>
-                  <button type="submit" className="flex items-center gap-2 bg-slate-900 text-white px-10 py-4 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl shadow-slate-900/10"><Save size={16} /> Finalize Profile</button>
-               </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+    <div className="space-y-8 animate-in fade-in duration-500">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Staff Ecosystem</h1>
-          <p className="text-slate-500 font-medium">Coordinate and manage the heartbeat of RCS.</p>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Personnel Directory</h1>
+          <p className="text-slate-500 font-medium">Manage and monitor the RCS core team.</p>
         </div>
-        <button onClick={() => setShowModal(true)} className="flex items-center gap-2 bg-blue-600 px-5 py-2.5 rounded-xl text-sm font-bold text-white hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20">
-          <UserPlus size={18} />
-          Onboard Personnel
-        </button>
+        <Button
+          onClick={() => { resetForm(); setShowModal(true); }}
+          icon={Plus}
+          className="rounded-2xl px-6 py-3 shadow-blue-500/20"
+        >
+          Add New Employee
+        </Button>
       </div>
 
-      <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex items-center gap-4">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+      {/* Main Table Container */}
+      <div className="bg-white rounded-[2rem] shadow-sm border border-slate-200/60 overflow-hidden">
+        {/* Search & Filter Bar */}
+        <div className="p-6 border-b border-slate-100 bg-slate-50/30 flex items-center gap-4">
+          <div className="relative flex-1 max-w-md group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors" size={18} />
             <input
               type="text"
-              placeholder="Search staff database..."
-              className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500/20"
+              placeholder="Search by name, email, or role..."
+              className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/20 transition-all font-medium"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
         </div>
 
-        <div className="overflow-x-auto text-left">
-          <table className="w-full">
+        {/* Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-100 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                <th className="px-8 py-5">Personnel Profile</th>
-                <th className="px-8 py-5">Role & Identity</th>
-                <th className="px-8 py-5">Compensation</th>
-                <th className="px-8 py-5 text-right">Actions</th>
+              <tr className="bg-slate-50/50 border-b border-slate-100">
+                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Employee</th>
+                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Position & Unit</th>
+                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Compensation</th>
+                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
               {loading ? (
-                <tr><td colSpan="4" className="px-8 py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">Scanning Personnel Database...</td></tr>
-              ) : employees.length === 0 ? (
-                <tr><td colSpan="4" className="px-8 py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">No personnel records detected</td></tr>
-              ) : employees.map((emp) => (
-                <tr key={emp._id} className="hover:bg-slate-50/50 transition-all group">
+                <tr>
+                  <td colSpan="4" className="px-8 py-20 text-center">
+                    <Loader2 className="w-8 h-8 text-blue-600 animate-spin mx-auto mb-3" />
+                    <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Accessing Database...</p>
+                  </td>
+                </tr>
+              ) : filteredEmployees.length === 0 ? (
+                <tr>
+                  <td colSpan="4" className="px-8 py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">
+                    No personnel records match your search
+                  </td>
+                </tr>
+              ) : filteredEmployees.map((emp) => (
+                <tr key={emp._id} className="hover:bg-slate-50/80 transition-all group">
                   <td className="px-8 py-6">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 text-blue-600 flex items-center justify-center font-black text-lg">
+                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 text-blue-600 flex items-center justify-center font-black text-lg shadow-sm border border-white">
                         {emp.name.charAt(0)}
                       </div>
                       <div>
                         <p className="text-sm font-black text-slate-900 leading-tight mb-1">{emp.name}</p>
-                        <span className="text-xs text-slate-400 font-bold flex items-center gap-1.5"><Mail size={12} /> {emp.email}</span>
+                        <span className="text-xs text-slate-400 font-bold flex items-center gap-1.5 leading-none">
+                          <Mail size={12} className="text-slate-300" /> {emp.email}
+                        </span>
                       </div>
                     </div>
                   </td>
                   <td className="px-8 py-6">
-                    <div className="flex flex-col gap-1">
-                       <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 w-fit px-2 py-0.5 rounded">{emp.role}</span>
-                       <span className="text-xs font-bold text-slate-400 flex items-center gap-1.5">ID: {emp.employeeId || 'N/A'}</span>
+                    <div className="space-y-1.5">
+                       <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-100/50">
+                         {emp.designation || 'Staff'}
+                       </span>
+                       <p className="text-xs font-bold text-slate-400 flex items-center gap-1.5">
+                         <Building2 size={12} className="text-slate-300" /> {emp.department || 'General'}
+                       </p>
                     </div>
                   </td>
                   <td className="px-8 py-6">
                     <div className="flex flex-col">
-                       <span className="text-sm font-black text-slate-900">Rs. {emp.basicSalary?.toLocaleString()}</span>
+                       <span className="text-sm font-black text-slate-900">Rs. {Number(emp.basicSalary || 0).toLocaleString()}</span>
                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Base Monthly</span>
                     </div>
                   </td>
                   <td className="px-8 py-6 text-right">
-                    <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                      <button onClick={() => handleEdit(emp)} className="p-2.5 bg-slate-50 text-slate-500 rounded-xl hover:bg-slate-900 hover:text-white transition-all shadow-sm">
-                        <Edit2 size={18} />
+                    <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200">
+                      <button
+                        onClick={() => handleEdit(emp)}
+                        className="p-2.5 bg-white text-slate-500 rounded-xl hover:bg-slate-900 hover:text-white transition-all shadow-sm border border-slate-100"
+                      >
+                        <Edit2 size={16} />
                       </button>
-                      <button className="p-2.5 bg-slate-50 text-red-500 rounded-xl hover:bg-red-600 hover:text-white transition-all shadow-sm">
-                        <Trash2 size={18} />
+                      <button className="p-2.5 bg-white text-red-500 rounded-xl hover:bg-red-600 hover:text-white transition-all shadow-sm border border-slate-100">
+                        <Trash2 size={16} />
                       </button>
                     </div>
                   </td>
@@ -235,6 +253,112 @@ const EmployeeManager = () => {
           </table>
         </div>
       </div>
+
+      {/* Onboarding Modal */}
+      <Modal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        title={editingId ? 'Refine Employee Profile' : 'Onboard New Personnel'}
+      >
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {error && (
+            <div className="p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 text-red-600 text-sm font-bold">
+              <AlertCircle size={18} />
+              {error}
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              label="Full Name"
+              placeholder="e.g. Ramesh Thapa"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              required
+            />
+            <Input
+              label="Email Address"
+              type="email"
+              placeholder="name@rcs.com.np"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              required
+            />
+            <Input
+              label="Contact Number"
+              icon={Phone}
+              placeholder="+977-XXXXXXXXXX"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              required
+            />
+            <Input
+              label="PAN Identifier"
+              icon={CreditCard}
+              placeholder="9-digit PAN"
+              value={formData.panNumber}
+              onChange={(e) => setFormData({ ...formData, panNumber: e.target.value })}
+            />
+            <div className="col-span-2">
+              <Input
+                label="Permanent Address"
+                icon={MapPin}
+                placeholder="Street name, City, Country"
+                value={formData.address}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              />
+            </div>
+            <Input
+              label="Department"
+              icon={Building2}
+              placeholder="e.g. Engineering"
+              value={formData.department}
+              onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+            />
+            <Input
+              label="Designation"
+              icon={Briefcase}
+              placeholder="e.g. Senior Developer"
+              value={formData.designation}
+              onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
+            />
+            <Input
+              label="Basic Salary"
+              type="number"
+              icon={Wallet}
+              placeholder="Monthly Amount"
+              value={formData.basicSalary}
+              onChange={(e) => setFormData({ ...formData, basicSalary: e.target.value })}
+            />
+            <Input
+              label="Daily Allowance"
+              type="number"
+              icon={Plus}
+              placeholder="Per Day Amount"
+              value={formData.dailyAllowance}
+              onChange={(e) => setFormData({ ...formData, dailyAllowance: e.target.value })}
+            />
+          </div>
+
+          <div className="flex gap-3 pt-4 border-t border-slate-100 mt-6">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setShowModal(false)}
+              className="flex-1 rounded-xl"
+            >
+              Discard
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="flex-2 min-w-[160px] rounded-xl"
+            >
+              {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : editingId ? 'Update Profile' : 'Save Employee'}
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };

@@ -2,12 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Mail, ArrowRight, ShieldCheck } from 'lucide-react';
 
-const AdminLogin = () => {
+const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
   const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
@@ -17,12 +16,9 @@ const AdminLogin = () => {
 
     try {
       let backendUrl = import.meta.env.VITE_API_URL || '';
-      // Sanitize backendUrl: remove trailing slash if it exists
       if (backendUrl.endsWith('/')) {
         backendUrl = backendUrl.slice(0, -1);
       }
-
-      console.log('Attempting login at:', `${backendUrl}/api/auth/login`);
 
       const response = await fetch(`${backendUrl}/api/auth/login`, {
         method: 'POST',
@@ -34,7 +30,17 @@ const AdminLogin = () => {
 
       if (data.success) {
         localStorage.setItem('rcs_admin_token', data.token);
-        navigate('/admin');
+        localStorage.setItem('rcs_user', JSON.stringify(data.user));
+
+        if (data.mustChangePassword) {
+          navigate('/change-password');
+        } else if (data.user.role === 'ADMIN' || data.user.role === 'SUPER_ADMIN') {
+          navigate('/admin');
+        } else if (data.user.role === 'STAFF') {
+          navigate('/dashboard');
+        } else {
+          navigate('/dashboard');
+        }
       } else {
         setError(data.message || 'Login failed. Please try again.');
       }
@@ -51,7 +57,6 @@ const AdminLogin = () => {
       className="min-h-screen flex items-center justify-center bg-slate-950 p-4 font-sans relative"
       style={{ minHeight: '100vh', width: '100%', display: 'flex', backgroundColor: '#020617' }}
     >
-      {/* Background Decor */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[120px]"></div>
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-600/10 rounded-full blur-[120px]"></div>
@@ -64,7 +69,7 @@ const AdminLogin = () => {
               <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-blue-500/20 mb-6 rotate-3">
                 <ShieldCheck size={32} />
               </div>
-              <h1 className="text-3xl font-black text-slate-900 tracking-tight">Admin Login</h1>
+              <h1 className="text-3xl font-black text-slate-900 tracking-tight">RCS Solutions Login</h1>
               <p className="text-slate-500 mt-2 font-medium">Royal Consultancy Services</p>
             </div>
 
@@ -149,4 +154,4 @@ const AdminLogin = () => {
   );
 };
 
-export default AdminLogin;
+export default Login;

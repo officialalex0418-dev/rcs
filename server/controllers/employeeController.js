@@ -1,4 +1,6 @@
 import User from '../models/User.js';
+import crypto from 'crypto';
+import { sendOnboardingEmail } from '../utils/emailService.js';
 
 export const getEmployees = async (req, res, next) => {
   try {
@@ -19,13 +21,24 @@ export const createEmployee = async (req, res, next) => {
       newId = `RCS${(currentNum + 1).toString().padStart(3, '0')}`;
     }
 
+    // Generate secure 12-character random temporary password
+    const tempPassword = crypto.randomBytes(9).toString('base64').replace(/\+/g, '0').replace(/\//g, '1');
+
     const employee = await User.create({
       ...req.body,
       employeeId: newId,
-      password: req.body.password || 'RCS@2026' // Default password if not provided
+      password: tempPassword,
+      mustChangePassword: true
     });
 
-    res.status(201).json({ success: true, data: employee });
+    // Send onboarding email
+    await sendOnboardingEmail(employee.email, employee.name, tempPassword);
+
+    // Hide password in response
+    const employeeResponse = employee.toObject();
+    delete employeeResponse.password;
+
+    res.status(201).json({ success: true, data: employeeResponse });
   } catch (err) {
     next(err);
   }

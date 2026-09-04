@@ -26,6 +26,10 @@ const userSchema = new mongoose.Schema({
     enum: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'SALES', 'PROJECT_MANAGER', 'CONTENT_MANAGER', 'DEVELOPER', 'DESIGNER', 'STAFF'],
     default: 'STAFF'
   },
+  mustChangePassword: {
+    type: Boolean,
+    default: true
+  },
   designation: String,
   phone: String,
   address: String,

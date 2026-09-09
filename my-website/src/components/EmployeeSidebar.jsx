@@ -1,21 +1,28 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, CheckSquare, Layers, Timer, BarChart3,
   Wallet, PieChart, Calendar, FileStack, Settings,
   ChevronDown, Star, UserCheck, LogOut
 } from 'lucide-react';
+import { getProfilePic } from '../utils/auth';
 
 const EmployeeSidebar = () => {
-  const user = JSON.parse(localStorage.getItem('rcs_user')) || {};
+  const [user, setUser] = useState(JSON.parse(localStorage.getItem('rcs_user')) || {});
+
+  useEffect(() => {
+    const handleUpdate = (e) => setUser(e.detail);
+    window.addEventListener('rcs_user_update', handleUpdate);
+    return () => window.removeEventListener('rcs_user_update', handleUpdate);
+  }, []);
 
   return (
     <aside className="w-72 bg-white border-r border-slate-200/60 hidden xl:flex flex-col fixed top-0 h-screen p-8 z-20">
       <div className="flex items-center gap-3 mb-12">
-        <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
-           <span className="font-black text-xs">RCS</span>
+        <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/20 font-black text-xs">
+           RCS
         </div>
-        <span className="text-xl font-black tracking-tighter uppercase">RCS Solutions</span>
+        <span className="text-2xl font-black tracking-tighter uppercase">RCS</span>
       </div>
 
       <nav className="flex-1 space-y-2 text-slate-500">
@@ -34,7 +41,7 @@ const EmployeeSidebar = () => {
          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-slate-100 overflow-hidden border border-slate-200">
-                <img src={user.profilePicture ? (user.profilePicture.startsWith('http') ? user.profilePicture : `https://rcs-ajbn.onrender.com${user.profilePicture}`) : `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name || 'User'}`} alt="Avatar" className="w-full h-full object-cover" />
+                <img src={getProfilePic(user)} alt="Avatar" className="w-full h-full object-cover" />
               </div>
               <div className="max-w-[120px]">
                 <p className="text-sm font-black leading-none mb-1 truncate">{user.name || 'Employee'}</p>

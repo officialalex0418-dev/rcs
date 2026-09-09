@@ -7,6 +7,8 @@ import { apiFetch } from '../utils/api';
 import Button from '../admin/components/Button';
 import Input from '../admin/components/Input';
 
+import { syncUserData, getProfilePic } from '../utils/auth';
+
 const EmployeeSettings = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -66,13 +68,13 @@ const EmployeeSettings = () => {
       }
 
       const token = localStorage.getItem('rcs_admin_token');
-      const backendUrl = 'https://rcs-ajbn.onrender.com';
+      const backendUrl = import.meta.env.VITE_API_URL || 'https://rcs-ajbn.onrender.com';
+      const cleanUrl = backendUrl.endsWith('/') ? backendUrl.slice(0, -1) : backendUrl;
 
-      const response = await fetch(`${backendUrl}/api/auth/update-me`, {
+      const response = await fetch(`${cleanUrl}/api/auth/update-me`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`
-          // No Content-Type header here for FormData
         },
         body: data
       });
@@ -81,10 +83,7 @@ const EmployeeSettings = () => {
       if (result.success) {
         setMessage({ type: 'success', text: 'Profile updated successfully!' });
         setUser(result.data.user);
-        // Update local storage
-        localStorage.setItem('rcs_user', JSON.stringify(result.data.user));
-        // Refresh to apply changes globally
-        window.dispatchEvent(new Event('storage'));
+        syncUserData(result.data.user);
       } else {
         setMessage({ type: 'error', text: result.message || 'Update failed' });
       }
@@ -115,7 +114,7 @@ const EmployeeSettings = () => {
             <div className="relative group">
               <div className="w-32 h-32 rounded-[2rem] overflow-hidden bg-slate-100 border-4 border-white shadow-xl">
                 <img
-                  src={profilePreview || (user.profilePicture ? (user.profilePicture.startsWith('http') ? user.profilePicture : `https://rcs-ajbn.onrender.com${user.profilePicture}`) : `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`)}
+                  src={profilePreview || getProfilePic(user)}
                   alt="Profile"
                   className="w-full h-full object-cover"
                 />

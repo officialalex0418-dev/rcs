@@ -7,6 +7,7 @@ import {
   Trophy, Star, ArrowUpRight
 } from 'lucide-react';
 import { apiFetch } from '../utils/api';
+import { getProfilePic } from '../utils/auth';
 
 const EmployeeDashboard = () => {
   const [data, setData] = useState(null);
@@ -55,14 +56,19 @@ const EmployeeDashboard = () => {
 
         {/* Welcome Header */}
         <div className="mb-12 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-            <div>
-                <h1 className="text-4xl font-black tracking-tight text-slate-900 mb-2">
-                  {getGreeting()}, {user.name.split(' ')[0]}! 👋
-                </h1>
-                <div className="flex flex-wrap gap-3">
-                   <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-black uppercase tracking-widest border border-blue-100/50">ID: {user.employeeId}</span>
-                   <span className="px-3 py-1 bg-slate-100 text-slate-500 rounded-lg text-[10px] font-black uppercase tracking-widest border border-slate-200/50">{user.designation}</span>
-                   <span className="px-3 py-1 bg-slate-100 text-slate-500 rounded-lg text-[10px] font-black uppercase tracking-widest border border-slate-200/50">{user.department}</span>
+            <div className="flex items-center gap-6">
+                <div className="w-20 h-20 rounded-[1.5rem] overflow-hidden border-4 border-white shadow-xl bg-slate-100 flex-shrink-0">
+                    <img src={getProfilePic(user)} alt="Avatar" className="w-full h-full object-cover" />
+                </div>
+                <div>
+                    <h1 className="text-4xl font-black tracking-tight text-slate-900 mb-2">
+                      {getGreeting()}, {user.name.split(' ')[0]}! 👋
+                    </h1>
+                    <div className="flex flex-wrap gap-3">
+                       <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-black uppercase tracking-widest border border-blue-100/50">ID: {user.employeeId}</span>
+                       <span className="px-3 py-1 bg-slate-100 text-slate-500 rounded-lg text-[10px] font-black uppercase tracking-widest border border-slate-200/50">{user.designation}</span>
+                       <span className="px-3 py-1 bg-slate-100 text-slate-500 rounded-lg text-[10px] font-black uppercase tracking-widest border border-slate-200/50">{user.department}</span>
+                    </div>
                 </div>
             </div>
             <p className="text-slate-400 font-medium text-right max-w-xs hidden lg:block">You are doing great! Keep up the excellent work.</p>
@@ -277,7 +283,7 @@ const EmployeeDashboard = () => {
                       <div className="w-24 h-24 rounded-3xl bg-white p-1.5 shadow-xl border border-slate-50">
                          <div className="w-full h-full rounded-[1.2rem] overflow-hidden bg-slate-100 border border-slate-200">
                            <img
-                             src={user.profilePicture ? (user.profilePicture.startsWith('http') ? user.profilePicture : `https://rcs-ajbn.onrender.com${user.profilePicture}`) : `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`}
+                             src={getProfilePic(user)}
                              alt="User"
                              className="w-full h-full object-cover"
                            />

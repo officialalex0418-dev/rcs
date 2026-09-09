@@ -69,7 +69,7 @@ export const getEmployeeDashboardData = async (req, res, next) => {
     const todayAttendance = await Attendance.findOne({ user: userId, date: today });
     const monthlyAttendance = await Attendance.countDocuments({
       user: userId,
-      date: { $gte: startOfMonth.toISOString().split('T')[0] },
+      date: { $gte: startOfMonth },
       status: 'PRESENT'
     });
 

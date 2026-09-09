@@ -2,6 +2,38 @@ import User from '../models/User.js';
 import Task from '../models/Task.js';
 import Project from '../models/Project.js';
 import Attendance from '../models/Attendance.js';
+import Job from '../models/Job.js';
+import Application from '../models/Application.js';
+
+export const getDashboardStats = async (req, res, next) => {
+  try {
+    const employeeCount = await User.countDocuments({ role: { $ne: 'SUPER_ADMIN' } });
+    const jobCount = await Job.countDocuments();
+    const applicationCount = await Application.countDocuments();
+    const projectCount = await Project.countDocuments();
+
+    // Get recent applications
+    const recentApplications = await Application.find()
+      .populate('job', 'title')
+      .sort('-createdAt')
+      .limit(5);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        counts: {
+          employees: employeeCount,
+          jobs: jobCount,
+          applications: applicationCount,
+          projects: projectCount
+        },
+        recentApplications
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
 
 export const getEmployeeDashboardData = async (req, res, next) => {
   try {

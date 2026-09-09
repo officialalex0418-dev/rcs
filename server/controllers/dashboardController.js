@@ -35,11 +35,32 @@ export const getDashboardStats = async (req, res, next) => {
   }
 };
 
+export const getLeaderboard = async (req, res, next) => {
+  try {
+    const employees = await User.find({ role: { $ne: 'SUPER_ADMIN' } })
+      .select('name designation profilePicture')
+      .sort('-basicSalary'); // Simple mock ranking logic based on something
+
+    const leaderboard = employees.map((emp, index) => ({
+      ...emp.toObject(),
+      rank: `#${index + 1}`,
+      score: (9.5 - (index * 0.2)).toFixed(1) // Mock dynamic scores
+    }));
+
+    res.status(200).json({ success: true, data: leaderboard });
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const getEmployeeDashboardData = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const today = new Date().toISOString().split('T')[0];
-    const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+
+    // Use local time for date (Nepal UTC+5:45)
+    const localDate = new Date(new Date().getTime() + (5.75 * 60 * 60 * 1000));
+    const today = localDate.toISOString().split('T')[0];
+    const startOfMonth = new Date(localDate.getFullYear(), localDate.getMonth(), 1);
 
     // 1. User Info
     const user = await User.findById(userId).select('-password');

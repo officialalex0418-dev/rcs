@@ -6,7 +6,9 @@ import path from 'path';
 export const checkIn = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const today = new Date().toISOString().split('T')[0];
+    // Use local time for date (Nepal UTC+5:45)
+    const localDate = new Date(new Date().getTime() + (5.75 * 60 * 60 * 1000));
+    const today = localDate.toISOString().split('T')[0];
 
     // Check if already checked in
     let attendance = await Attendance.findOne({ user: userId, date: today });
@@ -46,7 +48,9 @@ export const checkIn = async (req, res, next) => {
 export const checkOut = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const today = new Date().toISOString().split('T')[0];
+    // Use local time for date (Nepal UTC+5:45)
+    const localDate = new Date(new Date().getTime() + (5.75 * 60 * 60 * 1000));
+    const today = localDate.toISOString().split('T')[0];
 
     const attendance = await Attendance.findOne({ user: userId, date: today });
     if (!attendance || !attendance.checkIn) {

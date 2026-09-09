@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
-import { Bell, Menu, X } from 'lucide-react';
+import { Bell, Menu, X, CheckCheck } from 'lucide-react';
 import EmployeeSidebar from './EmployeeSidebar';
 
 const EmployeeLayout = () => {
@@ -8,10 +8,23 @@ const EmployeeLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
 
+  const [notifications, setNotifications] = useState([
+    { id: 1, title: "Task Assigned", desc: "New task 'FinTech Dashboard' assigned to you.", time: "2m ago", read: false },
+    { id: 2, title: "Project Update", desc: "E-commerce API progress reached 70%.", time: "1h ago", read: false },
+    { id: 3, title: "Salary Credited", desc: "Your basic salary for August has been processed.", time: "5h ago", read: false }
+  ]);
+
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
+
+  const markAllRead = () => {
+    setNotifications(notifications.map(n => ({ ...n, read: true })));
+    setTimeout(() => setShowNotifications(false), 500);
+  };
+
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
     <div className="flex min-h-screen bg-[#F8FAFC] text-slate-900 font-sans">
@@ -30,7 +43,7 @@ const EmployeeLayout = () => {
       <main className="flex-1 xl:ml-72 min-h-screen flex flex-col">
 
         {/* Header */}
-        <header className="h-24 px-8 lg:px-12 flex justify-between items-center sticky top-0 bg-[#F8FAFC]/80 backdrop-blur-md z-10">
+        <header className="h-24 px-8 lg:px-12 flex justify-between items-center sticky top-0 bg-[#F8FAFC]/80 backdrop-blur-md z-30">
           <div className="flex items-center gap-4">
              <button
                onClick={() => setIsSidebarOpen(true)}
@@ -60,31 +73,41 @@ const EmployeeLayout = () => {
                 className="relative p-3.5 bg-white border border-slate-200 rounded-2xl text-slate-600 hover:border-blue-200 transition-all shadow-sm active:scale-95"
               >
                 <Bell size={20} />
-                <span className="absolute top-3 right-3 w-4 h-4 bg-red-500 text-white text-[8px] font-black rounded-full flex items-center justify-center border-2 border-white">3</span>
+                {unreadCount > 0 && (
+                  <span className="absolute top-3 right-3 w-4 h-4 bg-red-500 text-white text-[8px] font-black rounded-full flex items-center justify-center border-2 border-white">
+                    {unreadCount}
+                  </span>
+                )}
               </button>
 
               {showNotifications && (
                 <div className="absolute right-0 mt-4 w-80 bg-white rounded-[2rem] shadow-2xl shadow-slate-900/10 border border-slate-100 p-6 animate-in fade-in slide-in-from-top-2 duration-300 z-50">
                   <div className="flex justify-between items-center mb-6">
                     <h3 className="font-black text-lg">Notifications</h3>
-                    <button className="text-blue-600 text-[10px] font-black uppercase tracking-widest">Mark All Read</button>
+                    {unreadCount > 0 && (
+                      <button
+                        onClick={markAllRead}
+                        className="text-blue-600 text-[10px] font-black uppercase tracking-widest flex items-center gap-1 hover:underline"
+                      >
+                        <CheckCheck size={14} /> Mark all read
+                      </button>
+                    )}
                   </div>
                   <div className="space-y-4">
-                     <NotificationItem
-                       title="Task Assigned"
-                       desc="New task 'FinTech Dashboard' assigned to you."
-                       time="2m ago"
-                     />
-                     <NotificationItem
-                       title="Project Update"
-                       desc="E-commerce API progress reached 70%."
-                       time="1h ago"
-                     />
-                     <NotificationItem
-                       title="Salary Credited"
-                       desc="Your basic salary for August has been processed."
-                       time="5h ago"
-                     />
+                     {notifications.map(n => (
+                       <NotificationItem
+                         key={n.id}
+                         title={n.title}
+                         desc={n.desc}
+                         time={n.time}
+                         read={n.read}
+                       />
+                     ))}
+                     {notifications.length === 0 && (
+                       <div className="text-center py-10">
+                          <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">No notifications</p>
+                       </div>
+                     )}
                   </div>
                 </div>
               )}
@@ -101,13 +124,16 @@ const EmployeeLayout = () => {
   );
 };
 
-const NotificationItem = ({ title, desc, time }) => (
-  <div className="p-4 bg-slate-50 rounded-2xl hover:bg-slate-100 transition-colors cursor-pointer">
+const NotificationItem = ({ title, desc, time, read }) => (
+  <div className={`p-4 rounded-2xl transition-colors cursor-pointer border ${read ? 'bg-white border-transparent' : 'bg-blue-50/50 border-blue-100'}`}>
     <div className="flex justify-between items-start mb-1">
-      <h4 className="text-sm font-black text-slate-900">{title}</h4>
-      <span className="text-[9px] font-bold text-slate-400">{time}</span>
+      <h4 className="text-sm font-black text-slate-900 flex items-center gap-2">
+        {!read && <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>}
+        {title}
+      </h4>
+      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{time}</span>
     </div>
-    <p className="text-xs text-slate-500 leading-snug">{desc}</p>
+    <p className={`text-xs leading-snug ${read ? 'text-slate-500' : 'text-slate-600 font-medium'}`}>{desc}</p>
   </div>
 );
 

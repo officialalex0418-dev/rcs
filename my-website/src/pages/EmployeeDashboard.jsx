@@ -43,15 +43,29 @@ const EmployeeDashboard = () => {
 
   const { user, stats, scoreboard, progress, tasks, kpis, upcomingEvents } = data;
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good Morning';
+    if (hour < 18) return 'Good Afternoon';
+    return 'Good Evening';
+  };
+
   return (
     <div className="animate-in fade-in duration-700">
 
         {/* Welcome Header */}
-        <div className="mb-12">
-            <h1 className="text-4xl font-black tracking-tight text-slate-900 mb-2">
-              Good Morning, {user.name.split(' ')[0]}! 👋
-            </h1>
-            <p className="text-slate-400 font-medium">You are doing great! Keep up the excellent work.</p>
+        <div className="mb-12 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+            <div>
+                <h1 className="text-4xl font-black tracking-tight text-slate-900 mb-2">
+                  {getGreeting()}, {user.name.split(' ')[0]}! 👋
+                </h1>
+                <div className="flex flex-wrap gap-3">
+                   <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-black uppercase tracking-widest border border-blue-100/50">ID: {user.employeeId}</span>
+                   <span className="px-3 py-1 bg-slate-100 text-slate-500 rounded-lg text-[10px] font-black uppercase tracking-widest border border-slate-200/50">{user.designation}</span>
+                   <span className="px-3 py-1 bg-slate-100 text-slate-500 rounded-lg text-[10px] font-black uppercase tracking-widest border border-slate-200/50">{user.department}</span>
+                </div>
+            </div>
+            <p className="text-slate-400 font-medium text-right max-w-xs hidden lg:block">You are doing great! Keep up the excellent work.</p>
         </div>
 
         {/* --- Top Metrics Row --- */}
@@ -261,8 +275,8 @@ const EmployeeDashboard = () => {
                    <button className="w-8 h-8 bg-white/10 backdrop-blur-md rounded-lg flex items-center justify-center text-white"><MoreVertical size={16}/></button>
                    <div className="absolute -bottom-10 left-1/2 -translate-x-1/2">
                       <div className="w-24 h-24 rounded-3xl bg-white p-1.5 shadow-xl border border-slate-50">
-                         <div className="w-full h-full rounded-[1.2rem] overflow-hidden bg-slate-100">
-                           <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`} alt="User" />
+                         <div className="w-full h-full rounded-[1.2rem] overflow-hidden bg-slate-100 border border-slate-200">
+                           <img src={user.profilePicture ? `https://rcs-ajbn.onrender.com${user.profilePicture}` : `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`} alt="User" className="w-full h-full object-cover" />
                          </div>
                          <div className="absolute bottom-1 right-1 w-4 h-4 bg-emerald-500 border-4 border-white rounded-full"></div>
                       </div>

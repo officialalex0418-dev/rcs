@@ -13,9 +13,9 @@ const EmployeeSidebar = () => {
     <aside className="w-72 bg-white border-r border-slate-200/60 hidden xl:flex flex-col fixed top-0 h-screen p-8 z-20">
       <div className="flex items-center gap-3 mb-12">
         <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
-           <Layers size={22} />
+           <span className="font-black text-xs">RCS</span>
         </div>
-        <span className="text-xl font-black tracking-tighter">WorkHub</span>
+        <span className="text-xl font-black tracking-tighter uppercase">RCS Solutions</span>
       </div>
 
       <nav className="flex-1 space-y-2 text-slate-500">
@@ -26,9 +26,6 @@ const EmployeeSidebar = () => {
         <SidebarLink to="/time-tracking" icon={Timer} label="Time Tracking" />
         <SidebarLink to="/performance" icon={BarChart3} label="Performance" />
         <SidebarLink to="/payroll" icon={Wallet} label="Payroll" />
-        <SidebarLink to="/reports" icon={PieChart} label="Reports" />
-        <SidebarLink to="/calendar" icon={Calendar} label="Calendar" />
-        <SidebarLink to="/documents" icon={FileStack} label="Documents" />
         <SidebarLink to="/settings" icon={Settings} label="Settings" />
       </nav>
 
@@ -47,8 +44,8 @@ const EmployeeSidebar = () => {
       {/* Bottom User Card */}
       <div className="mt-8 pt-8 border-t border-slate-100 flex items-center justify-between">
          <div className="flex items-center gap-3">
-           <div className="w-10 h-10 rounded-xl bg-slate-100 overflow-hidden">
-             <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name || 'User'}`} alt="Avatar" />
+           <div className="w-10 h-10 rounded-xl bg-slate-100 overflow-hidden border border-slate-200">
+             <img src={user.profilePicture ? `https://rcs-ajbn.onrender.com${user.profilePicture}` : `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name || 'User'}`} alt="Avatar" className="w-full h-full object-cover" />
            </div>
            <div className="max-w-[120px]">
              <p className="text-sm font-black leading-none mb-1 truncate">{user.name || 'Employee'}</p>

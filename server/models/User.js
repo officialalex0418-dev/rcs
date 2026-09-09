@@ -34,6 +34,7 @@ const userSchema = new mongoose.Schema({
   designation: String,
   phone: String,
   address: String,
+  profilePicture: String,
   panNumber: String,
   employeeId: {
     type: String,

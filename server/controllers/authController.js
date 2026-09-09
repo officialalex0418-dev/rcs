@@ -85,3 +85,29 @@ export const getMe = async (req, res, next) => {
     next(err);
   }
 };
+
+export const updateMe = async (req, res, next) => {
+  try {
+    const { phone, address } = req.body;
+    const updateData = {};
+
+    if (phone) updateData.phone = phone;
+    if (address) updateData.address = address;
+
+    if (req.file) {
+      updateData.profilePicture = `/uploads/profiles/${req.file.filename}`;
+    }
+
+    const user = await User.findByIdAndUpdate(req.user.id, updateData, {
+      new: true,
+      runValidators: true
+    });
+
+    res.status(200).json({
+      success: true,
+      data: { user }
+    });
+  } catch (err) {
+    next(err);
+  }
+};

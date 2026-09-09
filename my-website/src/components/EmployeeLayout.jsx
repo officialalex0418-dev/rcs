@@ -38,7 +38,6 @@ const EmployeeLayout = () => {
              >
                <Menu size={20} />
              </button>
-             <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest hidden sm:block">WorkHub Terminal</h2>
           </div>
 
           <div className="flex items-center gap-6">

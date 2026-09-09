@@ -37,6 +37,7 @@ import EmployeeDashboard from "./pages/EmployeeDashboard";
 import EmployeeLayout from "./components/EmployeeLayout";
 import AttendancePage from "./pages/AttendancePage";
 import MyTasksPage from "./pages/MyTasksPage";
+import EmployeeSettings from "./pages/EmployeeSettings";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -111,6 +112,7 @@ function Site() {
           <Route path="/dashboard" element={<EmployeeDashboard />} />
           <Route path="/attendance" element={<AttendancePage />} />
           <Route path="/tasks" element={<MyTasksPage />} />
+          <Route path="/settings" element={<EmployeeSettings />} />
           <Route path="/projects" element={<div className="p-8 text-2xl font-bold">Project Collaboration Hub Coming Soon</div>} />
           <Route path="/time-tracking" element={<div className="p-8 text-2xl font-bold">Time Sheets Coming Soon</div>} />
           <Route path="/performance" element={<div className="p-8 text-2xl font-bold">Performance Analytics Coming Soon</div>} />

@@ -15,7 +15,7 @@ const Login = () => {
     setError('');
 
     try {
-      let backendUrl = import.meta.env.VITE_API_URL || '';
+      let backendUrl = import.meta.env.VITE_API_URL || 'https://rcs-ajbn.onrender.com';
       if (backendUrl.endsWith('/')) {
         backendUrl = backendUrl.slice(0, -1);
       }

@@ -48,7 +48,7 @@ const ChangePassword = () => {
 
     setIsLoading(true);
     try {
-      const backendUrl = import.meta.env.VITE_API_URL || '';
+      const backendUrl = import.meta.env.VITE_API_URL || 'https://rcs-ajbn.onrender.com';
       const token = localStorage.getItem('rcs_admin_token');
 
       const response = await fetch(`${backendUrl}/api/auth/update-password`, {

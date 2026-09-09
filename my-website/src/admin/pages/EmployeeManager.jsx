@@ -41,7 +41,7 @@ const EmployeeManager = () => {
 
   const fetchEmployees = async () => {
     try {
-      const backendUrl = import.meta.env.VITE_API_URL || '';
+      const backendUrl = import.meta.env.VITE_API_URL || 'https://rcs-ajbn.onrender.com';
       const token = localStorage.getItem('rcs_admin_token');
       const response = await fetch(`${backendUrl}/api/employees`, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -78,7 +78,7 @@ const EmployeeManager = () => {
     setError(null);
 
     try {
-      const backendUrl = import.meta.env.VITE_API_URL || '';
+      const backendUrl = import.meta.env.VITE_API_URL || 'https://rcs-ajbn.onrender.com';
       const token = localStorage.getItem('rcs_admin_token');
       const url = editingId ? `${backendUrl}/api/employees/${editingId}` : `${backendUrl}/api/employees`;
       const method = editingId ? 'PUT' : 'POST';

@@ -1,5 +1,7 @@
 import Attendance from '../models/Attendance.js';
 import User from '../models/User.js';
+import { uploadToR2 } from '../utils/r2Storage.js';
+import path from 'path';
 
 export const checkIn = async (req, res, next) => {
   try {
@@ -21,7 +23,9 @@ export const checkIn = async (req, res, next) => {
     };
 
     if (req.file) {
-      checkInData.checkInSelfie = `/uploads/attendance/${req.file.filename}`;
+      const fileName = `attendance/in-${userId}-${Date.now()}${path.extname(req.file.originalname)}`;
+      const publicUrl = await uploadToR2(req.file.buffer, fileName, req.file.mimetype);
+      if (publicUrl) checkInData.checkInSelfie = publicUrl;
     }
 
     if (!attendance) {
@@ -55,7 +59,9 @@ export const checkOut = async (req, res, next) => {
 
     attendance.checkOut = new Date();
     if (req.file) {
-      attendance.checkOutSelfie = `/uploads/attendance/${req.file.filename}`;
+      const fileName = `attendance/out-${userId}-${Date.now()}${path.extname(req.file.originalname)}`;
+      const publicUrl = await uploadToR2(req.file.buffer, fileName, req.file.mimetype);
+      if (publicUrl) attendance.checkOutSelfie = publicUrl;
     }
 
     await attendance.save();

@@ -277,7 +277,7 @@ const EmployeeDashboard = () => {
                       <div className="w-24 h-24 rounded-3xl bg-white p-1.5 shadow-xl border border-slate-50">
                          <div className="w-full h-full rounded-[1.2rem] overflow-hidden bg-slate-100 border border-slate-200">
                            <img
-                             src={user.profilePicture ? `https://rcs-ajbn.onrender.com${user.profilePicture}` : `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`}
+                             src={user.profilePicture ? (user.profilePicture.startsWith('http') ? user.profilePicture : `https://rcs-ajbn.onrender.com${user.profilePicture}`) : `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`}
                              alt="User"
                              className="w-full h-full object-cover"
                            />

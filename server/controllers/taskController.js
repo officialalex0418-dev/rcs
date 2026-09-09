@@ -1,4 +1,6 @@
 import Task from '../models/Task.js';
+import { uploadToR2 } from '../utils/r2Storage.js';
+import path from 'path';
 
 export const getTasks = async (req, res, next) => {
   try {
@@ -35,7 +37,9 @@ export const updateTask = async (req, res, next) => {
     const updateData = { ...req.body, progress };
 
     if (req.file) {
-      updateData.outputScreenshot = `/uploads/tasks/${req.file.filename}`;
+      const fileName = `tasks/task-${req.params.id}-${Date.now()}${path.extname(req.file.originalname)}`;
+      const publicUrl = await uploadToR2(req.file.buffer, fileName, req.file.mimetype);
+      if (publicUrl) updateData.outputScreenshot = publicUrl;
     }
 
     if (req.body.status === 'COMPLETED') {

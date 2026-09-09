@@ -1,5 +1,7 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import { uploadToR2 } from '../utils/r2Storage.js';
+import path from 'path';
 
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -95,10 +97,15 @@ export const updateMe = async (req, res, next) => {
     if (address) updateData.address = address;
 
     if (req.file) {
-      updateData.profilePicture = `/uploads/profiles/${req.file.filename}`;
-      console.log('--- SAVING PROFILE PICTURE ---');
-      console.log('User ID:', req.user.id);
-      console.log('Path:', updateData.profilePicture);
+      const fileName = `profiles/profile-${req.user.id}-${Date.now()}${path.extname(req.file.originalname)}`;
+      const publicUrl = await uploadToR2(req.file.buffer, fileName, req.file.mimetype);
+
+      if (publicUrl) {
+        updateData.profilePicture = publicUrl;
+        console.log('--- SAVING PROFILE PICTURE TO R2 ---');
+        console.log('User ID:', req.user.id);
+        console.log('URL:', publicUrl);
+      }
     }
 
     const user = await User.findByIdAndUpdate(req.user.id, updateData, {

@@ -3,6 +3,8 @@ import Application from '../models/Application.js';
 import User from '../models/User.js';
 import crypto from 'crypto';
 import { sendThankYouEmail, sendOnboardingEmail } from '../utils/emailService.js';
+import { uploadToR2 } from '../utils/r2Storage.js';
+import path from 'path';
 
 // Jobs
 export const getJobs = async (req, res, next) => {
@@ -65,11 +67,16 @@ export const applyForJob = async (req, res, next) => {
     const applicationData = { ...req.body };
 
     if (req.file) {
-      applicationData.resume = {
-        url: `/uploads/resumes/${req.file.filename}`,
-        fileName: req.file.originalname,
-        storageKey: req.file.filename
-      };
+      const fileName = `resumes/resume-${Date.now()}${path.extname(req.file.originalname)}`;
+      const publicUrl = await uploadToR2(req.file.buffer, fileName, req.file.mimetype);
+
+      if (publicUrl) {
+        applicationData.resume = {
+          url: publicUrl,
+          fileName: req.file.originalname,
+          storageKey: fileName
+        };
+      }
     }
 
     const application = await Application.create(applicationData);

@@ -115,7 +115,7 @@ const EmployeeSettings = () => {
             <div className="relative group">
               <div className="w-32 h-32 rounded-[2rem] overflow-hidden bg-slate-100 border-4 border-white shadow-xl">
                 <img
-                  src={profilePreview || (user.profilePicture ? `https://rcs-ajbn.onrender.com${user.profilePicture}` : `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`)}
+                  src={profilePreview || (user.profilePicture ? (user.profilePicture.startsWith('http') ? user.profilePicture : `https://rcs-ajbn.onrender.com${user.profilePicture}`) : `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`)}
                   alt="Profile"
                   className="w-full h-full object-cover"
                 />

@@ -34,7 +34,7 @@ const EmployeeSidebar = () => {
          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-slate-100 overflow-hidden border border-slate-200">
-                <img src={user.profilePicture ? `https://rcs-ajbn.onrender.com${user.profilePicture}` : `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name || 'User'}`} alt="Avatar" className="w-full h-full object-cover" />
+                <img src={user.profilePicture ? (user.profilePicture.startsWith('http') ? user.profilePicture : `https://rcs-ajbn.onrender.com${user.profilePicture}`) : `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name || 'User'}`} alt="Avatar" className="w-full h-full object-cover" />
               </div>
               <div className="max-w-[120px]">
                 <p className="text-sm font-black leading-none mb-1 truncate">{user.name || 'Employee'}</p>

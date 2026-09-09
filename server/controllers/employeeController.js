@@ -31,8 +31,12 @@ export const createEmployee = async (req, res, next) => {
       mustChangePassword: true
     });
 
-    // Send onboarding email
-    await sendOnboardingEmail(employee.email, employee.name, tempPassword);
+    // Send onboarding email (don't await to keep response fast)
+    sendOnboardingEmail(employee.email, employee.name, tempPassword)
+      .then(result => {
+        if (!result.success) console.error('Onboarding email failed:', result.error);
+      })
+      .catch(err => console.error('Email service error:', err));
 
     // Hide password in response
     const employeeResponse = employee.toObject();

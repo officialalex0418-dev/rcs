@@ -29,14 +29,17 @@ const Login = () => {
       const data = await response.json();
 
       if (data.success) {
-        localStorage.setItem('rcs_admin_token', data.token);
-        localStorage.setItem('rcs_user', JSON.stringify(data.user));
+        const userData = data.data?.user || data.user;
+        const mustChange = userData?.mustChangePassword || data.mustChangePassword;
 
-        if (data.mustChangePassword) {
+        localStorage.setItem('rcs_admin_token', data.token);
+        localStorage.setItem('rcs_user', JSON.stringify(userData));
+
+        if (mustChange) {
           navigate('/change-password');
-        } else if (data.user.role === 'ADMIN' || data.user.role === 'SUPER_ADMIN') {
+        } else if (userData?.role === 'ADMIN' || userData?.role === 'SUPER_ADMIN') {
           navigate('/admin');
-        } else if (data.user.role === 'STAFF') {
+        } else if (userData?.role === 'STAFF') {
           navigate('/dashboard');
         } else {
           navigate('/dashboard');

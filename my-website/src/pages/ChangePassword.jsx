@@ -48,15 +48,41 @@ const ChangePassword = () => {
 
     setIsLoading(true);
     try {
-      // API Call Mockup
-      // const response = await fetch('/api/auth/change-password', { ... });
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API
-      setSuccess(true);
-      setTimeout(() => {
-        navigate('/employee/dashboard');
-      }, 2000);
+      const backendUrl = import.meta.env.VITE_API_URL || '';
+      const token = localStorage.getItem('rcs_admin_token');
+
+      const response = await fetch(`${backendUrl}/api/auth/update-password`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          currentPassword: formData.currentPassword,
+          newPassword: formData.newPassword
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        const userData = data.data?.user || data.user;
+        localStorage.setItem('rcs_user', JSON.stringify(userData));
+        if (data.token) localStorage.setItem('rcs_admin_token', data.token);
+
+        setSuccess(true);
+        setTimeout(() => {
+          if (userData?.role === 'STAFF') {
+            navigate('/dashboard');
+          } else {
+            navigate('/admin');
+          }
+        }, 2000);
+      } else {
+        setError(data.message || 'Failed to update password.');
+      }
     } catch (err) {
-      setError('Failed to update password. Please try again.');
+      setError('Connection failed. Please check your network.');
     } finally {
       setIsLoading(false);
     }

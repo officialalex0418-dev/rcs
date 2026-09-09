@@ -8,14 +8,16 @@ const resend = apiKey ? new Resend(apiKey) : null;
 
 export const sendOnboardingEmail = async (email, name, temporaryPassword) => {
   if (!resend) {
-    console.warn('Onboarding email not sent: RESEND_API_KEY is missing.');
+    console.error('Email Service Error: RESEND_API_KEY is missing in environment variables.');
     return { success: false, error: 'API Key missing' };
   }
+
   try {
+    console.log(`Attempting to send onboarding email to: ${email}`);
     const { data, error } = await resend.emails.send({
-      from: 'RCS Onboarding <onboarding@resend.dev>', // Using resend.dev for testing/default
+      from: 'RCS Solutions <onboarding@resend.dev>',
       to: [email],
-      subject: 'Welcome to Royal Consultancy Services - Your Account is Ready',
+      subject: 'Welcome to RCS Solutions - Your Account is Ready',
       html: `
         <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 10px; overflow: hidden;">
           <div style="background-color: #1a237e; color: white; padding: 20px; text-align: center;">
@@ -46,7 +48,7 @@ export const sendOnboardingEmail = async (email, name, temporaryPassword) => {
     });
 
     if (error) {
-      console.error('Error sending email:', error);
+      console.error('RESEND ERROR:', JSON.stringify(error, null, 2));
       return { success: false, error };
     }
 

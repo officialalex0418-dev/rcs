@@ -12,7 +12,8 @@ import {
   Briefcase,
   Building2,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  CheckCircle2
 } from 'lucide-react';
 import Button from '../components/Button';
 import Input from '../components/Input';
@@ -27,6 +28,7 @@ const EmployeeManager = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [successData, setSuccessData] = useState(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -86,6 +88,14 @@ const EmployeeManager = () => {
       const data = await response.json();
       if (response.ok) {
         setShowModal(false);
+        if (!editingId) {
+          setSuccessData({
+            name: data.data.name,
+            email: data.data.email,
+            password: data.data.tempPassword,
+            emailSent: data.onboardingEmailStatus === 'sent'
+          });
+        }
         resetForm();
         fetchEmployees();
       } else {
@@ -138,6 +148,44 @@ const EmployeeManager = () => {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
+      {/* Success Modal */}
+      {successData && (
+        <Modal
+          isOpen={!!successData}
+          onClose={() => setSuccessData(null)}
+          title="Personnel Onboarded Successfully!"
+        >
+          <div className="text-center p-4">
+            <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
+              <CheckCircle2 size={40} />
+            </div>
+            <p className="text-slate-500 font-medium mb-8">
+              {successData.emailSent
+                ? `An onboarding email has been sent to ${successData.email}.`
+                : `Employee created, but email delivery failed. Please provide these credentials manually:`}
+            </p>
+
+            <div className="bg-slate-50 rounded-2xl p-6 mb-8 space-y-4 text-left border border-slate-100">
+              <div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Login Email</p>
+                <p className="font-bold text-slate-900">{successData.email}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Temporary Password</p>
+                <p className="font-mono font-black text-blue-600 text-lg tracking-wider">{successData.password || 'Refer to email'}</p>
+              </div>
+            </div>
+
+            <Button
+              onClick={() => setSuccessData(null)}
+              className="w-full py-4 rounded-2xl font-black uppercase tracking-widest"
+            >
+              Done
+            </Button>
+          </div>
+        </Modal>
+      )}
+
       {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>

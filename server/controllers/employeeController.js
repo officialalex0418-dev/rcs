@@ -31,18 +31,34 @@ export const createEmployee = async (req, res, next) => {
       mustChangePassword: true
     });
 
-    // Send onboarding email (don't await to keep response fast)
-    sendOnboardingEmail(employee.email, employee.name, tempPassword)
-      .then(result => {
-        if (!result.success) console.error('Onboarding email failed:', result.error);
-      })
-      .catch(err => console.error('Email service error:', err));
+    // Send onboarding email
+    let emailStatus = 'sent';
+    try {
+      const result = await sendOnboardingEmail(employee.email, employee.name, tempPassword);
+      if (!result.success) {
+        console.error('Onboarding email failed:', result.error);
+        emailStatus = 'failed';
+      }
+    } catch (err) {
+      console.error('Email service error:', err);
+      emailStatus = 'error';
+    }
 
-    // Hide password in response
+    // Prepare response
     const employeeResponse = employee.toObject();
     delete employeeResponse.password;
 
-    res.status(201).json({ success: true, data: employeeResponse });
+    // If email failed or for safety, provide the password in the response so admin can give it manually
+    employeeResponse.tempPassword = tempPassword;
+    if (emailStatus !== 'sent') {
+      employeeResponse.emailError = 'Email delivery failed. Please provide the password to the employee manually.';
+    }
+
+    res.status(201).json({
+      success: true,
+      data: employeeResponse,
+      onboardingEmailStatus: emailStatus
+    });
   } catch (err) {
     next(err);
   }

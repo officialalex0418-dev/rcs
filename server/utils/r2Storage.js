@@ -38,9 +38,17 @@ export const uploadToR2 = async (fileBuffer, fileName, contentType) => {
     );
 
     // Return the public URL.
-    // Usually R2 uses a custom domain or the bucket URL if configured for public access.
-    const publicBaseUrl = process.env.R2_PUBLIC_URL || process.env.R2_ENDPOINT.replace('https://', `https://${bucketName}.`);
-    return `${publicBaseUrl}/${fileName}`;
+    // Ensure the URL starts with https://
+    let publicBaseUrl = process.env.R2_PUBLIC_URL || process.env.R2_ENDPOINT.replace('https://', `https://${bucketName}.`);
+
+    if (!publicBaseUrl.startsWith('http')) {
+      publicBaseUrl = `https://${publicBaseUrl}`;
+    }
+
+    // Clean trailing slash from base URL
+    const cleanBaseUrl = publicBaseUrl.endsWith('/') ? publicBaseUrl.slice(0, -1) : publicBaseUrl;
+
+    return `${cleanBaseUrl}/${fileName}`;
   } catch (err) {
     console.error('R2 Upload Error:', err);
     throw err;

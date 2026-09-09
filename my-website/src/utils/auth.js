@@ -16,10 +16,21 @@ export const getProfilePic = (user) => {
     return `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name || 'RCS'}`;
   }
 
+  // If it's already a full URL (R2 or External)
   if (user.profilePicture.startsWith('http')) {
     return user.profilePicture;
   }
 
+  // Handle case where database might have saved just the domain name (R2 issue)
+  if (user.profilePicture.includes('.com') || user.profilePicture.includes('.np')) {
+    return `https://${user.profilePicture}`;
+  }
+
   const backendUrl = import.meta.env.VITE_API_URL || 'https://rcs-ajbn.onrender.com';
-  return `${backendUrl.endsWith('/') ? backendUrl.slice(0, -1) : backendUrl}${user.profilePicture}`;
+  const cleanBackendUrl = backendUrl.endsWith('/') ? backendUrl.slice(0, -1) : backendUrl;
+
+  // Ensure local paths start with a slash
+  const path = user.profilePicture.startsWith('/') ? user.profilePicture : `/${user.profilePicture}`;
+
+  return `${cleanBackendUrl}${path}`;
 };

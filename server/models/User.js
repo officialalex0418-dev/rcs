@@ -30,6 +30,7 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  department: String,
   designation: String,
   phone: String,
   address: String,

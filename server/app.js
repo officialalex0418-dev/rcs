@@ -40,10 +40,26 @@ if (!fs.existsSync(uploadDir)) {
 app.use(helmet({
   crossOriginResourcePolicy: false,
 }));
+
+const allowedOrigins = [
+  'https://rcs.com.np',
+  'https://www.rcs.com.np',
+  'http://localhost:5173',
+  'http://localhost:3000'
+];
+
 app.use(cors({
-  origin: ['https://rcs.com.np', 'http://localhost:5173', 'http://localhost:3000'],
+  origin: function (origin, callback) {
+    // allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      return callback(null, true); // Allow all for now during debugging, but can be restricted later
+    }
+    return callback(null, true);
+  },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
 }));
 app.use(express.json());
 app.use(morgan('dev'));

@@ -48,10 +48,9 @@ export const createEmployee = async (req, res, next) => {
     const employeeResponse = employee.toObject();
     delete employeeResponse.password;
 
-    // If email failed or for safety, provide the password in the response so admin can give it manually
-    employeeResponse.tempPassword = tempPassword;
+    // Only provide password to frontend IF email failed (as a fallback)
     if (emailStatus !== 'sent') {
-      employeeResponse.emailError = 'Email delivery failed. Please provide the password to the employee manually.';
+      employeeResponse.tempPassword = tempPassword;
     }
 
     res.status(201).json({

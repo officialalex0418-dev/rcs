@@ -13,9 +13,11 @@ export const sendOnboardingEmail = async (email, name, temporaryPassword) => {
   }
 
   try {
-    console.log(`Attempting to send onboarding email to: ${email}`);
+    const fromEmail = process.env.FROM_EMAIL || 'onboarding@resend.dev';
+    console.log(`Attempting to send onboarding email from ${fromEmail} to: ${email}`);
+
     const { data, error } = await resend.emails.send({
-      from: 'RCS Solutions <onboarding@resend.dev>',
+      from: `RCS Solutions <${fromEmail}>`,
       to: [email],
       subject: 'Welcome to RCS Solutions - Your Account is Ready',
       html: `

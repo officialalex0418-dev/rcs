@@ -29,6 +29,7 @@ const EmployeeManager = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [successData, setSuccessData] = useState(null);
+  const [showConfidential, setShowConfidential] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -193,12 +194,27 @@ const EmployeeManager = () => {
               </div>
               <div>
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Temporary Password</p>
-                <p className="font-mono font-black text-blue-600 text-lg tracking-wider">{successData.password || 'Refer to email'}</p>
+                {successData.emailSent ? (
+                  <p className="text-xs text-slate-500 italic">Sent privately via email</p>
+                ) : (
+                  <div className="space-y-2">
+                    {showConfidential ? (
+                      <p className="font-mono font-black text-blue-600 text-lg tracking-wider">{successData.password}</p>
+                    ) : (
+                      <button
+                        onClick={() => setShowConfidential(true)}
+                        className="text-xs font-bold text-blue-600 hover:underline"
+                      >
+                        Click to reveal password (Email failed)
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
             <Button
-              onClick={() => setSuccessData(null)}
+              onClick={() => { setSuccessData(null); setShowConfidential(false); }}
               className="w-full py-4 rounded-2xl font-black uppercase tracking-widest"
             >
               Done

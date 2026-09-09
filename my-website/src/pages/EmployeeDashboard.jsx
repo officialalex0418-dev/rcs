@@ -12,6 +12,16 @@ import { getProfilePic } from '../utils/auth';
 const EmployeeDashboard = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(JSON.parse(localStorage.getItem('rcs_user')) || {});
+
+  useEffect(() => {
+    const handleUpdate = (e) => {
+      setUser(e.detail);
+      if (data) setData({ ...data, user: e.detail });
+    };
+    window.addEventListener('rcs_user_update', handleUpdate);
+    return () => window.removeEventListener('rcs_user_update', handleUpdate);
+  }, [data]);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -20,6 +30,8 @@ const EmployeeDashboard = () => {
         const result = await response.json();
         if (result.success) {
           setData(result.data);
+          setUser(result.data.user);
+          syncUserData(result.data.user);
         }
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
@@ -42,7 +54,7 @@ const EmployeeDashboard = () => {
     );
   }
 
-  const { user, stats, scoreboard, progress, tasks, kpis, upcomingEvents } = data;
+  const { stats, scoreboard, progress, tasks, kpis, upcomingEvents } = data;
 
   const getGreeting = () => {
     const hour = new Date().getHours();

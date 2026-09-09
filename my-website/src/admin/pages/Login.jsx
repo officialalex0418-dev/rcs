@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Mail, ArrowRight, ShieldCheck } from 'lucide-react';
 import { apiFetch } from '../../utils/api';
+import { syncUserData } from '../../utils/auth';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -28,7 +29,7 @@ const Login = () => {
         const mustChange = userData?.mustChangePassword || data.mustChangePassword;
 
         localStorage.setItem('rcs_admin_token', data.token);
-        localStorage.setItem('rcs_user', JSON.stringify(userData));
+        syncUserData(userData);
 
         if (userData?.role === 'ADMIN' || userData?.role === 'SUPER_ADMIN') {
           navigate('/admin');

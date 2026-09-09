@@ -18,6 +18,10 @@ export const getProfilePic = (user) => {
 
   // If it's already a full URL (R2 or External)
   if (user.profilePicture.startsWith('http')) {
+    // FIX: If the URL incorrectly points to the frontend domain, try to fix it or fallback to dicebear
+    if (user.profilePicture.includes('rcs.com.np') && (user.profilePicture.includes('/profiles/') || user.profilePicture.includes('/attendance/'))) {
+      return `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name || 'RCS'}`;
+    }
     return user.profilePicture;
   }
 

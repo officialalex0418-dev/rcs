@@ -4,6 +4,7 @@ import {
   AlertCircle, CheckCircle2, Loader2, X
 } from 'lucide-react';
 import { apiFetch } from '../utils/api';
+import { getProfilePic } from '../utils/auth';
 import Button from '../admin/components/Button';
 import Modal from '../admin/components/Modal';
 
@@ -196,8 +197,8 @@ const AttendancePage = () => {
                           </td>
                           <td className="py-5">
                              <div className="flex -space-x-2">
-                                {log.checkInSelfie && <img src={log.checkInSelfie.startsWith('http') ? log.checkInSelfie : `https://rcs-ajbn.onrender.com${log.checkInSelfie}`} className="w-8 h-8 rounded-full border-2 border-white object-cover" alt="In" />}
-                                {log.checkOutSelfie && <img src={log.checkOutSelfie.startsWith('http') ? log.checkOutSelfie : `https://rcs-ajbn.onrender.com${log.checkOutSelfie}`} className="w-8 h-8 rounded-full border-2 border-white object-cover" alt="Out" />}
+                                {log.checkInSelfie && <img src={getProfilePic({ profilePicture: log.checkInSelfie })} className="w-8 h-8 rounded-full border-2 border-white object-cover" alt="In" />}
+                                {log.checkOutSelfie && <img src={getProfilePic({ profilePicture: log.checkOutSelfie })} className="w-8 h-8 rounded-full border-2 border-white object-cover" alt="Out" />}
                              </div>
                           </td>
                           <td className="py-5">

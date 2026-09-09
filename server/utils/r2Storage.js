@@ -39,7 +39,12 @@ export const uploadToR2 = async (fileBuffer, fileName, contentType) => {
 
     // Return the public URL.
     // Ensure the URL starts with https://
-    let publicBaseUrl = process.env.R2_PUBLIC_URL || process.env.R2_ENDPOINT.replace('https://', `https://${bucketName}.`);
+    let publicBaseUrl = process.env.R2_PUBLIC_URL;
+
+    // If PUBLIC_URL is missing or incorrectly set to the main domain, use the S3 API endpoint as fallback
+    if (!publicBaseUrl || publicBaseUrl === 'rcs.com.np' || publicBaseUrl === 'www.rcs.com.np') {
+      publicBaseUrl = process.env.R2_ENDPOINT.replace('https://', `https://${bucketName}.`);
+    }
 
     if (!publicBaseUrl.startsWith('http')) {
       publicBaseUrl = `https://${publicBaseUrl}`;

@@ -124,6 +124,27 @@ const EmployeeManager = () => {
     setShowModal(true);
   };
 
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this employee? This will permanently remove all their data.')) {
+      return;
+    }
+
+    try {
+      const response = await apiFetch(`/api/employees/${id}`, {
+        method: 'DELETE'
+      });
+
+      if (response.ok) {
+        fetchEmployees();
+      } else {
+        const data = await response.json();
+        setError(data.message || 'Failed to delete employee.');
+      }
+    } catch (err) {
+      setError('Connection error. Could not delete employee.');
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       name: '',
@@ -281,7 +302,10 @@ const EmployeeManager = () => {
                       >
                         <Edit2 size={16} />
                       </button>
-                      <button className="p-2.5 bg-white text-red-500 rounded-xl hover:bg-red-600 hover:text-white transition-all shadow-sm border border-slate-100">
+                      <button
+                        onClick={() => handleDelete(emp._id)}
+                        className="p-2.5 bg-white text-red-500 rounded-xl hover:bg-red-600 hover:text-white transition-all shadow-sm border border-slate-100"
+                      >
                         <Trash2 size={16} />
                       </button>
                     </div>

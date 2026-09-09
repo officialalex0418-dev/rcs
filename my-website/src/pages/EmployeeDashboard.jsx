@@ -1,203 +1,504 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  Calendar,
-  Clock,
-  Wallet,
-  TrendingUp,
-  User,
-  MapPin,
-  Mail,
-  Phone,
-  Briefcase,
-  Building2,
-  FileText,
-  Bell,
-  CheckCircle2,
-  AlertCircle
+  Calendar, Clock, Wallet, TrendingUp, User, MapPin, Mail, Phone,
+  Briefcase, Building2, FileText, Bell, CheckCircle2, AlertCircle,
+  Search, LayoutDashboard, CheckSquare, Layers, Timer, BarChart3,
+  PieChart, FileStack, Settings, LogOut, ChevronDown, MoreVertical,
+  Trophy, Star, ArrowUpRight
 } from 'lucide-react';
+import { apiFetch } from '../utils/api';
 
 const EmployeeDashboard = () => {
-  // Mock User Data based on the model requirements
-  const user = {
-    name: 'Ramesh Thapa',
-    email: 'ramesh.thapa@rcs.com.np',
-    employeeId: 'EMP-2024-042',
-    designation: 'Senior Full Stack Developer',
-    department: 'Engineering & Innovation',
-    location: 'Kathmandu, Nepal',
-    contact: '+977-9841234567',
-    joiningDate: 'Jan 15, 2024',
-    basicSalary: 85000,
-    allowance: 500,
-    attendance: {
-      today: 'Present (09:12 AM)',
-      monthly: '22 / 24 Days',
-      status: 'On-Time'
-    }
-  };
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
-  return (
-    <div className="min-h-screen bg-[#F8FAFC] p-8 lg:p-12 font-sans text-slate-900 animate-in fade-in duration-700">
-      {/* Top Welcome Bar */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-12">
-        <div>
-          <h1 className="text-4xl font-black tracking-tight text-slate-900 mb-2">Welcome Back, {user.name.split(' ')[0]}!</h1>
-          <p className="text-slate-500 font-medium flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-            You are currently clocked in. Have a productive day!
-          </p>
-        </div>
-        <div className="flex gap-4">
-          <button className="p-3 bg-white border border-slate-200 rounded-2xl text-slate-600 hover:text-blue-600 hover:border-blue-100 transition-all shadow-sm">
-            <Bell size={20} />
-          </button>
-          <button className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-2xl font-bold text-sm hover:bg-blue-600 transition-all shadow-xl shadow-slate-900/10">
-            <Clock size={18} />
-            Clock Out
-          </button>
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const response = await apiFetch('/api/dashboard/employee');
+        const result = await response.json();
+        if (result.success) {
+          setData(result.data);
+        }
+      } catch (err) {
+        console.error('Error fetching dashboard data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, []);
+
+  if (loading || !data) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin"></div>
+          <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Syncing Workplace...</p>
         </div>
       </div>
+    );
+  }
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column: Stats & Attendance */}
-        <div className="lg:col-span-2 space-y-8">
-          {/* Quick Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <StatCard
-              icon={CheckCircle2}
-              label="Today's Attendance"
-              value={user.attendance.today}
-              trend="Check-in: 09:12 AM"
-              color="blue"
-            />
-            <StatCard
-              icon={Calendar}
-              label="Monthly Attendance"
-              value={user.attendance.monthly}
-              trend="92% Completion"
-              color="purple"
-            />
-            <StatCard
-              icon={Wallet}
-              label="Current Salary"
-              value={`Rs. ${user.basicSalary.toLocaleString()}`}
-              trend="Next Payout: Oct 01"
-              color="green"
-            />
-          </div>
+  const { user, stats, scoreboard, progress, tasks, kpis, upcomingEvents } = data;
 
-          {/* Activity/Task Section (Mock) */}
-          <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200/60 shadow-sm shadow-blue-500/5">
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-xl font-black tracking-tight">Assigned Projects</h2>
-              <button className="text-blue-600 text-xs font-black uppercase tracking-widest hover:text-blue-700">View All</button>
-            </div>
-            <div className="space-y-4">
-              <ProjectItem title="FinTech Dashboard Redesign" status="In Progress" priority="High" deadline="Sept 15" />
-              <ProjectItem title="E-commerce API Integration" status="Review" priority="Medium" deadline="Sept 20" />
-              <ProjectItem title="Mobile App Security Audit" status="Planning" priority="Urgent" deadline="Sept 10" />
-            </div>
+  return (
+    <div className="flex min-h-screen bg-[#F8FAFC] text-slate-900 font-sans">
+      {/* --- SIDEBAR --- */}
+      <aside className="w-72 bg-white border-r border-slate-200/60 hidden xl:flex flex-col sticky top-0 h-screen p-8">
+        <div className="flex items-center gap-3 mb-12">
+          <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
+             <Layers size={22} />
           </div>
+          <span className="text-xl font-black tracking-tighter">WorkHub</span>
         </div>
 
-        {/* Right Column: Profile & Info */}
-        <div className="space-y-8">
-          {/* Profile Card */}
-          <div className="bg-white rounded-[2.5rem] overflow-hidden border border-slate-200/60 shadow-sm shadow-blue-500/5">
-            <div className="h-24 bg-gradient-to-r from-blue-600 to-indigo-600"></div>
-            <div className="px-8 pb-8 -mt-12 text-center">
-              <div className="w-24 h-24 rounded-[2rem] bg-white p-1.5 shadow-xl mx-auto mb-4 border border-slate-100">
-                <div className="w-full h-full rounded-[1.7rem] bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center text-blue-600 font-black text-3xl overflow-hidden">
-                  {user.name.charAt(0)}
+        <nav className="flex-1 space-y-2 text-slate-500">
+          <SidebarLink icon={LayoutDashboard} label="Dashboard" active />
+          <SidebarLink icon={CheckSquare} label="My Tasks" badge="4" />
+          <SidebarLink icon={Layers} label="Projects" />
+          <SidebarLink icon={Timer} label="Time Tracking" />
+          <SidebarLink icon={BarChart3} label="Performance" />
+          <SidebarLink icon={Wallet} label="Payroll" />
+          <SidebarLink icon={PieChart} label="Reports" />
+          <SidebarLink icon={Calendar} label="Calendar" />
+          <SidebarLink icon={FileStack} label="Documents" />
+          <SidebarLink icon={Settings} label="Settings" />
+        </nav>
+
+        {/* Upgrade Pro Card */}
+        <div className="mt-8 p-6 bg-gradient-to-br from-slate-900 to-slate-800 rounded-[2rem] text-white relative overflow-hidden">
+           <div className="absolute top-0 right-0 p-4 opacity-10">
+              <Star size={60} />
+           </div>
+           <h4 className="text-sm font-bold mb-2 flex items-center gap-2">
+             <Star size={14} className="text-blue-400" /> Upgrade to Pro
+           </h4>
+           <p className="text-[10px] text-slate-400 mb-4 leading-relaxed">Unlock advanced features and analytical reports.</p>
+           <button className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">Upgrade Now</button>
+        </div>
+
+        {/* Bottom User Card */}
+        <div className="mt-8 pt-8 border-t border-slate-100 flex items-center justify-between">
+           <div className="flex items-center gap-3">
+             <div className="w-10 h-10 rounded-xl bg-slate-100 overflow-hidden">
+               <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`} alt="Avatar" />
+             </div>
+             <div>
+               <p className="text-sm font-black leading-none mb-1">{user.name}</p>
+               <p className="text-[10px] font-bold text-slate-400">{user.designation}</p>
+             </div>
+           </div>
+           <ChevronDown size={16} className="text-slate-300" />
+        </div>
+      </aside>
+
+      {/* --- MAIN CONTENT --- */}
+      <main className="flex-1 p-8 lg:p-12 overflow-y-auto max-w-[1600px] mx-auto">
+
+        {/* Header */}
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+          <div>
+            <h1 className="text-3xl font-black tracking-tight text-slate-900 mb-2">
+              Good Morning, {user.name.split(' ')[0]}! 👋
+            </h1>
+            <p className="text-slate-400 font-medium">You are doing great! Keep up the excellent work.</p>
+          </div>
+
+          <div className="flex items-center gap-6">
+            <div className="relative group hidden lg:block">
+               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors" size={18} />
+               <input
+                 type="text"
+                 placeholder="Search anything..."
+                 className="pl-12 pr-10 py-3 bg-white border border-slate-200 rounded-2xl text-sm outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500/20 w-80 transition-all font-medium"
+               />
+               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-300 border border-slate-100 px-1.5 py-0.5 rounded-md">⌘K</span>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <button className="relative p-3 bg-white border border-slate-200 rounded-2xl text-slate-600 hover:border-blue-200 transition-all shadow-sm">
+                 <Bell size={20} />
+                 <span className="absolute top-2.5 right-2.5 w-4 h-4 bg-red-500 text-white text-[8px] font-black rounded-full flex items-center justify-center border-2 border-white">3</span>
+              </button>
+
+              <div className="text-right hidden sm:block">
+                 <p className="text-sm font-black text-slate-900">{currentTime.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                 <div className="flex items-center justify-end gap-2">
+                    <span className="text-sm font-bold text-slate-500">{currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span className="text-[10px] font-black text-emerald-600 uppercase">Live</span>
+                 </div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* --- Top Metrics Row --- */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+           <MetricCard
+             icon={CheckCircle2}
+             color="emerald"
+             label="Today's Attendance"
+             value={stats.todayAttendance ? `Present (${new Date(stats.todayAttendance.checkIn).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})})` : "Absent"}
+             sub={`Check-in: ${stats.todayAttendance ? new Date(stats.todayAttendance.checkIn).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'N/A'}`}
+           />
+           <MetricCard
+             icon={Calendar}
+             color="purple"
+             label="Monthly Attendance"
+             value={`${stats.monthlyAttendance.present} / ${stats.monthlyAttendance.total} Days`}
+             sub={`${Math.round((stats.monthlyAttendance.present / stats.monthlyAttendance.total) * 100)}% Completion`}
+             progress={(stats.monthlyAttendance.present / stats.monthlyAttendance.total) * 100}
+           />
+           <MetricCard
+             icon={Wallet}
+             color="emerald"
+             label="Current Salary"
+             value={`Rs. ${stats.salary.amount.toLocaleString()}`}
+             sub={`Next Payout: ${stats.salary.nextPayout}`}
+           />
+           <MetricCard
+             icon={Trophy}
+             color="amber"
+             label="Scoreboard Rank"
+             value={stats.rank}
+             sub="Top Performer"
+           />
+        </div>
+
+        {/* --- Main Dashboard Grid --- */}
+        <div className="grid grid-cols-12 gap-8">
+
+          {/* Performance Scoreboard (Left Col) */}
+          <div className="col-span-12 lg:col-span-5 space-y-8">
+             <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200/60 shadow-sm shadow-blue-500/5">
+                <div className="flex justify-between items-center mb-10">
+                   <h2 className="text-xl font-black tracking-tight">Performance Scoreboard</h2>
+                   <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-xl text-[10px] font-black uppercase text-slate-400">
+                      This Month <ChevronDown size={14} />
+                   </div>
                 </div>
-              </div>
-              <h3 className="text-xl font-black text-slate-900">{user.name}</h3>
-              <p className="text-blue-600 font-bold text-xs uppercase tracking-widest mb-6">{user.designation}</p>
 
-              <div className="space-y-4 text-left border-t border-slate-50 pt-6">
-                <InfoRow icon={Mail} text={user.email} />
-                <InfoRow icon={Phone} text={user.contact} />
-                <InfoRow icon={Building2} text={user.department} />
-                <InfoRow icon={MapPin} text={user.location} />
-                <InfoRow icon={Calendar} text={`Joined ${user.joiningDate}`} />
-              </div>
-            </div>
+                <div className="flex items-center gap-12">
+                   <div className="relative w-44 h-44 flex items-center justify-center">
+                      {/* Gauge SVG */}
+                      <svg className="w-full h-full transform -rotate-90">
+                         <circle cx="88" cy="88" r="76" stroke="#f1f5f9" strokeWidth="12" fill="transparent" />
+                         <circle
+                           cx="88" cy="88" r="76" stroke="url(#gradient)" strokeWidth="12" fill="transparent"
+                           strokeDasharray="477.5" strokeDashoffset={477.5 * (1 - scoreboard.score / 10)}
+                           strokeLinecap="round"
+                         />
+                         <defs>
+                            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                               <stop offset="0%" stopColor="#3b82f6" />
+                               <stop offset="100%" stopColor="#7c3aed" />
+                            </linearGradient>
+                         </defs>
+                      </svg>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                         <span className="text-4xl font-black text-slate-900 leading-none">{scoreboard.score}</span>
+                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Out of 10</span>
+                         <span className="mt-4 px-3 py-1 bg-emerald-100 text-emerald-600 text-[10px] font-black rounded-full uppercase">Excellent</span>
+                      </div>
+                   </div>
+
+                   <div className="flex-1 space-y-6">
+                      <ScoreBar label="Code Quality" value={scoreboard.breakdown.codeQuality} max={10} color="blue" />
+                      <ScoreBar label="Task Completion" value={scoreboard.breakdown.taskCompletion} max={10} color="indigo" />
+                      <ScoreBar label="Collaboration" value={scoreboard.breakdown.collaboration} max={10} color="purple" />
+                      <ScoreBar label="Innovation" value={scoreboard.breakdown.innovation} max={10} color="amber" />
+                   </div>
+                </div>
+             </div>
+
+             {/* KPI Section */}
+             <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200/60 shadow-sm shadow-blue-500/5">
+                <div className="flex justify-between items-center mb-8">
+                   <h2 className="text-xl font-black tracking-tight">Key Performance Indicators</h2>
+                   <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-xl text-[10px] font-black uppercase text-slate-400">
+                      This Month <ChevronDown size={14} />
+                   </div>
+                </div>
+
+                <div className="grid grid-cols-4 gap-4 mb-10">
+                   <KPICard icon={CheckSquare} color="blue" label="Tasks Completed" value={kpis.tasksCompleted} trend="+15%" />
+                   <KPICard icon={Timer} color="emerald" label="On-Time Delivery" value={kpis.onTimeDelivery} trend="+8%" />
+                   <KPICard icon={AlertCircle} color="red" label="Bug Resolution" value={kpis.bugResolution} trend="+10%" />
+                   <KPICard icon={FileText} color="purple" label="Code Reviews" value={kpis.codeReviews} trend="+20%" />
+                </div>
+
+                {/* KPI Line Chart SVG */}
+                <div className="relative h-40 w-full mt-6">
+                   <svg className="w-full h-full overflow-visible" preserveAspectRatio="none">
+                      <path
+                        d="M0,80 Q50,60 100,100 T200,40 T300,90 T400,20 T500,50 T600,10"
+                        fill="none" stroke="url(#lineGradient)" strokeWidth="3"
+                      />
+                      <defs>
+                         <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stopColor="#3b82f6" />
+                            <stop offset="100%" stopColor="#7c3aed" />
+                         </linearGradient>
+                      </defs>
+                      <circle cx="0" cy="80" r="4" fill="#3b82f6" />
+                      <circle cx="100" cy="100" r="4" fill="#3b82f6" />
+                      <circle cx="200" cy="40" r="4" fill="#4f46e5" />
+                      <circle cx="300" cy="90" r="4" fill="#4f46e5" />
+                      <circle cx="400" cy="20" r="4" fill="#7c3aed" />
+                      <circle cx="600" cy="10" r="4" fill="#7c3aed" />
+                   </svg>
+                   <div className="flex justify-between mt-4 text-[10px] font-bold text-slate-400 uppercase">
+                      <span>Aug 1</span>
+                      <span>Aug 6</span>
+                      <span>Aug 11</span>
+                      <span>Aug 16</span>
+                      <span>Aug 21</span>
+                      <span>Aug 26</span>
+                      <span>Aug 31</span>
+                   </div>
+                </div>
+             </div>
           </div>
 
-          {/* Salary Breakdown (Mini) */}
-          <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white shadow-xl shadow-slate-900/20">
-             <div className="flex items-center gap-3 mb-6">
-               <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
-                 <TrendingUp className="text-blue-400" size={20} />
-               </div>
-               <h4 className="font-bold text-lg">Payroll Snapshot</h4>
+          {/* Progress Overview & Profile (Middle Col) */}
+          <div className="col-span-12 lg:col-span-4 space-y-8">
+             <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200/60 shadow-sm shadow-blue-500/5">
+                <div className="flex justify-between items-center mb-8">
+                   <h2 className="text-xl font-black tracking-tight">Progress Overview</h2>
+                </div>
+
+                <div className="mb-10">
+                   <div className="flex justify-between items-end mb-3">
+                      <span className="text-sm font-bold text-slate-500">Overall Progress</span>
+                      <div className="text-right">
+                         <span className="text-2xl font-black text-slate-900">{progress.overall}%</span>
+                         <span className="text-[10px] font-bold text-emerald-500 ml-2">+12% from last month</span>
+                      </div>
+                   </div>
+                   <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-blue-600 rounded-full" style={{ width: `${progress.overall}%` }}></div>
+                   </div>
+                </div>
+
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Project Progress</p>
+                <div className="space-y-6">
+                   {progress.projects.map((proj, idx) => (
+                      <div key={idx} className="space-y-2.5">
+                         <div className="flex items-center justify-between text-xs font-bold">
+                            <div className="flex items-center gap-2">
+                               <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+                               <span className="text-slate-900">{proj.name}</span>
+                            </div>
+                            <span className="text-slate-400">{proj.progress}%</span>
+                         </div>
+                         <div className="h-1.5 w-full bg-slate-50 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full ${idx % 3 === 0 ? 'bg-blue-500' : idx % 3 === 1 ? 'bg-indigo-500' : 'bg-amber-500'}`}
+                              style={{ width: `${proj.progress}%` }}
+                            ></div>
+                         </div>
+                      </div>
+                   ))}
+                </div>
+
+                <button className="w-full mt-10 py-3 border border-slate-100 rounded-2xl text-[10px] font-black uppercase tracking-widest text-blue-600 hover:bg-slate-50 transition-all">View All Projects</button>
              </div>
-             <div className="space-y-3">
-               <div className="flex justify-between text-sm">
-                 <span className="text-slate-400">Basic Pay</span>
-                 <span className="font-bold">Rs. {user.basicSalary.toLocaleString()}</span>
-               </div>
-               <div className="flex justify-between text-sm">
-                 <span className="text-slate-400">Allowances</span>
-                 <span className="font-bold">Rs. {(user.allowance * 22).toLocaleString()}</span>
-               </div>
-               <div className="pt-3 border-t border-white/10 flex justify-between">
-                 <span className="font-bold">Estimated Total</span>
-                 <span className="text-blue-400 font-black">Rs. {(user.basicSalary + (user.allowance * 22)).toLocaleString()}</span>
-               </div>
+
+             {/* Uncompleted Tasks */}
+             <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200/60 shadow-sm shadow-blue-500/5">
+                <div className="flex justify-between items-center mb-8">
+                   <h2 className="text-xl font-black tracking-tight">Uncompleted Tasks</h2>
+                   <button className="text-blue-600 text-[10px] font-black uppercase tracking-widest hover:underline">View All</button>
+                </div>
+
+                <div className="space-y-4">
+                   {tasks.map((task, idx) => (
+                      <div key={idx} className="flex items-center gap-4 p-4 bg-slate-50/50 rounded-2xl border border-transparent hover:border-slate-100 transition-all group">
+                         <div className="w-6 h-6 rounded-full border-2 border-slate-200 flex items-center justify-center bg-white group-hover:border-blue-500 transition-colors"></div>
+                         <div className="flex-1">
+                            <h4 className="text-sm font-bold text-slate-900 leading-none mb-1.5">{task.title}</h4>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{task.project?.name || 'Internal'}</p>
+                         </div>
+                         <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg ${
+                            task.priority === 'HIGH' ? 'bg-red-50 text-red-600' :
+                            task.priority === 'MEDIUM' ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'
+                         }`}>
+                           {task.priority}
+                         </span>
+                      </div>
+                   ))}
+                </div>
              </div>
+          </div>
+
+          {/* Right Section: Profile & Sidebar Cards */}
+          <div className="col-span-12 lg:col-span-3 space-y-8">
+             {/* Profile Card */}
+             <div className="bg-white rounded-[2.5rem] overflow-hidden border border-slate-200/60 shadow-sm shadow-blue-500/5">
+                <div className="h-32 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-4 flex justify-end items-start relative">
+                   <button className="w-8 h-8 bg-white/10 backdrop-blur-md rounded-lg flex items-center justify-center text-white"><MoreVertical size={16}/></button>
+                   <div className="absolute -bottom-10 left-1/2 -translate-x-1/2">
+                      <div className="w-24 h-24 rounded-3xl bg-white p-1.5 shadow-xl border border-slate-50">
+                         <div className="w-full h-full rounded-[1.2rem] overflow-hidden bg-slate-100">
+                           <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`} alt="User" />
+                         </div>
+                         <div className="absolute bottom-1 right-1 w-4 h-4 bg-emerald-500 border-4 border-white rounded-full"></div>
+                      </div>
+                   </div>
+                </div>
+                <div className="pt-14 pb-8 px-8 text-center">
+                   <h3 className="text-xl font-black text-slate-900 mb-1">{user.name}</h3>
+                   <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-8">{user.designation}</p>
+
+                   <div className="space-y-4 text-left border-t border-slate-50 pt-8">
+                      <ProfileInfo icon={Mail} value={user.email} />
+                      <ProfileInfo icon={Phone} value={user.phone || '+977-9841XXXXXX'} />
+                      <ProfileInfo icon={Building2} value={user.department || 'Engineering'} />
+                      <ProfileInfo icon={MapPin} value={user.address || 'Kathmandu, Nepal'} />
+                      <ProfileInfo icon={Calendar} value={`Joined ${new Date(user.joiningDate).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'})}`} />
+                   </div>
+
+                   <button className="w-full mt-8 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-900 hover:bg-slate-100 transition-all">View Full Profile</button>
+                </div>
+             </div>
+
+             {/* Upcoming Events */}
+             <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200/60 shadow-sm shadow-blue-500/5">
+                <div className="flex justify-between items-center mb-8">
+                   <h2 className="text-sm font-black tracking-tight">Upcoming Events</h2>
+                   <button className="text-blue-600 text-[10px] font-black uppercase tracking-widest hover:underline">View Calendar</button>
+                </div>
+
+                <div className="space-y-6">
+                   {upcomingEvents.map((event, i) => (
+                      <div key={i} className="flex gap-4">
+                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                            event.type === 'DEADLINE' ? 'bg-blue-50 text-blue-600' : 'bg-emerald-50 text-emerald-600'
+                         }`}>
+                            {event.type === 'DEADLINE' ? <FileText size={20}/> : <Building2 size={20}/>}
+                         </div>
+                         <div className="flex-1">
+                            <h4 className="text-xs font-black text-slate-900 leading-none mb-1.5">{event.title}</h4>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Weekly Standup</p>
+                         </div>
+                         <div className="text-right">
+                            <p className="text-[10px] font-black text-red-500 uppercase leading-none mb-1.5">{event.date.split(',')[0]}</p>
+                            <p className="text-[9px] font-bold text-slate-400 uppercase leading-none">10:00 AM</p>
+                         </div>
+                      </div>
+                   ))}
+                </div>
+             </div>
+
+             {/* Recent Achievements */}
+             <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200/60 shadow-sm shadow-blue-500/5">
+                <div className="flex justify-between items-center mb-8">
+                   <h2 className="text-sm font-black tracking-tight">Recent Achievements</h2>
+                   <button className="text-blue-600 text-[10px] font-black uppercase tracking-widest hover:underline">View All</button>
+                </div>
+
+                <div className="flex gap-4">
+                   <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center">
+                      <Trophy size={20}/>
+                   </div>
+                   <div>
+                      <h4 className="text-xs font-black text-slate-900 leading-none mb-1.5">Top Performer</h4>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mb-2">Awarded for excellent performance</p>
+                      <p className="text-[9px] font-black text-slate-400 uppercase leading-none">Aug 20, 2025</p>
+                   </div>
+                </div>
+             </div>
+
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 };
 
-const StatCard = ({ icon: Icon, label, value, trend, color }) => {
-  const colors = {
-    blue: 'text-blue-600 bg-blue-50 border-blue-100',
-    purple: 'text-purple-600 bg-purple-50 border-purple-100',
-    green: 'text-emerald-600 bg-emerald-50 border-emerald-100'
-  };
-
-  return (
-    <div className="bg-white p-6 rounded-[2rem] border border-slate-200/60 shadow-sm hover:shadow-md transition-all">
-      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 border ${colors[color]}`}>
-        <Icon size={24} />
-      </div>
-      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{label}</p>
-      <h3 className="text-xl font-black text-slate-900 mb-2">{value}</h3>
-      <p className="text-xs font-bold text-slate-500">{trend}</p>
+const SidebarLink = ({ icon: Icon, label, active = false, badge }) => (
+  <a href="#" className={`flex items-center justify-between p-3 rounded-2xl transition-all group ${
+    active ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20' : 'hover:bg-slate-50 hover:text-slate-900'
+  }`}>
+    <div className="flex items-center gap-3">
+       <Icon size={20} className={active ? 'text-white' : 'text-slate-400 group-hover:text-blue-600 transition-colors'} />
+       <span className="text-sm font-bold">{label}</span>
     </div>
-  );
-};
+    {badge && (
+      <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
+        active ? 'bg-white/20 text-white' : 'bg-red-500 text-white'
+      }`}>{badge}</span>
+    )}
+  </a>
+);
 
-const InfoRow = ({ icon: Icon, text }) => (
-  <div className="flex items-center gap-3 text-sm font-medium text-slate-600">
-    <Icon size={16} className="text-slate-300" />
-    <span>{text}</span>
+const MetricCard = ({ icon: Icon, label, value, sub, color, progress }) => (
+  <div className="bg-white p-6 rounded-[2.5rem] border border-slate-200/60 shadow-sm shadow-blue-500/5 hover:shadow-md transition-all relative overflow-hidden group">
+    <div className={`w-12 h-12 rounded-2xl mb-5 flex items-center justify-center ${
+      color === 'blue' ? 'bg-blue-50 text-blue-600' :
+      color === 'purple' ? 'bg-purple-50 text-purple-600' :
+      color === 'amber' ? 'bg-amber-50 text-amber-600' :
+      'bg-emerald-50 text-emerald-600'
+    }`}>
+       <Icon size={24} />
+    </div>
+    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">{label}</p>
+    <h3 className="text-xl font-black text-slate-900 mb-1.5">{value}</h3>
+    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{sub}</p>
+
+    {progress && (
+       <div className="mt-4 h-1 w-full bg-slate-50 rounded-full overflow-hidden">
+          <div className="h-full bg-purple-500 rounded-full" style={{ width: `${progress}%` }}></div>
+       </div>
+    )}
+
+    <ArrowUpRight className="absolute top-6 right-6 text-slate-100 group-hover:text-slate-200 transition-colors" size={24} />
   </div>
 );
 
-const ProjectItem = ({ title, status, priority, deadline }) => (
-  <div className="flex items-center justify-between p-4 bg-slate-50/50 hover:bg-slate-50 rounded-2xl border border-transparent hover:border-slate-100 transition-all group">
-    <div className="flex items-center gap-4">
-      <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-        <FileText className="text-slate-400" size={18} />
-      </div>
-      <div>
-        <h5 className="font-bold text-slate-900">{title}</h5>
-        <p className="text-[10px] text-slate-400 font-black uppercase tracking-tighter">Deadline: {deadline}</p>
-      </div>
-    </div>
-    <div className="flex items-center gap-3">
-      <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-        priority === 'Urgent' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'
-      }`}>
-        {priority}
-      </span>
-      <span className="text-xs font-bold text-slate-500">{status}</span>
-    </div>
+const ScoreBar = ({ label, value, max, color }) => (
+  <div className="space-y-2">
+     <div className="flex justify-between items-end text-xs font-bold">
+        <span className="text-slate-500">{label}</span>
+        <span className="text-slate-900">{value}</span>
+     </div>
+     <div className="h-1.5 w-full bg-slate-50 rounded-full overflow-hidden">
+        <div
+          className={`h-full rounded-full ${
+            color === 'blue' ? 'bg-blue-500' : color === 'indigo' ? 'bg-indigo-500' : color === 'purple' ? 'bg-purple-500' : 'bg-amber-500'
+          }`}
+          style={{ width: `${(value/max)*100}%` }}
+        ></div>
+     </div>
+  </div>
+);
+
+const KPICard = ({ icon: Icon, color, label, value, trend }) => (
+  <div className="p-4 bg-slate-50/50 border border-slate-100 rounded-2xl group hover:bg-white hover:shadow-xl hover:shadow-blue-500/5 transition-all">
+     <div className={`w-10 h-10 rounded-xl mb-4 flex items-center justify-center border-2 border-white shadow-sm ${
+       color === 'blue' ? 'bg-blue-50 text-blue-600' :
+       color === 'emerald' ? 'bg-emerald-50 text-emerald-600' :
+       color === 'red' ? 'bg-red-50 text-red-600' :
+       'bg-purple-50 text-purple-600'
+     }`}>
+        <Icon size={18} />
+     </div>
+     <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5">{label}</p>
+     <h4 className="text-lg font-black text-slate-900 mb-1">{value}</h4>
+     <p className="text-[9px] font-bold text-emerald-500">{trend} <span className="text-slate-400 ml-1">from last month</span></p>
+  </div>
+);
+
+const ProfileInfo = ({ icon: Icon, value }) => (
+  <div className="flex items-center gap-3 text-xs font-bold text-slate-600">
+     <Icon size={16} className="text-slate-300" />
+     <span>{value}</span>
   </div>
 );
 

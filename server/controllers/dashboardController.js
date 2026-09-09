@@ -57,10 +57,10 @@ export const getEmployeeDashboardData = async (req, res, next) => {
   try {
     const userId = req.user.id;
 
-    // Use local time for date (Nepal UTC+5:45)
-    const localDate = new Date(new Date().getTime() + (5.75 * 60 * 60 * 1000));
-    const today = localDate.toISOString().split('T')[0];
-    const startOfMonth = new Date(localDate.getFullYear(), localDate.getMonth(), 1);
+    // Get Nepal date (YYYY-MM-DD)
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kathmandu' });
+    const localDate = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kathmandu' }));
+    const startOfMonth = new Date(localDate.getFullYear(), localDate.getMonth(), 1).toLocaleDateString('en-CA');
 
     // 1. User Info
     const user = await User.findById(userId).select('-password');

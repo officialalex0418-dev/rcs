@@ -324,13 +324,6 @@ const EmployeeDashboard = () => {
                    ))}
                 </div>
              </div>
-
-             <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-[2.5rem] p-8 text-white shadow-xl shadow-blue-500/20">
-                <Star className="text-white/20 mb-6" size={40} />
-                <h3 className="text-xl font-black mb-2 leading-tight">Achievement Unlocked</h3>
-                <p className="text-white/70 text-xs font-medium mb-6 leading-relaxed">You've maintained a 98% on-time delivery rate this month. Exclusive bonus reward pending.</p>
-                <button className="w-full py-4 bg-white/10 hover:bg-white/20 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-white/20 transition-all">Claim Reward</button>
-             </div>
           </div>
         </div>
 

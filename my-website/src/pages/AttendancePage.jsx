@@ -31,7 +31,7 @@ const AttendancePage = () => {
       if (data.success) {
         setLogs(data.data);
         setStats(data.stats);
-        const today = new Date().toISOString().split('T')[0];
+        const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kathmandu' });
         setTodayLog(data.data.find(log => log.date === today));
       }
     } catch (err) {

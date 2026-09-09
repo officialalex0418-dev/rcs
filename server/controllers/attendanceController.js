@@ -6,9 +6,8 @@ import path from 'path';
 export const checkIn = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    // Use local time for date (Nepal UTC+5:45)
-    const localDate = new Date(new Date().getTime() + (5.75 * 60 * 60 * 1000));
-    const today = localDate.toISOString().split('T')[0];
+    // Get Nepal date (YYYY-MM-DD)
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kathmandu' });
 
     // Check if already checked in
     let attendance = await Attendance.findOne({ user: userId, date: today });
@@ -48,9 +47,8 @@ export const checkIn = async (req, res, next) => {
 export const checkOut = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    // Use local time for date (Nepal UTC+5:45)
-    const localDate = new Date(new Date().getTime() + (5.75 * 60 * 60 * 1000));
-    const today = localDate.toISOString().split('T')[0];
+    // Get Nepal date (YYYY-MM-DD)
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kathmandu' });
 
     const attendance = await Attendance.findOne({ user: userId, date: today });
     if (!attendance || !attendance.checkIn) {

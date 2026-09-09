@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Eye, EyeOff, ShieldCheck, AlertCircle, CheckCircle2, ArrowRight } from 'lucide-react';
 import Button from '../admin/components/Button';
@@ -10,6 +10,16 @@ const ChangePassword = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    const userJson = localStorage.getItem('rcs_user');
+    if (userJson) {
+      const user = JSON.parse(userJson);
+      if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
+        navigate('/admin');
+      }
+    }
+  }, [navigate]);
 
   const [formData, setFormData] = useState({
     currentPassword: '',

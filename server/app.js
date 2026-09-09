@@ -41,8 +41,9 @@ app.use(helmet({
   crossOriginResourcePolicy: false,
 }));
 app.use(cors({
-  origin: true, // Allow all origins temporarily for easier deployment debugging
-  credentials: true
+  origin: ['https://rcs.com.np', 'http://localhost:5173', 'http://localhost:3000'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
 }));
 app.use(express.json());
 app.use(morgan('dev'));

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Lock, Eye, EyeOff, ShieldCheck, AlertCircle, CheckCircle2, ArrowRight } from 'lucide-react';
 import Button from '../admin/components/Button';
 import Input from '../admin/components/Input';
+import { apiFetch } from '../utils/api';
 
 const ChangePassword = () => {
   const navigate = useNavigate();
@@ -58,15 +59,8 @@ const ChangePassword = () => {
 
     setIsLoading(true);
     try {
-      const backendUrl = import.meta.env.VITE_API_URL || 'https://rcs-ajbn.onrender.com';
-      const token = localStorage.getItem('rcs_admin_token');
-
-      const response = await fetch(`${backendUrl}/api/auth/update-password`, {
+      const response = await apiFetch('/api/auth/update-password', {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify({
           currentPassword: formData.currentPassword,
           newPassword: formData.newPassword

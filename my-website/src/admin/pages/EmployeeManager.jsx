@@ -17,6 +17,7 @@ import {
 import Button from '../components/Button';
 import Input from '../components/Input';
 import Modal from '../components/Modal';
+import { apiFetch } from '../../utils/api';
 
 const EmployeeManager = () => {
   const [employees, setEmployees] = useState([]);
@@ -41,11 +42,7 @@ const EmployeeManager = () => {
 
   const fetchEmployees = async () => {
     try {
-      const backendUrl = import.meta.env.VITE_API_URL || 'https://rcs-ajbn.onrender.com';
-      const token = localStorage.getItem('rcs_admin_token');
-      const response = await fetch(`${backendUrl}/api/employees`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const response = await apiFetch('/api/employees');
       const data = await response.json();
       if (data.success) setEmployees(data.data);
     } catch (err) {
@@ -78,17 +75,11 @@ const EmployeeManager = () => {
     setError(null);
 
     try {
-      const backendUrl = import.meta.env.VITE_API_URL || 'https://rcs-ajbn.onrender.com';
-      const token = localStorage.getItem('rcs_admin_token');
-      const url = editingId ? `${backendUrl}/api/employees/${editingId}` : `${backendUrl}/api/employees`;
+      const url = editingId ? `/api/employees/${editingId}` : `/api/employees`;
       const method = editingId ? 'PUT' : 'POST';
 
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify(formData)
       });
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Mail, ArrowRight, ShieldCheck } from 'lucide-react';
+import { apiFetch } from '../../utils/api';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -15,14 +16,8 @@ const Login = () => {
     setError('');
 
     try {
-      let backendUrl = import.meta.env.VITE_API_URL || 'https://rcs-ajbn.onrender.com';
-      if (backendUrl.endsWith('/')) {
-        backendUrl = backendUrl.slice(0, -1);
-      }
-
-      const response = await fetch(`${backendUrl}/api/auth/login`, {
+      const response = await apiFetch('/api/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
 

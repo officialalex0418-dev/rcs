@@ -5,6 +5,7 @@ import {
   X, ShieldCheck, Briefcase, LayoutGrid, Send, Clock,
   ChevronDown, MoreVertical
 } from 'lucide-react';
+import { apiFetch } from '../../utils/api';
 
 const ApplicationsList = () => {
   const [applications, setApplications] = useState([]);
@@ -19,23 +20,13 @@ const ApplicationsList = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      let backendUrl = import.meta.env.VITE_API_URL || '';
-      if (backendUrl.endsWith('/')) {
-        backendUrl = backendUrl.slice(0, -1);
-      }
-      const token = localStorage.getItem('rcs_admin_token');
-
       const queryParams = new URLSearchParams();
       if (filterJob) queryParams.append('job', filterJob);
       if (filterStatus) queryParams.append('status', filterStatus);
 
       const [appRes, jobRes] = await Promise.all([
-        fetch(`${backendUrl}/api/careers/applications?${queryParams.toString()}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        }),
-        fetch(`${backendUrl}/api/careers/jobs?admin=true`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
+        apiFetch(`/api/careers/applications?${queryParams.toString()}`),
+        apiFetch('/api/careers/jobs?admin=true')
       ]);
 
       const appData = await appRes.json();
@@ -56,17 +47,8 @@ const ApplicationsList = () => {
 
   const handleStatusChange = async (id, newStatus) => {
     try {
-      let backendUrl = import.meta.env.VITE_API_URL || '';
-      if (backendUrl.endsWith('/')) {
-        backendUrl = backendUrl.slice(0, -1);
-      }
-      const token = localStorage.getItem('rcs_admin_token');
-      const response = await fetch(`${backendUrl}/api/careers/applications/${id}/status`, {
+      const response = await apiFetch(`/api/careers/applications/${id}/status`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify({ status: newStatus })
       });
       const data = await response.json();

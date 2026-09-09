@@ -6,6 +6,7 @@ import {
   ChevronDown, Send, Clock, LayoutGrid, List, Filter,
   ChevronLeft, ChevronRight
 } from 'lucide-react';
+import { apiFetch } from '../../utils/api';
 
 const JobsList = () => {
   const [jobs, setJobs] = useState([]);
@@ -20,19 +21,9 @@ const JobsList = () => {
 
   const fetchData = async () => {
     try {
-      let backendUrl = import.meta.env.VITE_API_URL || '';
-      if (backendUrl.endsWith('/')) {
-        backendUrl = backendUrl.slice(0, -1);
-      }
-      const token = localStorage.getItem('rcs_admin_token');
-
       const [jobsRes, appsRes] = await Promise.all([
-        fetch(`${backendUrl}/api/careers/jobs?admin=true`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        }),
-        fetch(`${backendUrl}/api/careers/applications`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
+        apiFetch('/api/careers/jobs?admin=true'),
+        apiFetch('/api/careers/applications')
       ]);
 
       const jobsData = await jobsRes.json();
@@ -58,20 +49,9 @@ const JobsList = () => {
     if (!window.confirm('Are you sure you want to delete this vacancy? This action cannot be undone.')) return;
 
     try {
-      let backendUrl = import.meta.env.VITE_API_URL || '';
-      if (backendUrl.endsWith('/')) {
-        backendUrl = backendUrl.slice(0, -1);
-      }
-      const token = localStorage.getItem('rcs_admin_token');
-
-      console.log(`Attempting to delete job: ${id} at ${backendUrl}/api/careers/jobs/${id}`);
-
-      const response = await fetch(`${backendUrl}/api/careers/jobs/${id}`, {
+      const response = await apiFetch(`/api/careers/jobs/${id}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json'
-        }
+        headers: { 'Accept': 'application/json' }
       });
 
       const text = await response.text();
@@ -98,17 +78,8 @@ const JobsList = () => {
   const handleStatusToggle = async (id, currentStatus) => {
     try {
       const newStatus = currentStatus === 'Active' ? 'Closed' : 'Active';
-      let backendUrl = import.meta.env.VITE_API_URL || '';
-      if (backendUrl.endsWith('/')) {
-        backendUrl = backendUrl.slice(0, -1);
-      }
-      const token = localStorage.getItem('rcs_admin_token');
-      const response = await fetch(`${backendUrl}/api/careers/jobs/${id}`, {
+      const response = await apiFetch(`/api/careers/jobs/${id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify({ status: newStatus })
       });
       if (response.ok) fetchData();

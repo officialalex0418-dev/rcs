@@ -24,6 +24,7 @@ import payrollRoutes from './routes/payrollRoutes.js';
 import supportRoutes from './routes/supportRoutes.js';
 import taskRoutes from './routes/taskRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
+import attendanceRoutes from './routes/attendanceRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -87,6 +88,7 @@ app.use('/api/payroll', payrollRoutes);
 app.use('/api/support', supportRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/attendance', attendanceRoutes);
 
 // Basic Route
 app.get('/', (req, res) => {

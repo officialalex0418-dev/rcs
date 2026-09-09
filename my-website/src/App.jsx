@@ -34,6 +34,9 @@ import PayrollManager from "./admin/pages/PayrollManager";
 import SupportManager from "./admin/pages/SupportManager";
 import ChangePassword from "./pages/ChangePassword";
 import EmployeeDashboard from "./pages/EmployeeDashboard";
+import EmployeeLayout from "./components/EmployeeLayout";
+import AttendancePage from "./pages/AttendancePage";
+import MyTasksPage from "./pages/MyTasksPage";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -99,13 +102,21 @@ function Site() {
           }
         />
         <Route
-          path="/dashboard"
           element={
             <ProtectedRoute allowedRoles={['STAFF']}>
-              <EmployeeDashboard />
+              <EmployeeLayout />
             </ProtectedRoute>
           }
-        />
+        >
+          <Route path="/dashboard" element={<EmployeeDashboard />} />
+          <Route path="/attendance" element={<AttendancePage />} />
+          <Route path="/tasks" element={<MyTasksPage />} />
+          <Route path="/projects" element={<div className="p-8 text-2xl font-bold">Project Collaboration Hub Coming Soon</div>} />
+          <Route path="/time-tracking" element={<div className="p-8 text-2xl font-bold">Time Sheets Coming Soon</div>} />
+          <Route path="/performance" element={<div className="p-8 text-2xl font-bold">Performance Analytics Coming Soon</div>} />
+          <Route path="/payroll" element={<div className="p-8 text-2xl font-bold">Payslips & Tax Records Coming Soon</div>} />
+        </Route>
+
         <Route path="/employee/dashboard" element={<Navigate to="/dashboard" replace />} />
 
         {/* Public Website */}

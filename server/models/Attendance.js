@@ -12,6 +12,12 @@ const attendanceSchema = new mongoose.Schema({
   },
   checkIn: Date,
   checkOut: Date,
+  checkInSelfie: String,
+  checkOutSelfie: String,
+  biometricVerified: {
+    type: Boolean,
+    default: false
+  },
   status: {
     type: String,
     enum: ['PRESENT', 'ABSENT', 'LATE', 'LEAVE'],

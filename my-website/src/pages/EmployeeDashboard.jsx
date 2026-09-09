@@ -11,7 +11,6 @@ import { apiFetch } from '../utils/api';
 const EmployeeDashboard = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -29,13 +28,11 @@ const EmployeeDashboard = () => {
     };
 
     fetchDashboardData();
-    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
-    return () => clearInterval(timer);
   }, []);
 
   if (loading || !data) {
     return (
-      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
+      <div className="flex items-center justify-center h-[60vh]">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin"></div>
           <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Syncing Workplace...</p>
@@ -47,96 +44,15 @@ const EmployeeDashboard = () => {
   const { user, stats, scoreboard, progress, tasks, kpis, upcomingEvents } = data;
 
   return (
-    <div className="flex min-h-screen bg-[#F8FAFC] text-slate-900 font-sans">
-      {/* --- SIDEBAR --- */}
-      <aside className="w-72 bg-white border-r border-slate-200/60 hidden xl:flex flex-col sticky top-0 h-screen p-8">
-        <div className="flex items-center gap-3 mb-12">
-          <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
-             <Layers size={22} />
-          </div>
-          <span className="text-xl font-black tracking-tighter">WorkHub</span>
-        </div>
+    <div className="animate-in fade-in duration-700">
 
-        <nav className="flex-1 space-y-2 text-slate-500">
-          <SidebarLink icon={LayoutDashboard} label="Dashboard" active />
-          <SidebarLink icon={CheckSquare} label="My Tasks" badge="4" />
-          <SidebarLink icon={Layers} label="Projects" />
-          <SidebarLink icon={Timer} label="Time Tracking" />
-          <SidebarLink icon={BarChart3} label="Performance" />
-          <SidebarLink icon={Wallet} label="Payroll" />
-          <SidebarLink icon={PieChart} label="Reports" />
-          <SidebarLink icon={Calendar} label="Calendar" />
-          <SidebarLink icon={FileStack} label="Documents" />
-          <SidebarLink icon={Settings} label="Settings" />
-        </nav>
-
-        {/* Upgrade Pro Card */}
-        <div className="mt-8 p-6 bg-gradient-to-br from-slate-900 to-slate-800 rounded-[2rem] text-white relative overflow-hidden">
-           <div className="absolute top-0 right-0 p-4 opacity-10">
-              <Star size={60} />
-           </div>
-           <h4 className="text-sm font-bold mb-2 flex items-center gap-2">
-             <Star size={14} className="text-blue-400" /> Upgrade to Pro
-           </h4>
-           <p className="text-[10px] text-slate-400 mb-4 leading-relaxed">Unlock advanced features and analytical reports.</p>
-           <button className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">Upgrade Now</button>
-        </div>
-
-        {/* Bottom User Card */}
-        <div className="mt-8 pt-8 border-t border-slate-100 flex items-center justify-between">
-           <div className="flex items-center gap-3">
-             <div className="w-10 h-10 rounded-xl bg-slate-100 overflow-hidden">
-               <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`} alt="Avatar" />
-             </div>
-             <div>
-               <p className="text-sm font-black leading-none mb-1">{user.name}</p>
-               <p className="text-[10px] font-bold text-slate-400">{user.designation}</p>
-             </div>
-           </div>
-           <ChevronDown size={16} className="text-slate-300" />
-        </div>
-      </aside>
-
-      {/* --- MAIN CONTENT --- */}
-      <main className="flex-1 p-8 lg:p-12 overflow-y-auto max-w-[1600px] mx-auto">
-
-        {/* Header */}
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
-          <div>
-            <h1 className="text-3xl font-black tracking-tight text-slate-900 mb-2">
+        {/* Welcome Header */}
+        <div className="mb-12">
+            <h1 className="text-4xl font-black tracking-tight text-slate-900 mb-2">
               Good Morning, {user.name.split(' ')[0]}! 👋
             </h1>
             <p className="text-slate-400 font-medium">You are doing great! Keep up the excellent work.</p>
-          </div>
-
-          <div className="flex items-center gap-6">
-            <div className="relative group hidden lg:block">
-               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors" size={18} />
-               <input
-                 type="text"
-                 placeholder="Search anything..."
-                 className="pl-12 pr-10 py-3 bg-white border border-slate-200 rounded-2xl text-sm outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500/20 w-80 transition-all font-medium"
-               />
-               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-300 border border-slate-100 px-1.5 py-0.5 rounded-md">⌘K</span>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <button className="relative p-3 bg-white border border-slate-200 rounded-2xl text-slate-600 hover:border-blue-200 transition-all shadow-sm">
-                 <Bell size={20} />
-                 <span className="absolute top-2.5 right-2.5 w-4 h-4 bg-red-500 text-white text-[8px] font-black rounded-full flex items-center justify-center border-2 border-white">3</span>
-              </button>
-
-              <div className="text-right hidden sm:block">
-                 <p className="text-sm font-black text-slate-900">{currentTime.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}</p>
-                 <div className="flex items-center justify-end gap-2">
-                    <span className="text-sm font-bold text-slate-500">{currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span className="text-[10px] font-black text-emerald-600 uppercase">Live</span>
-                 </div>
-              </div>
-            </div>
-          </div>
-        </header>
+        </div>
 
         {/* --- Top Metrics Row --- */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -178,14 +94,14 @@ const EmployeeDashboard = () => {
           <div className="col-span-12 lg:col-span-5 space-y-8">
              <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200/60 shadow-sm shadow-blue-500/5">
                 <div className="flex justify-between items-center mb-10">
-                   <h2 className="text-xl font-black tracking-tight">Performance Scoreboard</h2>
+                   <h2 className="text-xl font-black tracking-tight text-slate-900">Performance Scoreboard</h2>
                    <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-xl text-[10px] font-black uppercase text-slate-400">
                       This Month <ChevronDown size={14} />
                    </div>
                 </div>
 
-                <div className="flex items-center gap-12">
-                   <div className="relative w-44 h-44 flex items-center justify-center">
+                <div className="flex flex-col md:flex-row items-center gap-12">
+                   <div className="relative w-44 h-44 flex items-center justify-center flex-shrink-0">
                       {/* Gauge SVG */}
                       <svg className="w-full h-full transform -rotate-90">
                          <circle cx="88" cy="88" r="76" stroke="#f1f5f9" strokeWidth="12" fill="transparent" />
@@ -208,7 +124,7 @@ const EmployeeDashboard = () => {
                       </div>
                    </div>
 
-                   <div className="flex-1 space-y-6">
+                   <div className="flex-1 w-full space-y-6">
                       <ScoreBar label="Code Quality" value={scoreboard.breakdown.codeQuality} max={10} color="blue" />
                       <ScoreBar label="Task Completion" value={scoreboard.breakdown.taskCompletion} max={10} color="indigo" />
                       <ScoreBar label="Collaboration" value={scoreboard.breakdown.collaboration} max={10} color="purple" />
@@ -220,13 +136,13 @@ const EmployeeDashboard = () => {
              {/* KPI Section */}
              <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200/60 shadow-sm shadow-blue-500/5">
                 <div className="flex justify-between items-center mb-8">
-                   <h2 className="text-xl font-black tracking-tight">Key Performance Indicators</h2>
+                   <h2 className="text-xl font-black tracking-tight text-slate-900">Key Performance Indicators</h2>
                    <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-xl text-[10px] font-black uppercase text-slate-400">
                       This Month <ChevronDown size={14} />
                    </div>
                 </div>
 
-                <div className="grid grid-cols-4 gap-4 mb-10">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
                    <KPICard icon={CheckSquare} color="blue" label="Tasks Completed" value={kpis.tasksCompleted} trend="+15%" />
                    <KPICard icon={Timer} color="emerald" label="On-Time Delivery" value={kpis.onTimeDelivery} trend="+8%" />
                    <KPICard icon={AlertCircle} color="red" label="Bug Resolution" value={kpis.bugResolution} trend="+10%" />
@@ -255,22 +171,22 @@ const EmployeeDashboard = () => {
                    </svg>
                    <div className="flex justify-between mt-4 text-[10px] font-bold text-slate-400 uppercase">
                       <span>Aug 1</span>
-                      <span>Aug 6</span>
+                      <span className="hidden sm:inline">Aug 6</span>
                       <span>Aug 11</span>
-                      <span>Aug 16</span>
+                      <span className="hidden sm:inline">Aug 16</span>
                       <span>Aug 21</span>
-                      <span>Aug 26</span>
+                      <span className="hidden sm:inline">Aug 26</span>
                       <span>Aug 31</span>
                    </div>
                 </div>
              </div>
           </div>
 
-          {/* Progress Overview & Profile (Middle Col) */}
+          {/* Progress Overview & Task List (Middle Col) */}
           <div className="col-span-12 lg:col-span-4 space-y-8">
              <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200/60 shadow-sm shadow-blue-500/5">
                 <div className="flex justify-between items-center mb-8">
-                   <h2 className="text-xl font-black tracking-tight">Progress Overview</h2>
+                   <h2 className="text-xl font-black tracking-tight text-slate-900">Progress Overview</h2>
                 </div>
 
                 <div className="mb-10">
@@ -313,7 +229,7 @@ const EmployeeDashboard = () => {
              {/* Uncompleted Tasks */}
              <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200/60 shadow-sm shadow-blue-500/5">
                 <div className="flex justify-between items-center mb-8">
-                   <h2 className="text-xl font-black tracking-tight">Uncompleted Tasks</h2>
+                   <h2 className="text-xl font-black tracking-tight text-slate-900">Uncompleted Tasks</h2>
                    <button className="text-blue-600 text-[10px] font-black uppercase tracking-widest hover:underline">View All</button>
                 </div>
 
@@ -337,7 +253,7 @@ const EmployeeDashboard = () => {
              </div>
           </div>
 
-          {/* Right Section: Profile & Sidebar Cards */}
+          {/* Right Section: Profile Card & Sidebar Feed */}
           <div className="col-span-12 lg:col-span-3 space-y-8">
              {/* Profile Card */}
              <div className="bg-white rounded-[2.5rem] overflow-hidden border border-slate-200/60 shadow-sm shadow-blue-500/5">
@@ -371,7 +287,7 @@ const EmployeeDashboard = () => {
              {/* Upcoming Events */}
              <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200/60 shadow-sm shadow-blue-500/5">
                 <div className="flex justify-between items-center mb-8">
-                   <h2 className="text-sm font-black tracking-tight">Upcoming Events</h2>
+                   <h2 className="text-sm font-black tracking-tight text-slate-900">Upcoming Events</h2>
                    <button className="text-blue-600 text-[10px] font-black uppercase tracking-widest hover:underline">View Calendar</button>
                 </div>
 
@@ -399,7 +315,7 @@ const EmployeeDashboard = () => {
              {/* Recent Achievements */}
              <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200/60 shadow-sm shadow-blue-500/5">
                 <div className="flex justify-between items-center mb-8">
-                   <h2 className="text-sm font-black tracking-tight">Recent Achievements</h2>
+                   <h2 className="text-sm font-black tracking-tight text-slate-900">Recent Achievements</h2>
                    <button className="text-blue-600 text-[10px] font-black uppercase tracking-widest hover:underline">View All</button>
                 </div>
 
@@ -414,29 +330,13 @@ const EmployeeDashboard = () => {
                    </div>
                 </div>
              </div>
-
           </div>
         </div>
-      </main>
     </div>
   );
 };
 
-const SidebarLink = ({ icon: Icon, label, active = false, badge }) => (
-  <a href="#" className={`flex items-center justify-between p-3 rounded-2xl transition-all group ${
-    active ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20' : 'hover:bg-slate-50 hover:text-slate-900'
-  }`}>
-    <div className="flex items-center gap-3">
-       <Icon size={20} className={active ? 'text-white' : 'text-slate-400 group-hover:text-blue-600 transition-colors'} />
-       <span className="text-sm font-bold">{label}</span>
-    </div>
-    {badge && (
-      <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
-        active ? 'bg-white/20 text-white' : 'bg-red-500 text-white'
-      }`}>{badge}</span>
-    )}
-  </a>
-);
+// --- Sub-components (Reused) ---
 
 const MetricCard = ({ icon: Icon, label, value, sub, color, progress }) => (
   <div className="bg-white p-6 rounded-[2.5rem] border border-slate-200/60 shadow-sm shadow-blue-500/5 hover:shadow-md transition-all relative overflow-hidden group">
@@ -449,7 +349,7 @@ const MetricCard = ({ icon: Icon, label, value, sub, color, progress }) => (
        <Icon size={24} />
     </div>
     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">{label}</p>
-    <h3 className="text-xl font-black text-slate-900 mb-1.5">{value}</h3>
+    <h3 className="text-xl font-black text-slate-900 mb-1.5 truncate">{value}</h3>
     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{sub}</p>
 
     {progress && (
@@ -490,15 +390,15 @@ const KPICard = ({ icon: Icon, color, label, value, trend }) => (
         <Icon size={18} />
      </div>
      <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5">{label}</p>
-     <h4 className="text-lg font-black text-slate-900 mb-1">{value}</h4>
-     <p className="text-[9px] font-bold text-emerald-500">{trend} <span className="text-slate-400 ml-1">from last month</span></p>
+     <h4 className="text-lg font-black text-slate-900 mb-1 truncate">{value}</h4>
+     <p className="text-[9px] font-bold text-emerald-500">{trend}</p>
   </div>
 );
 
 const ProfileInfo = ({ icon: Icon, value }) => (
-  <div className="flex items-center gap-3 text-xs font-bold text-slate-600">
-     <Icon size={16} className="text-slate-300" />
-     <span>{value}</span>
+  <div className="flex items-center gap-3 text-xs font-bold text-slate-600 overflow-hidden">
+     <Icon size={16} className="text-slate-300 flex-shrink-0" />
+     <span className="truncate">{value}</span>
   </div>
 );
 

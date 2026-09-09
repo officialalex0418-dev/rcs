@@ -32,9 +32,20 @@ export const updateTask = async (req, res, next) => {
       progress = Math.round((completedCount / subtasks.length) * 100);
     }
 
+    const updateData = { ...req.body, progress };
+
+    if (req.file) {
+      updateData.outputScreenshot = `/uploads/tasks/${req.file.filename}`;
+    }
+
+    if (req.body.status === 'COMPLETED') {
+      updateData.completedAt = new Date();
+      updateData.progress = 100;
+    }
+
     const task = await Task.findByIdAndUpdate(
       req.params.id,
-      { ...req.body, progress },
+      updateData,
       { new: true }
     );
 

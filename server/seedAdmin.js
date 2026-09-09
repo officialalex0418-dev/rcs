@@ -19,7 +19,8 @@ export const seedAdmin = async () => {
       email: adminEmail,
       password: 'L1Ax8i%39043#',
       role: 'SUPER_ADMIN',
-      permissions: ['ALL']
+      permissions: ['ALL'],
+      mustChangePassword: false
     });
 
     await superAdmin.save();

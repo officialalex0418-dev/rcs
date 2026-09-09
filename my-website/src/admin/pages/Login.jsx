@@ -35,12 +35,10 @@ const Login = () => {
         localStorage.setItem('rcs_admin_token', data.token);
         localStorage.setItem('rcs_user', JSON.stringify(userData));
 
-        if (mustChange) {
-          navigate('/change-password');
-        } else if (userData?.role === 'ADMIN' || userData?.role === 'SUPER_ADMIN') {
+        if (userData?.role === 'ADMIN' || userData?.role === 'SUPER_ADMIN') {
           navigate('/admin');
-        } else if (userData?.role === 'STAFF') {
-          navigate('/dashboard');
+        } else if (mustChange) {
+          navigate('/change-password');
         } else {
           navigate('/dashboard');
         }

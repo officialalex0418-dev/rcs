@@ -34,7 +34,7 @@ export const createEmployee = async (req, res, next) => {
     // Send onboarding email
     let emailStatus = 'sent';
     try {
-      const result = await sendOnboardingEmail(employee.email, employee.name, tempPassword);
+      const result = await sendOnboardingEmail(employee.email, employee.name, tempPassword, employee.designation);
       if (!result.success) {
         console.error('Onboarding email failed:', result.error);
         emailStatus = 'failed';

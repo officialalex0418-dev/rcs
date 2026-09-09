@@ -15,7 +15,7 @@ const EmployeeDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('rcs_user')) || {});
   const [showLeaderboard, setShowLeaderboard] = useState(false);
-  const [leaderboardData, setLeaderboard) = useState([]);
+  const [leaderboardData, setLeaderboard] = useState([]);
 
   useEffect(() => {
     const handleUpdate = (e) => {

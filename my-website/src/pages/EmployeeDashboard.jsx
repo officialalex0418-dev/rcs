@@ -276,7 +276,11 @@ const EmployeeDashboard = () => {
                    <div className="absolute -bottom-10 left-1/2 -translate-x-1/2">
                       <div className="w-24 h-24 rounded-3xl bg-white p-1.5 shadow-xl border border-slate-50">
                          <div className="w-full h-full rounded-[1.2rem] overflow-hidden bg-slate-100 border border-slate-200">
-                           <img src={user.profilePicture ? `https://rcs-ajbn.onrender.com${user.profilePicture}` : `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`} alt="User" className="w-full h-full object-cover" />
+                           <img
+                             src={user.profilePicture ? `https://rcs-ajbn.onrender.com${user.profilePicture}` : `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`}
+                             alt="User"
+                             className="w-full h-full object-cover"
+                           />
                          </div>
                          <div className="absolute bottom-1 right-1 w-4 h-4 bg-emerald-500 border-4 border-white rounded-full"></div>
                       </div>

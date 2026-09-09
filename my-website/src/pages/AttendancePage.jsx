@@ -1,21 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  UserCheck, Clock, Camera, Fingerprint, Calendar,
-  AlertCircle, CheckCircle2, ChevronLeft, ChevronRight,
-  MapPin, Loader2
+  UserCheck, Clock, Camera, Calendar,
+  AlertCircle, CheckCircle2, Loader2, X
 } from 'lucide-react';
 import { apiFetch } from '../utils/api';
 import Button from '../admin/components/Button';
+import Modal from '../admin/components/Modal';
 
 const AttendancePage = () => {
   const [logs, setLogs] = useState([]);
   const [stats, setStats] = useState({ PRESENT: 0, ABSENT: 0, LATE: 0, LEAVE: 0 });
   const [loading, setLoading] = useState(true);
   const [todayLog, setTodayLog] = useState(null);
-  const [showCamera, setShowCamera] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  // Camera Modal State
+  const [showCameraModal, setShowCameraModal] = useState(false);
+  const [attendanceType, setAttendanceType] = useState(null); // 'in' or 'out'
   const [capturedImage, setCapturedImage] = useState(null);
-  const [isCheckingIn, setIsCheckingIn] = useState(false);
-  const [isBiometricActive, setIsBiometricActive] = useState(false);
+  const [cameraStream, setCameraStream] = useState(null);
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -27,10 +30,8 @@ const AttendancePage = () => {
       if (data.success) {
         setLogs(data.data);
         setStats(data.stats);
-
         const today = new Date().toISOString().split('T')[0];
-        const found = data.data.find(log => log.date === today);
-        setTodayLog(found);
+        setTodayLog(data.data.find(log => log.date === today));
       }
     } catch (err) {
       console.error('Failed to fetch attendance logs:', err);
@@ -43,99 +44,82 @@ const AttendancePage = () => {
     fetchLogs();
   }, []);
 
-  const startCamera = async () => {
-    setShowCamera(true);
+  const handleActionClick = async (type) => {
+    setAttendanceType(type);
+    setShowCameraModal(true);
     setCapturedImage(null);
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
+      setCameraStream(stream);
+      if (videoRef.current) videoRef.current.srcObject = stream;
     } catch (err) {
-      console.error('Camera access denied:', err);
-      alert('Please allow camera access for verification.');
-      setShowCamera(false);
+      alert('Camera access is required for verification.');
+      setShowCameraModal(false);
     }
   };
 
-  const capturePhoto = () => {
+  const captureAndSubmit = async () => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    if (video && canvas) {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(video, 0, 0);
-      const dataUrl = canvas.toDataURL('image/jpeg');
-      setCapturedImage(dataUrl);
+    if (!video || !canvas) return;
 
-      // Stop camera stream
-      const stream = video.srcObject;
-      const tracks = stream.getTracks();
-      tracks.forEach(track => track.stop());
-      setShowCamera(false);
-    }
-  };
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    const dataUrl = canvas.toDataURL('image/jpeg');
+    setCapturedImage(dataUrl);
 
-  const handleAttendance = async (type) => {
-    if (!capturedImage) {
-      alert('Selfie verification is mandatory.');
-      return;
+    // Stop stream
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+      setCameraStream(null);
     }
 
-    setIsCheckingIn(true);
+    setIsProcessing(true);
     try {
-      const blob = await (await fetch(capturedImage)).blob();
+      const blob = await (await fetch(dataUrl)).blob();
       const formData = new FormData();
       formData.append('selfie', blob, 'selfie.jpg');
-      formData.append('biometricVerified', isBiometricActive);
 
-      const endpoint = type === 'in' ? '/api/attendance/check-in' : '/api/attendance/check-out';
-
-      // We use raw fetch here because apiFetch might not handle FormData perfectly depending on implementation
-      // But let's assume apiFetch handles it or fallback to fetch
+      const endpoint = attendanceType === 'in' ? '/api/attendance/check-in' : '/api/attendance/check-out';
       const token = localStorage.getItem('rcs_admin_token');
-      const backendUrl = import.meta.env.VITE_API_URL || 'https://rcs-ajbn.onrender.com';
+      const backendUrl = 'https://rcs-ajbn.onrender.com';
 
       const response = await fetch(`${backendUrl}${endpoint}`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Authorization': `Bearer ${token}` },
         body: formData
       });
 
       const data = await response.json();
       if (data.success) {
-        alert(`${type === 'in' ? 'Check-in' : 'Check-out'} successful!`);
-        setCapturedImage(null);
+        alert(`${attendanceType === 'in' ? 'Check-in' : 'Check-out'} Successful!`);
+        setShowCameraModal(false);
         fetchLogs();
       } else {
-        alert(data.message || 'Verification failed');
+        alert(data.message || 'Verification Failed');
+        setCapturedImage(null);
+        handleActionClick(attendanceType); // Restart camera
       }
     } catch (err) {
-      console.error('Attendance error:', err);
-      alert('Network error during verification.');
+      alert('Network error. Check connection.');
     } finally {
-      setIsCheckingIn(false);
+      setIsProcessing(false);
     }
   };
 
-  const toggleBiometric = () => {
-    // Mocking biometric verification
-    if (!isBiometricActive) {
-      if (window.confirm('Enable biometric verification for this session?')) {
-        setIsBiometricActive(true);
-      }
-    } else {
-      setIsBiometricActive(false);
+  const closeCamera = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+      setCameraStream(null);
     }
+    setShowCameraModal(false);
+    setCapturedImage(null);
   };
 
   if (loading) return (
-    <div className="flex items-center justify-center h-[60vh]">
-      <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
-    </div>
+    <div className="flex items-center justify-center h-[60vh]"><Loader2 className="animate-spin text-blue-600" size={40} /></div>
   );
 
   return (
@@ -145,153 +129,122 @@ const AttendancePage = () => {
         <p className="text-slate-500 font-medium">Verified check-in and monthly tracking.</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* Action Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+          <div className="bg-white rounded-[2.5rem] p-10 border border-slate-200/60 shadow-sm flex flex-col items-center text-center">
+             <div className="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-3xl flex items-center justify-center mb-6 border border-emerald-100">
+                <Clock size={40} />
+             </div>
+             <h2 className="text-2xl font-black mb-2">Shift Check-In</h2>
+             <p className="text-slate-400 text-sm font-medium mb-8">Ready to start your day? Take a quick selfie to verify.</p>
+             <button
+               disabled={!!(todayLog && todayLog.checkIn)}
+               onClick={() => handleActionClick('in')}
+               className="w-full py-5 bg-emerald-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-emerald-500/20 active:scale-95 transition-all disabled:opacity-50 disabled:grayscale"
+             >
+                {todayLog?.checkIn ? `Checked In: ${new Date(todayLog.checkIn).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}` : 'Capture & Check In'}
+             </button>
+          </div>
 
-        {/* Left Column: Actions */}
-        <div className="lg:col-span-1 space-y-6">
-           <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200/60 shadow-sm shadow-blue-500/5">
-              <h2 className="text-xl font-black mb-6 flex items-center gap-3">
-                <Fingerprint className="text-blue-600" /> Verify Identity
-              </h2>
-
-              <div className="space-y-6">
-                 {/* Camera / Preview Area */}
-                 <div className="aspect-square rounded-3xl bg-slate-100 border-2 border-dashed border-slate-200 overflow-hidden relative group">
-                    {showCamera ? (
-                      <div className="w-full h-full relative">
-                        <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
-                        <button
-                          onClick={capturePhoto}
-                          className="absolute bottom-6 left-1/2 -translate-x-1/2 w-16 h-16 bg-white rounded-full border-4 border-blue-600 flex items-center justify-center shadow-xl active:scale-90 transition-transform"
-                        >
-                          <Camera className="text-blue-600" />
-                        </button>
-                      </div>
-                    ) : capturedImage ? (
-                      <div className="w-full h-full relative">
-                        <img src={capturedImage} alt="Captured" className="w-full h-full object-cover" />
-                        <button
-                          onClick={startCamera}
-                          className="absolute top-4 right-4 p-2 bg-black/50 text-white rounded-xl backdrop-blur-md"
-                        >
-                          <Clock size={16} />
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center gap-4 text-slate-400 group-hover:text-blue-600 transition-colors">
-                         <Camera size={48} />
-                         <p className="text-xs font-black uppercase tracking-widest">Selfie Verification Mandatory</p>
-                         <Button onClick={startCamera} variant="secondary" className="rounded-xl">Open Camera</Button>
-                      </div>
-                    )}
-                    <canvas ref={canvasRef} className="hidden" />
-                 </div>
-
-                 {/* Biometric Toggle */}
-                 <button
-                   onClick={toggleBiometric}
-                   className={`w-full p-4 rounded-2xl border flex items-center justify-between transition-all ${
-                     isBiometricActive ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-slate-50 border-slate-100 text-slate-500'
-                   }`}
-                 >
-                    <div className="flex items-center gap-3">
-                       <Fingerprint size={20} />
-                       <span className="text-sm font-black uppercase tracking-widest">Biometric Option</span>
-                    </div>
-                    <div className={`w-10 h-5 rounded-full relative transition-colors ${isBiometricActive ? 'bg-blue-600' : 'bg-slate-300'}`}>
-                       <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${isBiometricActive ? 'left-6' : 'left-1'}`} />
-                    </div>
-                 </button>
-
-                 {/* Action Buttons */}
-                 <div className="grid grid-cols-2 gap-4">
-                    <button
-                      disabled={isCheckingIn || !!(todayLog && todayLog.checkIn)}
-                      onClick={() => handleAttendance('in')}
-                      className="py-4 bg-emerald-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-emerald-600/20 active:scale-95 transition-all disabled:opacity-50 disabled:grayscale"
-                    >
-                       {isCheckingIn ? '...' : 'Check In'}
-                    </button>
-                    <button
-                      disabled={isCheckingIn || !todayLog || !!todayLog.checkOut}
-                      onClick={() => handleAttendance('out')}
-                      className="py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-slate-900/20 active:scale-95 transition-all disabled:opacity-50"
-                    >
-                       {isCheckingIn ? '...' : 'Check Out'}
-                    </button>
-                 </div>
-
-                 {todayLog && (
-                   <div className="p-4 bg-blue-50 border border-blue-100 rounded-2xl text-blue-700 text-xs font-bold space-y-2">
-                      <p className="flex justify-between">
-                         <span>Check-in:</span>
-                         <span>{new Date(todayLog.checkIn).toLocaleTimeString()}</span>
-                      </p>
-                      {todayLog.checkOut && (
-                        <p className="flex justify-between">
-                           <span>Check-out:</span>
-                           <span>{new Date(todayLog.checkOut).toLocaleTimeString()}</span>
-                        </p>
-                      )}
-                   </div>
-                 )}
-              </div>
-           </div>
-        </div>
-
-        {/* Right Columns: Stats & Logs */}
-        <div className="lg:col-span-2 space-y-8">
-           {/* Stats Grid */}
-           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <LogStatCard label="Present" value={stats.PRESENT} color="emerald" />
-              <LogStatCard label="Absent" value={stats.ABSENT} color="red" />
-              <LogStatCard label="Late" value={stats.LATE} color="amber" />
-              <LogStatCard label="Leave" value={stats.LEAVE} color="blue" />
-           </div>
-
-           {/* Detailed Log Table */}
-           <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200/60 shadow-sm shadow-blue-500/5">
-              <h2 className="text-xl font-black mb-8 text-slate-900">Attendance History</h2>
-
-              <div className="overflow-x-auto">
-                 <table className="w-full text-left border-collapse">
-                    <thead>
-                       <tr className="border-b border-slate-100">
-                          <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date</th>
-                          <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
-                          <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Check In</th>
-                          <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Check Out</th>
-                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50">
-                       {logs.map((log, idx) => (
-                         <tr key={idx} className="group hover:bg-slate-50/50 transition-colors">
-                            <td className="py-5">
-                               <p className="text-sm font-black text-slate-900">{new Date(log.date).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'})}</p>
-                            </td>
-                            <td className="py-5">
-                               <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest ${
-                                 log.status === 'PRESENT' ? 'bg-emerald-50 text-emerald-600' :
-                                 log.status === 'LATE' ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-600'
-                               }`}>
-                                 {log.status}
-                               </span>
-                            </td>
-                            <td className="py-5">
-                               <p className="text-xs font-bold text-slate-600">{log.checkIn ? new Date(log.checkIn).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '--:--'}</p>
-                            </td>
-                            <td className="py-5">
-                               <p className="text-xs font-bold text-slate-600">{log.checkOut ? new Date(log.checkOut).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '--:--'}</p>
-                            </td>
-                         </tr>
-                       ))}
-                    </tbody>
-                 </table>
-              </div>
-           </div>
-        </div>
-
+          <div className="bg-white rounded-[2.5rem] p-10 border border-slate-200/60 shadow-sm flex flex-col items-center text-center">
+             <div className="w-20 h-20 bg-slate-100 text-slate-900 rounded-3xl flex items-center justify-center mb-6 border border-slate-200">
+                <LogOut size={40} />
+             </div>
+             <h2 className="text-2xl font-black mb-2">End of Shift</h2>
+             <p className="text-slate-400 text-sm font-medium mb-8">Finished your tasks? Clock out for the day.</p>
+             <button
+               disabled={!todayLog || !!todayLog.checkOut}
+               onClick={() => handleActionClick('out')}
+               className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-slate-900/20 active:scale-95 transition-all disabled:opacity-50"
+             >
+                {todayLog?.checkOut ? `Checked Out: ${new Date(todayLog.checkOut).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}` : 'Capture & Check Out'}
+             </button>
+          </div>
       </div>
+
+      {/* Stats & History */}
+      <div className="space-y-8">
+         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <LogStatCard label="Present" value={stats.PRESENT} color="emerald" />
+            <LogStatCard label="Absent" value={stats.ABSENT} color="red" />
+            <LogStatCard label="Late" value={stats.LATE} color="amber" />
+            <LogStatCard label="Leave" value={stats.LEAVE} color="blue" />
+         </div>
+
+         <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200/60 shadow-sm">
+            <h2 className="text-xl font-black mb-8">Monthly Attendance Log</h2>
+            <div className="overflow-x-auto">
+               <table className="w-full text-left">
+                  <thead>
+                     <tr className="border-b border-slate-100">
+                        <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date</th>
+                        <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
+                        <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Verification</th>
+                        <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Timings</th>
+                     </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50">
+                     {logs.map((log, idx) => (
+                       <tr key={idx} className="group hover:bg-slate-50/50 transition-colors">
+                          <td className="py-5">
+                             <p className="text-sm font-black text-slate-900">{new Date(log.date).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'})}</p>
+                          </td>
+                          <td className="py-5">
+                             <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest ${
+                               log.status === 'PRESENT' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'
+                             }`}>{log.status}</span>
+                          </td>
+                          <td className="py-5">
+                             <div className="flex -space-x-2">
+                                {log.checkInSelfie && <img src={`https://rcs-ajbn.onrender.com${log.checkInSelfie}`} className="w-8 h-8 rounded-full border-2 border-white object-cover" alt="In" />}
+                                {log.checkOutSelfie && <img src={`https://rcs-ajbn.onrender.com${log.checkOutSelfie}`} className="w-8 h-8 rounded-full border-2 border-white object-cover" alt="Out" />}
+                             </div>
+                          </td>
+                          <td className="py-5">
+                             <p className="text-xs font-bold text-slate-600">
+                               {log.checkIn ? new Date(log.checkIn).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '--:--'} -
+                               {log.checkOut ? new Date(log.checkOut).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '--:--'}
+                             </p>
+                          </td>
+                       </tr>
+                     ))}
+                  </tbody>
+               </table>
+            </div>
+         </div>
+      </div>
+
+      {/* Camera Modal */}
+      <Modal isOpen={showCameraModal} onClose={closeCamera} title="Identity Verification">
+         <div className="space-y-6">
+            <div className="aspect-square rounded-3xl bg-slate-900 overflow-hidden relative border-4 border-white shadow-2xl">
+               {capturedImage ? (
+                  <img src={capturedImage} className="w-full h-full object-cover" alt="Verification" />
+               ) : (
+                  <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover scale-x-[-1]" />
+               )}
+               {isProcessing && (
+                 <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center text-white gap-4">
+                    <Loader2 className="animate-spin" size={40} />
+                    <p className="font-black uppercase tracking-widest text-[10px]">Processing...</p>
+                 </div>
+               )}
+            </div>
+
+            <div className="flex gap-4">
+               <button onClick={closeCamera} className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black uppercase tracking-widest hover:bg-slate-200 transition-all">Cancel</button>
+               {!capturedImage && (
+                 <button
+                   onClick={captureAndSubmit}
+                   className="flex-2 min-w-[200px] py-4 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-blue-500/20 active:scale-95 transition-all"
+                 >
+                    Capture & Verify
+                 </button>
+               )}
+            </div>
+            <canvas ref={canvasRef} className="hidden" />
+         </div>
+      </Modal>
     </div>
   );
 };
@@ -305,12 +258,17 @@ const LogStatCard = ({ label, value, color }) => (
   }`}>
     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{label}</p>
     <h3 className={`text-3xl font-black ${
-      color === 'emerald' ? 'text-emerald-600' :
-      color === 'red' ? 'text-red-600' :
-      color === 'amber' ? 'text-amber-600' :
-      'text-blue-600'
+      color === 'emerald' ? 'text-emerald-600' : color === 'red' ? 'text-red-600' : color === 'amber' ? 'text-amber-600' : 'text-blue-600'
     }`}>{value}</h3>
   </div>
+);
+
+const LogOut = ({ size, className }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+    <polyline points="16 17 21 12 16 7" />
+    <line x1="21" y1="12" x2="9" y2="12" />
+  </svg>
 );
 
 export default AttendancePage;

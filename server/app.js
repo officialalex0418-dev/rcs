@@ -32,10 +32,19 @@ dotenv.config();
 const app = express();
 
 // Ensure uploads directory exists
-const uploadDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+const uploadDirs = [
+  path.join(__dirname, 'uploads'),
+  path.join(__dirname, 'uploads/profiles'),
+  path.join(__dirname, 'uploads/attendance'),
+  path.join(__dirname, 'uploads/tasks'),
+  path.join(__dirname, 'uploads/resumes')
+];
+
+uploadDirs.forEach(dir => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+});
 
 // Middleware
 app.use(helmet({

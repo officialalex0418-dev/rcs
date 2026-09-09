@@ -66,12 +66,13 @@ const EmployeeSettings = () => {
       }
 
       const token = localStorage.getItem('rcs_admin_token');
-      const backendUrl = import.meta.env.VITE_API_URL || 'https://rcs-ajbn.onrender.com';
+      const backendUrl = 'https://rcs-ajbn.onrender.com';
 
       const response = await fetch(`${backendUrl}/api/auth/update-me`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`
+          // No Content-Type header here for FormData
         },
         body: data
       });

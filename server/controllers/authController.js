@@ -96,6 +96,9 @@ export const updateMe = async (req, res, next) => {
 
     if (req.file) {
       updateData.profilePicture = `/uploads/profiles/${req.file.filename}`;
+      console.log('--- SAVING PROFILE PICTURE ---');
+      console.log('User ID:', req.user.id);
+      console.log('Path:', updateData.profilePicture);
     }
 
     const user = await User.findByIdAndUpdate(req.user.id, updateData, {
@@ -103,11 +106,16 @@ export const updateMe = async (req, res, next) => {
       runValidators: true
     });
 
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    console.log('SUCCESS: Profile updated for', user.name);
+
     res.status(200).json({
       success: true,
       data: { user }
     });
   } catch (err) {
+    console.error('ERROR in updateMe:', err);
     next(err);
   }
 };

@@ -504,3 +504,77 @@ export const getProjectReport = async (req, res, next) => {
     next(err);
   }
 };
+
+export const getFinanceReport = async (req, res, next) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    const start = startDate ? new Date(startDate) : startOfMonth(new Date());
+    const end = endDate ? new Date(endDate) : endOfMonth(new Date());
+
+    const duration = end.getTime() - start.getTime();
+    const prevStart = new Date(start.getTime() - duration - 1000);
+    const prevEnd = new Date(start.getTime() - 1000);
+
+    // 1. Finance KPIs
+    const fetchFinanceKpis = async (s, e) => {
+      const projects = await Project.aggregate([
+        { $match: { createdAt: { $gte: s, $lte: e } } },
+        { $group: { _id: null, revenue: { $sum: '$budget' }, count: { $sum: 1 } } }
+      ]);
+
+      const payroll = await Payroll.aggregate([
+        { $match: { createdAt: { $gte: s, $lte: e }, status: 'PAID' } },
+        { $group: { _id: null, expense: { $sum: '$totalPaid' }, base: { $sum: '$baseSalary' }, bonus: { $sum: '$bonus' } } }
+      ]);
+
+      const rev = projects[0]?.revenue || 0;
+      const exp = payroll[0]?.expense || 0;
+
+      return {
+        revenue: rev,
+        expense: exp,
+        profit: rev - exp,
+        margin: rev ? Math.round(((rev - exp) / rev) * 100) : 0,
+        payroll: payroll[0] || { total: 0, base: 0, bonus: 0 }
+      };
+    };
+
+    const current = await fetchFinanceKpis(start, end);
+    const previous = await fetchFinanceKpis(prevStart, prevEnd);
+
+    // 2. Revenue vs Expense Trend
+    const trend = await Project.aggregate([
+      { $match: { createdAt: { $gte: start, $lte: end } } },
+      { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }, revenue: { $sum: '$budget' } } },
+      { $sort: { '_id': 1 } }
+    ]);
+
+    // 3. Project Profitability
+    const projectProfits = await Project.find({ createdAt: { $gte: start, $lte: end } })
+      .select('name client budget status progress')
+      .sort('-budget')
+      .limit(10);
+
+    // 4. Client Revenue
+    const clientRevenue = await Project.aggregate([
+      { $match: { createdAt: { $gte: start, $lte: end } } },
+      { $group: { _id: '$client', revenue: { $sum: '$budget' }, projects: { $sum: 1 } } },
+      { $sort: { revenue: -1 } },
+      { $limit: 10 }
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: current,
+        previousSummary: previous,
+        trends: trend,
+        projectProfits,
+        clientRevenue
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+};

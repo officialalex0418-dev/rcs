@@ -11,5 +11,6 @@ router.get('/company', getCompanyReport);
 router.get('/hr', getHRReport);
 router.get('/sales', getSalesReport);
 router.get('/projects', getProjectReport);
+router.get('/finance', getFinanceReport);
 
 export default router;

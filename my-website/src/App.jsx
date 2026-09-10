@@ -31,6 +31,7 @@ import CompanyReport from "./admin/pages/CompanyReport";
 import HRReport from "./admin/pages/HRReport";
 import SalesReport from "./admin/pages/SalesReport";
 import ProjectReport from "./admin/pages/ProjectReport";
+import FinanceReport from "./admin/pages/FinanceReport";
 import EmployeeManager from "./admin/pages/EmployeeManager";
 import TaskManager from "./admin/pages/TaskManager";
 import PayrollManager from "./admin/pages/PayrollManager";
@@ -92,7 +93,7 @@ function Site() {
           <Route path="reports/hr" element={<HRReport />} />
           <Route path="reports/sales" element={<SalesReport />} />
           <Route path="reports/projects" element={<ProjectReport />} />
-          <Route path="reports/finance" element={<CompanyReport />} />
+          <Route path="reports/finance" element={<FinanceReport />} />
           <Route path="reports/marketing" element={<CompanyReport />} />
           <Route path="support" element={<SupportManager />} />
           <Route path="settings" element={<div className="p-8 text-2xl font-bold">System Settings Coming Soon</div>} />

@@ -1,5 +1,12 @@
 import express from 'express';
-import { getCompanyReport, getHRReport, getSalesReport } from '../controllers/reportController.js';
+import {
+  getCompanyReport,
+  getHRReport,
+  getSalesReport,
+  getProjectReport,
+  getFinanceReport,
+  getMarketingReport
+} from '../controllers/reportController.js';
 import { protect, authorize } from '../middleware/auth.js';
 
 const router = express.Router();

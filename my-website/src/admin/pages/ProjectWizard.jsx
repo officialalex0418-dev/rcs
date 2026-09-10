@@ -80,18 +80,43 @@ const ProjectWizard = () => {
 
   const updateFormData = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
 
-  const handleSubmit = async () => {
+  const updateBudget = (breakdownField, value) => {
+    const newBreakdown = { ...formData.budget.breakdown, [breakdownField]: value };
+    const newTotal = Object.values(newBreakdown).reduce((acc, curr) => acc + (parseInt(curr) || 0), 0);
+    setFormData(prev => ({
+      ...prev,
+      budget: {
+        ...prev.budget,
+        breakdown: newBreakdown,
+        total: newTotal
+      }
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    if (e) e.preventDefault();
     setLoading(true);
     try {
+      const payload = {
+        ...formData,
+        startDate: formData.startDate || null,
+        targetDate: formData.targetDate || null
+      };
+
+      console.log('Submitting Project Data:', payload);
       const url = id ? `/api/projects/${id}` : '/api/projects';
       const method = id ? 'PUT' : 'POST';
       const response = await apiFetch(url, {
         method,
-        body: JSON.stringify(formData)
+        body: JSON.stringify(payload)
       });
+      const result = await response.json();
+      console.log('Submission Result:', result);
       if (response.ok) navigate('/admin/projects');
+      else alert(`Error: ${result.message || 'Failed to save project'}`);
     } catch (err) {
       console.error('Submit error:', err);
+      alert('An unexpected error occurred during deployment.');
     } finally {
       setLoading(false);
     }
@@ -252,10 +277,10 @@ const ProjectWizard = () => {
                     <div className="md:col-span-2 p-10 bg-slate-50 rounded-[3rem] border border-slate-200/60">
                        <h3 className="text-lg font-black text-slate-900 uppercase mb-8 flex items-center gap-2"><DollarSign size={20} className="text-emerald-500"/> Allocation Strategy</h3>
                        <div className="grid grid-cols-2 gap-8">
-                          <BudgetInput label="Human Capital" val={formData.budget.breakdown.employee} onChange={v => updateFormData('budget', {...formData.budget, breakdown: {...formData.budget.breakdown, employee: v}})} />
-                          <BudgetInput label="Infrastructure" val={formData.budget.breakdown.infrastructure} onChange={v => updateFormData('budget', {...formData.budget, breakdown: {...formData.budget.breakdown, infrastructure: v}})} />
-                          <BudgetInput label="Software & Tools" val={formData.budget.breakdown.software} onChange={v => updateFormData('budget', {...formData.budget, breakdown: {...formData.budget.breakdown, software: v}})} />
-                          <BudgetInput label="Risk Contingency" val={formData.budget.breakdown.contingency} onChange={v => updateFormData('budget', {...formData.budget, breakdown: {...formData.budget.breakdown, contingency: v}})} />
+                          <BudgetInput label="Human Capital" val={formData.budget.breakdown.employee} onChange={v => updateBudget('employee', v)} />
+                          <BudgetInput label="Infrastructure" val={formData.budget.breakdown.infrastructure} onChange={v => updateBudget('infrastructure', v)} />
+                          <BudgetInput label="Software & Tools" val={formData.budget.breakdown.software} onChange={v => updateBudget('software', v)} />
+                          <BudgetInput label="Risk Contingency" val={formData.budget.breakdown.contingency} onChange={v => updateBudget('contingency', v)} />
                        </div>
                     </div>
                     <div className="p-10 bg-slate-900 rounded-[3rem] text-white flex flex-col justify-center text-center relative overflow-hidden shadow-2xl">
@@ -354,7 +379,13 @@ const ProjectWizard = () => {
               </button>
 
               <div className="flex gap-4">
-                 <button className="px-10 py-4 rounded-2xl text-xs font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 hover:bg-slate-50 transition-all">Save Draft</button>
+                 <button
+                   onClick={() => handleSubmit()}
+                   disabled={loading}
+                   className="px-10 py-4 rounded-2xl text-xs font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 hover:bg-slate-50 transition-all disabled:opacity-50"
+                 >
+                    {loading ? 'Saving...' : 'Save Draft'}
+                 </button>
                  {step < steps.length ? (
                    <button onClick={handleNext} className="flex items-center gap-3 bg-slate-900 text-white px-10 py-4 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-blue-600 transition-all shadow-2xl shadow-slate-900/20">
                       Next Strategy <ArrowRight size={18} />

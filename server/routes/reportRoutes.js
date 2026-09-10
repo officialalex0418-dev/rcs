@@ -10,5 +10,6 @@ router.use(authorize('SUPER_ADMIN'));
 router.get('/company', getCompanyReport);
 router.get('/hr', getHRReport);
 router.get('/sales', getSalesReport);
+router.get('/projects', getProjectReport);
 
 export default router;

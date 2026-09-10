@@ -387,3 +387,120 @@ export const getSalesReport = async (req, res, next) => {
     next(err);
   }
 };
+
+export const getProjectReport = async (req, res, next) => {
+  try {
+    const { startDate, endDate, status, department, manager } = req.query;
+
+    const start = startDate ? new Date(startDate) : startOfMonth(new Date());
+    const end = endDate ? new Date(endDate) : endOfMonth(new Date());
+
+    const duration = end.getTime() - start.getTime();
+    const prevStart = new Date(start.getTime() - duration - 1000);
+    const prevEnd = new Date(start.getTime() - 1000);
+
+    const baseFilter = {};
+    if (status && status !== 'All') baseFilter.status = status;
+    if (manager && manager !== 'All') baseFilter.manager = manager;
+
+    const dateFilter = { ...baseFilter, createdAt: { $gte: start, $lte: end } };
+    const prevDateFilter = { ...baseFilter, createdAt: { $gte: prevStart, $lte: prevEnd } };
+
+    // 1. Project KPIs
+    const fetchProjectKpis = async (filter) => {
+      const [total, active, completed, delayed, atRisk, totalBudget] = await Promise.all([
+        Project.countDocuments(filter),
+        Project.countDocuments({ ...filter, status: { $in: ['IN_PROGRESS', 'PLANNING'] } }),
+        Project.countDocuments({ ...filter, status: 'COMPLETED' }),
+        Project.countDocuments({ ...filter, health: 'DELAYED' }),
+        Project.countDocuments({ ...filter, health: 'AT_RISK' }),
+        Project.aggregate([
+          { $match: filter },
+          { $group: { _id: null, total: { $sum: '$budget' } } }
+        ])
+      ]);
+
+      return {
+        total,
+        active,
+        completed,
+        delayed,
+        atRisk,
+        budget: totalBudget[0]?.total || 0
+      };
+    };
+
+    const current = await fetchProjectKpis(dateFilter);
+    const previous = await fetchProjectKpis(prevDateFilter);
+
+    // 2. Project Creation Trend
+    const creationTrend = await Project.aggregate([
+      { $match: dateFilter },
+      { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }, count: { $sum: 1 } } },
+      { $sort: { '_id': 1 } }
+    ]);
+
+    // 3. Status Distribution
+    const statusDistribution = await Project.aggregate([
+      { $group: { _id: '$status', count: { $sum: 1 } } }
+    ]);
+
+    // 4. Task Analytics
+    const taskStats = await Task.aggregate([
+      { $match: { createdAt: { $gte: start, $lte: end } } },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: 1 },
+          completed: { $sum: { $cond: [{ $eq: ['$status', 'COMPLETED'] }, 1, 0] } },
+          overdue: { $sum: { $cond: [{ $and: [{ $lt: ['$dueDate', new Date()] }, { $ne: ['$status', 'COMPLETED'] }] }, 1, 0] } }
+        }
+      }
+    ]);
+
+    // 5. Manager Performance
+    const managerPerformance = await User.aggregate([
+      { $match: { role: 'PROJECT_MANAGER' } },
+      {
+        $lookup: {
+          from: 'projects',
+          localField: '_id',
+          foreignField: 'manager',
+          as: 'projects'
+        }
+      },
+      {
+        $project: {
+          name: 1,
+          count: { $size: '$projects' },
+          avgProgress: { $avg: '$projects.progress' }
+        }
+      },
+      { $sort: { count: -1 } }
+    ]);
+
+    // 6. Upcoming Deadlines
+    const upcomingDeadlines = await Project.find({
+      status: { $ne: 'COMPLETED' },
+      targetDate: { $gte: new Date(), $lte: new Date(new Date().getTime() + 30 * 24 * 60 * 60 * 1000) }
+    })
+    .select('name client targetDate progress status')
+    .sort('targetDate')
+    .limit(5);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: current,
+        previousSummary: previous,
+        trends: creationTrend,
+        statusDistribution,
+        tasks: taskStats[0] || { total: 0, completed: 0, overdue: 0 },
+        managers: managerPerformance,
+        deadlines: upcomingDeadlines
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+};

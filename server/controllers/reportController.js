@@ -274,3 +274,116 @@ export const getHRReport = async (req, res, next) => {
     next(err);
   }
 };
+
+export const getSalesReport = async (req, res, next) => {
+  try {
+    const { startDate, endDate, salesperson } = req.query;
+
+    const start = startDate ? new Date(startDate) : startOfMonth(new Date());
+    const end = endDate ? new Date(endDate) : endOfMonth(new Date());
+
+    const duration = end.getTime() - start.getTime();
+    const prevStart = new Date(start.getTime() - duration - 1000);
+    const prevEnd = new Date(start.getTime() - 1000);
+
+    const baseFilter = salesperson && salesperson !== 'All' ? { assignedTo: salesperson } : {};
+    const dateFilter = { ...baseFilter, createdAt: { $gte: start, $lte: end } };
+    const prevDateFilter = { ...baseFilter, createdAt: { $gte: prevStart, $lte: prevEnd } };
+
+    // 1. Sales KPIs
+    const fetchSalesKpis = async (filter) => {
+      const [leads, qualified, won, lost, revenueData] = await Promise.all([
+        Inquiry.countDocuments(filter),
+        Inquiry.countDocuments({ ...filter, status: { $in: ['QUALIFIED', 'PROPOSAL_SENT', 'WON'] } }),
+        Inquiry.countDocuments({ ...filter, status: 'WON' }),
+        Inquiry.countDocuments({ ...filter, status: 'LOST' }),
+        Project.aggregate([
+          { $match: filter },
+          { $group: { _id: null, total: { $sum: '$budget' }, count: { $sum: 1 } } }
+        ])
+      ]);
+
+      return {
+        leads,
+        qualified,
+        won,
+        lost,
+        revenue: revenueData[0]?.total || 0,
+        sales: won // Simplified: won inquiries are sales
+      };
+    };
+
+    const current = await fetchSalesKpis(dateFilter);
+    const previous = await fetchSalesKpis(prevDateFilter);
+
+    // 2. Revenue Trend
+    const revenueTrend = await Project.aggregate([
+      { $match: dateFilter },
+      { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }, total: { $sum: '$budget' } } },
+      { $sort: { '_id': 1 } }
+    ]);
+
+    // 3. Lead Sources
+    const leadSources = await Inquiry.aggregate([
+      { $match: dateFilter },
+      { $group: { _id: '$source', count: { $sum: 1 }, revenue: { $sum: 0 } } } // Revenue would need join with Project
+    ]);
+
+    // 4. Salesperson Performance
+    const teamPerformance = await User.aggregate([
+      { $match: { role: { $in: ['SALES', 'ADMIN', 'SUPER_ADMIN'] } } },
+      {
+        $lookup: {
+          from: 'inquiries',
+          localField: '_id',
+          foreignField: 'assignedTo',
+          as: 'deals'
+        }
+      },
+      {
+        $project: {
+          name: 1,
+          totalDeals: { $size: '$deals' },
+          wonDeals: {
+            $size: {
+              $filter: {
+                input: '$deals',
+                as: 'd',
+                cond: { $eq: ['$$d.status', 'WON'] }
+              }
+            }
+          }
+        }
+      },
+      { $sort: { wonDeals: -1 } }
+    ]);
+
+    // 5. Sales Funnel
+    const funnel = await Inquiry.aggregate([
+      { $match: dateFilter },
+      {
+        $group: {
+          _id: null,
+          leads: { $sum: 1 },
+          qualified: { $sum: { $cond: [{ $in: ['$status', ['QUALIFIED', 'PROPOSAL_SENT', 'WON']] }, 1, 0] } },
+          proposal: { $sum: { $cond: [{ $in: ['$status', ['PROPOSAL_SENT', 'WON']] }, 1, 0] } },
+          won: { $sum: { $cond: [{ $eq: ['$status', 'WON'] }, 1, 0] } }
+        }
+      }
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: current,
+        previousSummary: previous,
+        revenueTrend,
+        leadSources,
+        teamPerformance,
+        funnel: funnel[0] || { leads: 0, qualified: 0, proposal: 0, won: 0 }
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+};

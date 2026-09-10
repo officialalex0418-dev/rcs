@@ -2,9 +2,28 @@ import React, { useState, useEffect } from 'react';
 import {
   Plus, Search, Calendar, CheckCircle2, Clock, Users, ArrowUpRight,
   Filter, ListChecks, Trash2, X, Save, ShieldCheck,
-  BarChart3, PieChart as PieIcon, Activity, FileText, ExternalLink
+  BarChart3, Activity, FileText, ExternalLink
 } from 'lucide-react';
 import Modal from '../components/Modal';
+
+const StatBox = ({ icon: Icon, label, value, sub, color }) => {
+  const colors = {
+    blue: 'bg-blue-50 text-blue-600 border-blue-100 shadow-blue-500/5',
+    emerald: 'bg-emerald-50 text-emerald-600 border-emerald-100 shadow-emerald-500/5',
+    red: 'bg-red-50 text-red-600 border-red-100 shadow-red-500/5',
+    purple: 'bg-purple-50 text-purple-600 border-purple-100 shadow-purple-500/5'
+  };
+  return (
+    <div className={`bg-white p-6 rounded-[2rem] border shadow-sm flex flex-col items-center text-center group hover:scale-105 transition-all ${colors[color] || colors.blue}`}>
+       <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-all ${colors[color] || colors.blue} border-2`}>
+          {Icon && <Icon size={24} />}
+       </div>
+       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 group-hover:text-slate-900 transition-colors">{label}</p>
+       <h3 className="text-2xl font-black text-slate-900 mb-1">{value}</h3>
+       <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter italic">{sub}</p>
+    </div>
+  );
+};
 
 const TaskManager = () => {
   const [tasks, setTasks] = useState([]);
@@ -24,13 +43,13 @@ const TaskManager = () => {
 
   const fetchEmployees = async () => {
     try {
-      const backendUrl = import.meta.env.VITE_API_URL || 'https://rcs-ajbn.onrender.com';
+      const backendUrl = 'https://rcs-ajbn.onrender.com';
       const token = localStorage.getItem('rcs_admin_token');
       const response = await fetch(`${backendUrl}/api/employees`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
-      if (data.success) setEmployees(data.data);
+      if (data.success) setEmployees(Array.isArray(data.data) ? data.data : []);
     } catch (err) {
       console.error('Failed to fetch employees:', err);
     }
@@ -38,13 +57,13 @@ const TaskManager = () => {
 
   const fetchTasks = async () => {
     try {
-      const backendUrl = import.meta.env.VITE_API_URL || 'https://rcs-ajbn.onrender.com';
+      const backendUrl = 'https://rcs-ajbn.onrender.com';
       const token = localStorage.getItem('rcs_admin_token');
       const response = await fetch(`${backendUrl}/api/tasks`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
-      if (data.success) setTasks(data.data);
+      if (data.success) setTasks(Array.isArray(data.data) ? data.data : []);
     } catch (err) {
       console.error('Failed to fetch tasks:', err);
     } finally {
@@ -73,7 +92,7 @@ const TaskManager = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const backendUrl = import.meta.env.VITE_API_URL || 'https://rcs-ajbn.onrender.com';
+      const backendUrl = 'https://rcs-ajbn.onrender.com';
       const token = localStorage.getItem('rcs_admin_token');
       const url = editingTask ? `${backendUrl}/api/tasks/${editingTask._id}` : `${backendUrl}/api/tasks`;
       const method = editingTask ? 'PUT' : 'POST';
@@ -101,7 +120,7 @@ const TaskManager = () => {
   const deleteTask = async (id) => {
     if (!window.confirm('Delete this task?')) return;
     try {
-      const backendUrl = import.meta.env.VITE_API_URL || 'https://rcs-ajbn.onrender.com';
+      const backendUrl = 'https://rcs-ajbn.onrender.com';
       const token = localStorage.getItem('rcs_admin_token');
       await fetch(`${backendUrl}/api/tasks/${id}`, {
         method: 'DELETE',
@@ -114,10 +133,10 @@ const TaskManager = () => {
   };
 
   // Stats Calculation
-  const totalTasks = tasks.length;
-  const completedTasks = tasks.filter(t => t.status === 'COMPLETED').length;
-  const highPriority = tasks.filter(t => t.priority === 'CRITICAL' || t.priority === 'HIGH').length;
-  const avgProgress = totalTasks ? Math.round(tasks.reduce((acc, t) => acc + (t.progress || 0), 0) / totalTasks) : 0;
+  const totalTasks = tasks?.length || 0;
+  const completedTasks = tasks?.filter(t => t?.status === 'COMPLETED').length || 0;
+  const highPriority = tasks?.filter(t => t?.priority === 'CRITICAL' || t?.priority === 'HIGH').length || 0;
+  const avgProgress = totalTasks ? Math.round(tasks.reduce((acc, t) => acc + (t?.progress || 0), 0) / totalTasks) : 0;
 
   return (
     <div className="p-8 bg-slate-50 min-h-screen font-sans space-y-10">
@@ -138,13 +157,13 @@ const TaskManager = () => {
                <Users size={20} className="text-slate-300" />
             </div>
             <div className="space-y-6">
-               {employees.slice(0, 5).map((emp, i) => {
-                  const empTasks = tasks.filter(t => t.assignedTo?._id === emp._id);
-                  const completion = empTasks.length ? Math.round((empTasks.filter(t => t.status === 'COMPLETED').length / empTasks.length) * 100) : 0;
+               {(employees || []).slice(0, 5).map((emp, i) => {
+                  const empTasks = (tasks || []).filter(t => t?.assignedTo?._id === emp?._id);
+                  const completion = empTasks.length ? Math.round((empTasks.filter(t => t?.status === 'COMPLETED').length / empTasks.length) * 100) : 0;
                   return (
                     <div key={i} className="space-y-2">
                        <div className="flex justify-between items-end">
-                          <span className="text-xs font-black text-slate-700 uppercase">{emp.name}</span>
+                          <span className="text-xs font-black text-slate-700 uppercase">{emp?.name}</span>
                           <span className="text-[10px] font-bold text-slate-400">{empTasks.length} Tasks • {completion}% Done</span>
                        </div>
                        <div className="h-2 w-full bg-slate-50 rounded-full overflow-hidden">
@@ -182,7 +201,14 @@ const TaskManager = () => {
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Task Orchestration</h1>
           <p className="text-slate-500 font-medium italic">Assign detailed workflows with sub-task tracking.</p>
         </div>
-        <button onClick={() => setShowModal(true)} className="flex items-center gap-3 bg-slate-900 px-8 py-4 rounded-2xl text-xs font-black uppercase tracking-widest text-white hover:bg-blue-600 transition-all shadow-xl shadow-slate-900/10">
+        <button
+          onClick={() => {
+            setEditingTask(null);
+            setFormData({title: '', description: '', priority: 'MEDIUM', dueDate: '', assignedTo: '', subtasks: []});
+            setShowModal(true);
+          }}
+          className="flex items-center gap-3 bg-slate-900 px-8 py-4 rounded-2xl text-xs font-black uppercase tracking-widest text-white hover:bg-blue-600 transition-all shadow-xl shadow-slate-900/10"
+        >
           <Plus size={18} />
           Deploy New Module
         </button>
@@ -191,63 +217,62 @@ const TaskManager = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {loading ? (
            <div className="col-span-full py-20 text-center font-bold text-slate-400 uppercase tracking-widest text-xs">Synchronizing Task Engine...</div>
-        ) : tasks.length === 0 ? (
+        ) : (tasks || []).length === 0 ? (
            <div className="col-span-full py-20 text-center font-bold text-slate-400 uppercase tracking-widest text-xs">No active tasks found in the system</div>
         ) : tasks.map((task) => (
-          <div key={task._id} className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200/60 p-8 hover:border-blue-500/30 transition-all group relative overflow-hidden flex flex-col">
+          <div key={task?._id} className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200/60 p-8 hover:border-blue-500/30 transition-all group relative overflow-hidden flex flex-col">
             <div className="flex justify-between items-start mb-6 relative z-10">
               <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all ${
-                task.priority === 'CRITICAL' ? 'bg-red-50 text-red-600 border-red-100' :
-                task.priority === 'HIGH' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                task?.priority === 'CRITICAL' ? 'bg-red-50 text-red-600 border-red-100' :
+                task?.priority === 'HIGH' ? 'bg-amber-50 text-amber-600 border-amber-100' :
                 'bg-blue-50 text-blue-600 border-blue-100'
               }`}>
-                {task.priority} Priority
+                {task?.priority} Priority
               </span>
               <div className="flex items-center gap-2">
-                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{task.progress}%</p>
-                 <div className={`p-1.5 rounded-lg ${task.progress === 100 ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-50 text-slate-400'}`}>
-                    {task.progress === 100 ? <ShieldCheck size={16} /> : <Clock size={16} />}
+                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{task?.progress}%</p>
+                 <div className={`p-1.5 rounded-lg ${task?.progress === 100 ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-50 text-slate-400'}`}>
+                    {task?.progress === 100 ? <ShieldCheck size={16} /> : <Clock size={16} />}
                  </div>
               </div>
             </div>
 
-            <h3 className="text-xl font-black text-slate-900 mb-2 leading-tight group-hover:text-blue-600 transition-colors relative z-10">{task.title}</h3>
-            <p className="text-slate-400 text-xs font-medium mb-8 line-clamp-2 relative z-10">{task.description || 'No additional instructions provided.'}</p>
+            <h3 className="text-xl font-black text-slate-900 mb-2 leading-tight group-hover:text-blue-600 transition-colors relative z-10">{task?.title}</h3>
+            <p className="text-slate-400 text-xs font-medium mb-8 line-clamp-2 relative z-10">{task?.description || 'No additional instructions provided.'}</p>
 
-            {/* Sub-tasks checklist preview */}
             <div className="space-y-2 mb-8 relative z-10 flex-1">
-               {task.subtasks.slice(0, 3).map((st, i) => (
+               {(task?.subtasks || []).slice(0, 3).map((st, i) => (
                  <div key={i} className="flex items-center gap-3">
-                    <div className={`w-4 h-4 rounded-md border-2 flex items-center justify-center ${st.completed ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-200'}`}>
-                       {st.completed && <CheckCircle2 size={10} />}
+                    <div className={`w-4 h-4 rounded-md border-2 flex items-center justify-center ${st?.completed ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-200'}`}>
+                       {st?.completed && <CheckCircle2 size={10} />}
                     </div>
-                    <span className={`text-[10px] font-bold ${st.completed ? 'text-slate-300 line-through' : 'text-slate-500'}`}>{st.title}</span>
+                    <span className={`text-[10px] font-bold ${st?.completed ? 'text-slate-300 line-through' : 'text-slate-500'}`}>{st?.title}</span>
                  </div>
                ))}
-               {task.subtasks.length > 3 && <p className="text-[9px] font-black text-blue-600 uppercase tracking-widest pl-7">+ {task.subtasks.length - 3} More Steps</p>}
+               {(task?.subtasks?.length || 0) > 3 && <p className="text-[9px] font-black text-blue-600 uppercase tracking-widest pl-7">+ {(task?.subtasks?.length || 0) - 3} More Steps</p>}
             </div>
 
-            <div className="flex items-center justify-between pt-6 border-t border-slate-50 relative z-10 mt-auto">
+            <div className="flex items-center justify-between pt-6 border-t border-slate-100 relative z-10 mt-auto">
                <div className="flex items-center gap-2">
                  <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-200">
-                    {task.assignedTo?.profilePicture ?
+                    {task?.assignedTo?.profilePicture ?
                       <img src={task.assignedTo.profilePicture} className="w-full h-full object-cover" alt="User" /> :
-                      <span className="text-[10px] font-black text-slate-400 uppercase">{task.assignedTo?.name?.charAt(0) || '?'}</span>
+                      <span className="text-[10px] font-black text-slate-400 uppercase">{task?.assignedTo?.name?.charAt(0) || '?'}</span>
                     }
                  </div>
                  <div className="max-w-[100px]">
-                    <p className="text-[10px] font-black text-slate-900 truncate leading-none mb-0.5">{task.assignedTo?.name || 'Unassigned'}</p>
+                    <p className="text-[10px] font-black text-slate-900 truncate leading-none mb-0.5">{task?.assignedTo?.name || 'Unassigned'}</p>
                     <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">Personnel</p>
                  </div>
                </div>
 
                <div className="flex items-center gap-2">
-                  {task.outputScreenshot && (
+                  {task?.outputScreenshot && (
                     <a href={task.outputScreenshot} target="_blank" rel="noreferrer" className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all">
                        <ExternalLink size={14} />
                     </a>
                   )}
-                  <button onClick={() => deleteTask(task._id)} className="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-600 hover:text-white transition-all">
+                  <button onClick={() => deleteTask(task?._id)} className="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-600 hover:text-white transition-all">
                      <Trash2 size={14} />
                   </button>
                </div>
@@ -256,7 +281,6 @@ const TaskManager = () => {
         ))}
       </div>
 
-      {/* Modal Integration */}
       <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="Configure Task Protocol">
          <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-1.5">
@@ -274,7 +298,7 @@ const TaskManager = () => {
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Assign Personnel</label>
                   <select required className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none" value={formData.assignedTo} onChange={e => setFormData({...formData, assignedTo: e.target.value})}>
                     <option value="">Select Employee</option>
-                    {employees.map(emp => <option key={emp._id} value={emp._id}>{emp.name}</option>)}
+                    {(employees || []).map(emp => <option key={emp?._id} value={emp?._id}>{emp?.name}</option>)}
                   </select>
                </div>
                <div className="space-y-1.5">
@@ -305,9 +329,9 @@ const TaskManager = () => {
                   <button type="button" onClick={handleAddSubtask} className="text-[10px] font-black text-blue-600 uppercase flex items-center gap-1 hover:underline"><Plus size={14} /> Add Step</button>
                </div>
                <div className="space-y-2">
-                  {formData.subtasks.map((st, idx) => (
+                  {(formData?.subtasks || []).map((st, idx) => (
                     <div key={idx} className="flex gap-2">
-                       <input className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none text-xs font-bold" placeholder={`Step ${idx+1} detail...`} value={st.title} onChange={e => updateSubtask(idx, e.target.value)} />
+                       <input className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none text-xs font-bold" placeholder={`Step ${idx+1} detail...`} value={st?.title} onChange={e => updateSubtask(idx, e.target.value)} />
                        <button type="button" onClick={() => setFormData({...formData, subtasks: formData.subtasks.filter((_, i) => i !== idx)})} className="p-3 text-slate-300 hover:text-red-500 transition-colors"><Trash2 size={16}/></button>
                     </div>
                   ))}
@@ -320,25 +344,6 @@ const TaskManager = () => {
             </div>
          </form>
       </Modal>
-    </div>
-  );
-};
-
-const StatBox = ({ icon: Icon, label, value, sub, color }) => {
-  const colors = {
-    blue: 'bg-blue-50 text-blue-600 border-blue-100 shadow-blue-500/5',
-    emerald: 'bg-emerald-50 text-emerald-600 border-emerald-100 shadow-emerald-500/5',
-    red: 'bg-red-50 text-red-600 border-red-100 shadow-red-500/5',
-    purple: 'bg-purple-50 text-purple-600 border-purple-100 shadow-purple-500/5'
-  };
-  return (
-    <div className={`bg-white p-6 rounded-[2rem] border shadow-sm flex flex-col items-center text-center group hover:scale-105 transition-all ${colors[color]}`}>
-       <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-all ${colors[color]} border-2`}>
-          <Icon size={24} />
-       </div>
-       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 group-hover:text-slate-900 transition-colors">{label}</p>
-       <h3 className="text-2xl font-black text-slate-900 mb-1">{value}</h3>
-       <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter italic">{sub}</p>
     </div>
   );
 };

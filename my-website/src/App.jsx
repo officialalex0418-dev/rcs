@@ -27,7 +27,7 @@ import InquiriesList from "./admin/pages/InquiriesList";
 import GalleryManager from "./admin/pages/GalleryManager";
 import ProjectManager from "./admin/pages/ProjectManager";
 import ProjectForm from "./admin/pages/ProjectForm";
-import Reports from "./admin/pages/Reports";
+import CompanyReport from "./admin/pages/CompanyReport";
 import EmployeeManager from "./admin/pages/EmployeeManager";
 import TaskManager from "./admin/pages/TaskManager";
 import PayrollManager from "./admin/pages/PayrollManager";
@@ -84,7 +84,13 @@ function Site() {
           <Route path="gallery" element={<GalleryManager />} />
           <Route path="tasks" element={<TaskManager />} />
           <Route path="payroll" element={<PayrollManager />} />
-          <Route path="reports" element={<Reports />} />
+          <Route path="reports" element={<Navigate to="reports/company" replace />} />
+          <Route path="reports/company" element={<CompanyReport />} />
+          <Route path="reports/hr" element={<CompanyReport />} />
+          <Route path="reports/sales" element={<CompanyReport />} />
+          <Route path="reports/projects" element={<CompanyReport />} />
+          <Route path="reports/finance" element={<CompanyReport />} />
+          <Route path="reports/marketing" element={<CompanyReport />} />
           <Route path="support" element={<SupportManager />} />
           <Route path="settings" element={<div className="p-8 text-2xl font-bold">System Settings Coming Soon</div>} />
           <Route path="careers" element={<JobsList />} />

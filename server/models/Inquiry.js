@@ -38,6 +38,10 @@ const inquirySchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
+  campaign: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Campaign'
+  },
   followUpDate: Date,
   lastContactedAt: Date,
   thread: [{

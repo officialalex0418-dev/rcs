@@ -5,6 +5,7 @@ import Project from '../models/Project.js';
 import User from '../models/User.js';
 import Payroll from '../models/Payroll.js';
 import Task from '../models/Task.js';
+import Campaign from '../models/Campaign.js';
 import { startOfDay, endOfDay, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, format, isWithinInterval } from 'date-fns';
 
 export const getCompanyReport = async (req, res, next) => {
@@ -572,6 +573,95 @@ export const getFinanceReport = async (req, res, next) => {
         trends: trend,
         projectProfits,
         clientRevenue
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getMarketingReport = async (req, res, next) => {
+  try {
+    const { startDate, endDate, channel } = req.query;
+
+    const start = startDate ? new Date(startDate) : startOfMonth(new Date());
+    const end = endDate ? new Date(endDate) : endOfMonth(new Date());
+
+    const duration = end.getTime() - start.getTime();
+    const prevStart = new Date(start.getTime() - duration - 1000);
+    const prevEnd = new Date(start.getTime() - 1000);
+
+    const baseFilter = channel && channel !== 'All' ? { platform: channel } : {};
+    const dateFilter = { createdAt: { $gte: start, $lte: end } };
+    const prevDateFilter = { createdAt: { $gte: prevStart, $lte: prevEnd } };
+
+    // 1. Marketing KPIs
+    const fetchMarketingKpis = async (s, e) => {
+      const [campaigns, active, inquiries] = await Promise.all([
+        Campaign.countDocuments({ createdAt: { $gte: s, $lte: e } }),
+        Campaign.countDocuments({ status: 'ACTIVE' }),
+        Inquiry.countDocuments({ createdAt: { $gte: s, $lte: e } })
+      ]);
+
+      const qualified = await Inquiry.countDocuments({
+        createdAt: { $gte: s, $lte: e },
+        status: { $in: ['QUALIFIED', 'PROPOSAL_SENT', 'WON'] }
+      });
+
+      const converted = await Inquiry.countDocuments({
+        createdAt: { $gte: s, $lte: e },
+        status: 'WON'
+      });
+
+      const spendData = await Campaign.aggregate([
+        { $match: { createdAt: { $gte: s, $lte: e } } },
+        { $group: { _id: null, total: { $sum: '$actualSpend' } } }
+      ]);
+
+      const spend = spendData[0]?.total || 0;
+
+      return {
+        campaigns,
+        active,
+        leads: inquiries,
+        qualified,
+        converted,
+        spend,
+        cpl: inquiries ? Math.round(spend / inquiries) : 0,
+        conversionRate: inquiries ? Math.round((converted / inquiries) * 100) : 0
+      };
+    };
+
+    const current = await fetchMarketingKpis(start, end);
+    const previous = await fetchMarketingKpis(prevStart, prevEnd);
+
+    // 2. Lead Source Distribution
+    const sources = await Inquiry.aggregate([
+      { $match: { createdAt: { $gte: start, $lte: end } } },
+      { $group: { _id: '$source', count: { $sum: 1 } } }
+    ]);
+
+    // 3. Campaign Performance
+    const campaignStats = await Campaign.find({ createdAt: { $gte: start, $lte: end } })
+      .select('name platform status actualSpend budget')
+      .sort('-actualSpend')
+      .limit(10);
+
+    // 4. Marketing Funnel
+    const funnel = {
+      leads: current.leads,
+      qualified: current.qualified,
+      converted: current.converted
+    };
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: current,
+        previousSummary: previous,
+        leadSources: sources,
+        campaigns: campaignStats,
+        funnel
       }
     });
   } catch (err) {

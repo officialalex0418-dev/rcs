@@ -47,6 +47,12 @@ export const updateTask = async (req, res, next) => {
       updateData.progress = 100;
     }
 
+    if (req.body.status === 'REJECTED') {
+      updateData.status = 'TODO';
+      updateData.progress = 0;
+      updateData.subtasks = (req.body.subtasks || []).map(st => ({ ...st, completed: false }));
+    }
+
     const task = await Task.findByIdAndUpdate(
       req.params.id,
       updateData,

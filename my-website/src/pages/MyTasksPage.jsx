@@ -88,7 +88,7 @@ const MyTasksPage = () => {
     try {
       const formData = new FormData();
       formData.append('screenshot', screenshot);
-      formData.append('status', 'COMPLETED');
+      formData.append('status', 'IN_REVIEW');
 
       const token = localStorage.getItem('rcs_admin_token');
       const backendUrl = 'https://rcs-ajbn.onrender.com';
@@ -158,10 +158,11 @@ const MyTasksPage = () => {
                {/* Header */}
                <div className="flex justify-between items-start mb-6">
                   <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
+                    task?.status === 'IN_REVIEW' ? 'bg-purple-50 text-purple-600' :
                     task?.priority === 'CRITICAL' ? 'bg-red-50 text-red-600' :
                     task?.priority === 'HIGH' ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-blue-600'
                   }`}>
-                    {task?.priority || 'MEDIUM'} Priority
+                    {task?.status === 'IN_REVIEW' ? 'Pending Review' : `${task?.priority || 'MEDIUM'} Priority`}
                   </span>
                   <div className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase tracking-widest">
                     <Calendar size={12} className="text-slate-300" /> {task?.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'N/A'}
@@ -170,6 +171,14 @@ const MyTasksPage = () => {
 
                <div className="flex-1">
                   <h3 className="text-xl font-black text-slate-900 mb-2 leading-tight group-hover:text-blue-600 transition-colors truncate">{task?.title}</h3>
+
+                  {task.adminComment && (
+                    <div className="bg-rose-50 p-4 rounded-2xl mb-6 border border-rose-100 animate-pulse">
+                       <p className="text-[10px] font-black text-rose-600 uppercase tracking-widest mb-1 flex items-center gap-1"><AlertCircle size={10}/> Admin Feedback</p>
+                       <p className="text-[11px] text-rose-800 font-medium italic">"{task.adminComment}"</p>
+                    </div>
+                  )}
+
                   <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-6 flex items-center gap-2">
                      <Target size={12} /> {task?.project?.name || 'Administrative'}
                   </p>

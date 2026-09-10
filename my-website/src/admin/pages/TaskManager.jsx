@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Plus, Search, Calendar, CheckCircle2, Clock, Users, ArrowUpRight,
   Filter, ListChecks, Trash2, X, Save, ShieldCheck,
-  BarChart3, Activity, FileText, ExternalLink, AlertCircle
+  BarChart3, Activity, FileText, ExternalLink, AlertCircle, Eye, ThumbsUp, ThumbsDown, MessageCircle
 } from 'lucide-react';
 import Modal from '../components/Modal';
 
@@ -31,6 +31,8 @@ const TaskManager = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
+  const [reviewTask, setReviewTask] = useState(null);
+  const [adminComment, setAdminComment] = useState('');
 
   const [formData, setFormData] = useState({
     title: '',
@@ -117,6 +119,42 @@ const TaskManager = () => {
     }
   };
 
+  const handleReviewAction = async (status) => {
+    try {
+      const backendUrl = 'https://rcs-ajbn.onrender.com';
+      const token = localStorage.getItem('rcs_admin_token');
+
+      const payload = {
+        status,
+        adminComment,
+        subtasks: reviewTask.subtasks
+      };
+
+      const response = await fetch(`${backendUrl}/api/tasks/${reviewTask._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        setReviewTask(null);
+        setAdminComment('');
+        fetchTasks();
+      }
+    } catch (err) {
+      console.error('Review failed:', err);
+    }
+  };
+
+  const toggleReviewSubtask = (idx) => {
+    const newSubtasks = [...reviewTask.subtasks];
+    newSubtasks[idx].completed = !newSubtasks[idx].completed;
+    setReviewTask({ ...reviewTask, subtasks: newSubtasks });
+  };
+
   const deleteTask = async (id) => {
     if (!window.confirm('Delete this task?')) return;
     try {
@@ -135,6 +173,7 @@ const TaskManager = () => {
   // Stats Calculation
   const totalTasks = tasks?.length || 0;
   const completedTasks = tasks?.filter(t => t?.status === 'COMPLETED').length || 0;
+  const inReviewTasks = tasks?.filter(t => t?.status === 'IN_REVIEW').length || 0;
   const highPriority = tasks?.filter(t => t?.priority === 'CRITICAL' || t?.priority === 'HIGH').length || 0;
   const avgProgress = totalTasks ? Math.round(tasks.reduce((acc, t) => acc + (t?.progress || 0), 0) / totalTasks) : 0;
 
@@ -144,62 +183,15 @@ const TaskManager = () => {
       {/* Dashboard Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
          <StatBox icon={Activity} label="Task Volume" value={totalTasks} sub="Active Protocol" color="blue" />
-         <StatBox icon={ShieldCheck} label="Finalized" value={completedTasks} sub="Verification Done" color="emerald" />
-         <StatBox icon={AlertCircle} label="Critical Path" value={highPriority} sub="Priority Level" color="red" />
-         <StatBox icon={BarChart3} label="Avg Progress" value={`${avgProgress}%`} sub="Engine Efficiency" color="purple" />
-      </div>
-
-      {/* Visual Analytics Hub */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-         <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200/60 shadow-sm">
-            <div className="flex justify-between items-center mb-8">
-               <h2 className="text-xl font-black text-slate-900 tracking-tight">Personnel Workload</h2>
-               <Users size={20} className="text-slate-300" />
-            </div>
-            <div className="space-y-6">
-               {(employees || []).slice(0, 5).map((emp, i) => {
-                  const empTasks = (tasks || []).filter(t => t?.assignedTo?._id === emp?._id);
-                  const completion = empTasks.length ? Math.round((empTasks.filter(t => t?.status === 'COMPLETED').length / empTasks.length) * 100) : 0;
-                  return (
-                    <div key={i} className="space-y-2">
-                       <div className="flex justify-between items-end">
-                          <span className="text-xs font-black text-slate-700 uppercase">{emp?.name}</span>
-                          <span className="text-[10px] font-bold text-slate-400">{empTasks.length} Tasks • {completion}% Done</span>
-                       </div>
-                       <div className="h-2 w-full bg-slate-50 rounded-full overflow-hidden">
-                          <div className="h-full bg-blue-600 rounded-full transition-all duration-1000" style={{ width: `${completion}%` }}></div>
-                       </div>
-                    </div>
-                  );
-               })}
-            </div>
-         </div>
-
-         <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200/60 shadow-sm flex flex-col">
-            <div className="flex justify-between items-center mb-8">
-               <h2 className="text-xl font-black text-slate-900 tracking-tight">Completion Velocity</h2>
-               <Activity size={20} className="text-slate-300" />
-            </div>
-            <div className="flex-1 flex items-end justify-between gap-4 h-40">
-               {[40, 70, 45, 90, 65, 80, 55].map((h, i) => (
-                 <div key={i} className="flex-1 bg-slate-50 rounded-xl relative group">
-                    <div
-                      className="absolute bottom-0 left-0 right-0 bg-blue-600/10 rounded-xl group-hover:bg-blue-600 transition-all duration-500"
-                      style={{ height: `${h}%` }}
-                    ></div>
-                 </div>
-               ))}
-            </div>
-            <div className="flex justify-between mt-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">
-               <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
-            </div>
-         </div>
+         <StatBox icon={ShieldCheck} label="Approved" value={completedTasks} sub="Verification Done" color="emerald" />
+         <StatBox icon={Eye} label="In Review" value={inReviewTasks} sub="Waiting Approval" color="purple" />
+         <StatBox icon={BarChart3} label="Avg Progress" value={`${avgProgress}%`} sub="Engine Efficiency" color="blue" />
       </div>
 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Task Orchestration</h1>
-          <p className="text-slate-500 font-medium italic">Assign detailed workflows with sub-task tracking.</p>
+          <p className="text-slate-500 font-medium italic">Manage workflows, approve completions, and provide feedback.</p>
         </div>
         <button
           onClick={() => {
@@ -223,22 +215,28 @@ const TaskManager = () => {
           <div key={task?._id} className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200/60 p-8 hover:border-blue-500/30 transition-all group relative overflow-hidden flex flex-col">
             <div className="flex justify-between items-start mb-6 relative z-10">
               <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all ${
-                task?.priority === 'CRITICAL' ? 'bg-red-50 text-red-600 border-red-100' :
-                task?.priority === 'HIGH' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                task?.status === 'IN_REVIEW' ? 'bg-purple-50 text-purple-600 border-purple-100' :
+                task?.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
                 'bg-blue-50 text-blue-600 border-blue-100'
               }`}>
-                {task?.priority} Priority
+                {task?.status?.replace('_', ' ')}
               </span>
               <div className="flex items-center gap-2">
                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{task?.progress}%</p>
-                 <div className={`p-1.5 rounded-lg ${task?.progress === 100 ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-50 text-slate-400'}`}>
-                    {task?.progress === 100 ? <ShieldCheck size={16} /> : <Clock size={16} />}
+                 <div className={`p-1.5 rounded-lg ${task?.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-50 text-slate-400'}`}>
+                    {task?.status === 'COMPLETED' ? <ShieldCheck size={16} /> : <Clock size={16} />}
                  </div>
               </div>
             </div>
 
             <h3 className="text-xl font-black text-slate-900 mb-2 leading-tight group-hover:text-blue-600 transition-colors relative z-10">{task?.title}</h3>
-            <p className="text-slate-400 text-xs font-medium mb-8 line-clamp-2 relative z-10">{task?.description || 'No additional instructions provided.'}</p>
+
+            {task.adminComment && (
+              <div className="bg-amber-50 p-4 rounded-2xl mb-4 border border-amber-100">
+                <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-1 flex items-center gap-1"><MessageCircle size={10}/> Admin Feedback</p>
+                <p className="text-[11px] text-amber-800 font-medium italic">"{task.adminComment}"</p>
+              </div>
+            )}
 
             <div className="space-y-2 mb-8 relative z-10 flex-1">
                {(task?.subtasks || []).slice(0, 3).map((st, i) => (
@@ -260,13 +258,18 @@ const TaskManager = () => {
                       <span className="text-[10px] font-black text-slate-400 uppercase">{task?.assignedTo?.name?.charAt(0) || '?'}</span>
                     }
                  </div>
-                 <div className="max-w-[100px]">
-                    <p className="text-[10px] font-black text-slate-900 truncate leading-none mb-0.5">{task?.assignedTo?.name || 'Unassigned'}</p>
-                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">Personnel</p>
+                 <div>
+                    <p className="text-[10px] font-black text-slate-900 leading-none mb-0.5">{task?.assignedTo?.name || 'Unassigned'}</p>
+                    <p className="text-[8px] font-bold text-slate-400 uppercase">Personnel</p>
                  </div>
                </div>
 
                <div className="flex items-center gap-2">
+                  {task?.status === 'IN_REVIEW' && (
+                    <button onClick={() => setReviewTask(task)} className="p-2 bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-600 hover:text-white transition-all flex items-center gap-1">
+                       <Eye size={14} /> <span className="text-[9px] font-black uppercase">Review</span>
+                    </button>
+                  )}
                   {task?.outputScreenshot && (
                     <a href={task.outputScreenshot} target="_blank" rel="noreferrer" className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all">
                        <ExternalLink size={14} />
@@ -281,6 +284,74 @@ const TaskManager = () => {
         ))}
       </div>
 
+      {/* Review Modal */}
+      <Modal isOpen={!!reviewTask} onClose={() => setReviewTask(null)} title="Examine Task Output">
+         {reviewTask && (
+           <div className="space-y-6">
+              <div className="aspect-video bg-slate-100 rounded-3xl overflow-hidden border border-slate-200">
+                 {reviewTask.outputScreenshot ? (
+                   <img src={reviewTask.outputScreenshot} className="w-full h-full object-contain" alt="Work proof" />
+                 ) : (
+                   <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
+                      <FileText size={48} className="mb-2 opacity-20" />
+                      <p className="text-[10px] font-black uppercase">No visual proof attached</p>
+                   </div>
+                 )}
+              </div>
+
+              <div className="space-y-4">
+                 <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Verify Deliverables</h4>
+                 <div className="space-y-2">
+                    {reviewTask.subtasks.map((st, i) => (
+                      <div key={i} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 group">
+                         <span className={`text-xs font-bold ${st.completed ? 'text-slate-900' : 'text-slate-400'}`}>{st.title}</span>
+                         <button
+                           onClick={() => toggleReviewSubtask(i)}
+                           className={`p-1.5 rounded-lg transition-all ${st.completed ? 'bg-emerald-500 text-white' : 'bg-white text-slate-300 border border-slate-200'}`}
+                         >
+                            <CheckCircle2 size={14} />
+                         </button>
+                      </div>
+                    ))}
+                 </div>
+              </div>
+
+              <div className="space-y-2">
+                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Admin Instructions / Comment</label>
+                 <textarea
+                   className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none text-sm font-medium focus:border-purple-500 transition-all"
+                   placeholder="Provide feedback for the employee..."
+                   rows="3"
+                   value={adminComment}
+                   onChange={e => setAdminComment(e.target.value)}
+                 />
+              </div>
+
+              <div className="flex gap-4 pt-4">
+                 <button
+                   onClick={() => handleReviewAction('REJECTED')}
+                   className="flex-1 flex items-center justify-center gap-2 py-4 bg-red-50 text-red-600 rounded-2xl text-[10px] font-black uppercase hover:bg-red-600 hover:text-white transition-all border border-red-100"
+                 >
+                    <ThumbsDown size={14} /> Reject & Reset
+                 </button>
+                 <button
+                   onClick={() => handleReviewAction('IN_PROGRESS')}
+                   className="flex-1 flex items-center justify-center gap-2 py-4 bg-amber-50 text-amber-600 rounded-2xl text-[10px] font-black uppercase hover:bg-amber-600 hover:text-white transition-all border border-amber-100"
+                 >
+                    <Clock size={14} /> Partial Review
+                 </button>
+                 <button
+                   onClick={() => handleReviewAction('COMPLETED')}
+                   className="flex-1 flex items-center justify-center gap-2 py-4 bg-emerald-600 text-white rounded-2xl text-[10px] font-black uppercase hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-500/20"
+                 >
+                    <ThumbsUp size={14} /> Approve Task
+                 </button>
+              </div>
+           </div>
+         )}
+      </Modal>
+
+      {/* Deploy Modal */}
       <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="Configure Task Protocol">
          <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-1.5">

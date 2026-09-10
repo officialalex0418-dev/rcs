@@ -99,8 +99,14 @@ const ProjectWizard = () => {
     try {
       const payload = {
         ...formData,
+        manager: formData.manager === '' ? null : formData.manager,
+        clientRef: formData.clientRef === '' ? null : formData.clientRef,
         startDate: formData.startDate || null,
-        targetDate: formData.targetDate || null
+        targetDate: formData.targetDate || null,
+        team: (formData.team || []).filter(m => m.user !== '').map(m => ({
+          ...m,
+          user: m.user === '' ? null : m.user
+        }))
       };
 
       console.log('Submitting Project Data:', payload);

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Plus, Search, Calendar, CheckCircle2, Clock, Users, ArrowUpRight,
   Filter, ListChecks, Trash2, X, Save, ShieldCheck,
-  BarChart3, Activity, FileText, ExternalLink
+  BarChart3, Activity, FileText, ExternalLink, AlertCircle
 } from 'lucide-react';
 import Modal from '../components/Modal';
 

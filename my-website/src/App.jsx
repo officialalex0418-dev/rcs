@@ -28,6 +28,7 @@ import GalleryManager from "./admin/pages/GalleryManager";
 import ProjectManager from "./admin/pages/ProjectManager";
 import ProjectForm from "./admin/pages/ProjectForm";
 import CompanyReport from "./admin/pages/CompanyReport";
+import HRReport from "./admin/pages/HRReport";
 import EmployeeManager from "./admin/pages/EmployeeManager";
 import TaskManager from "./admin/pages/TaskManager";
 import PayrollManager from "./admin/pages/PayrollManager";
@@ -86,7 +87,7 @@ function Site() {
           <Route path="payroll" element={<PayrollManager />} />
           <Route path="reports" element={<Navigate to="reports/company" replace />} />
           <Route path="reports/company" element={<CompanyReport />} />
-          <Route path="reports/hr" element={<CompanyReport />} />
+          <Route path="reports/hr" element={<HRReport />} />
           <Route path="reports/sales" element={<CompanyReport />} />
           <Route path="reports/projects" element={<CompanyReport />} />
           <Route path="reports/finance" element={<CompanyReport />} />

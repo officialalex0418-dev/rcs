@@ -65,6 +65,18 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  employmentType: {
+    type: String,
+    enum: ['PERMANENT', 'CONTRACT', 'INTERN', 'PART_TIME', 'PROBATION'],
+    default: 'PROBATION'
+  },
+  employmentStatus: {
+    type: String,
+    enum: ['ACTIVE', 'ON_LEAVE', 'RESIGNED', 'TERMINATED'],
+    default: 'ACTIVE'
+  },
+  probationUntil: Date,
+  exitDate: Date,
   lastLogin: Date
 }, {
   timestamps: true

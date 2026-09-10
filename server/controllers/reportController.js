@@ -168,3 +168,109 @@ export const getCompanyReport = async (req, res, next) => {
     next(err);
   }
 };
+
+export const getHRReport = async (req, res, next) => {
+  try {
+    const { startDate, endDate, department } = req.query;
+
+    const start = startDate ? new Date(startDate) : startOfMonth(new Date());
+    const end = endDate ? new Date(endDate) : endOfMonth(new Date());
+
+    const duration = end.getTime() - start.getTime();
+    const prevStart = new Date(start.getTime() - duration - 1000);
+    const prevEnd = new Date(start.getTime() - 1000);
+
+    const baseFilter = department && department !== 'All' ? { department } : {};
+    const dateFilter = { ...baseFilter, createdAt: { $gte: start, $lte: end } };
+    const joiningFilter = { ...baseFilter, joiningDate: { $gte: start, $lte: end } };
+    const prevJoiningFilter = { ...baseFilter, joiningDate: { $gte: prevStart, $lte: prevEnd } };
+
+    // 1. Summary KPIs
+    const fetchHrKpis = async (joinFilter, activeFilter) => {
+      const [total, hired, left, vacancies, apps] = await Promise.all([
+        User.countDocuments({ role: { $ne: 'SUPER_ADMIN' }, ...activeFilter }),
+        User.countDocuments(joinFilter),
+        User.countDocuments({ ...baseFilter, employmentStatus: { $in: ['RESIGNED', 'TERMINATED'] }, exitDate: { $gte: start, $lte: end } }),
+        Job.countDocuments({ ...baseFilter, status: 'OPEN' }),
+        Application.countDocuments({ ...baseFilter, createdAt: { $gte: start, $lte: end } })
+      ]);
+
+      const onLeave = await Attendance.countDocuments({ ...baseFilter, date: { $gte: format(start, 'yyyy-MM-dd'), $lte: format(end, 'yyyy-MM-dd') }, status: 'LEAVE' });
+
+      return { total, hired, left, vacancies, apps, onLeave };
+    };
+
+    const currentKpis = await fetchHrKpis(joiningFilter, { active: true });
+    const previousKpis = await fetchHrKpis(prevJoiningFilter, { active: true });
+
+    // 2. Workforce Trends (Joining vs Leaving)
+    const joiningTrend = await User.aggregate([
+      { $match: joiningFilter },
+      { $group: { _id: { $dateToString: { format: '%Y-%m', date: '$joiningDate' } }, count: { $sum: 1 } } },
+      { $sort: { '_id': 1 } }
+    ]);
+
+    // 3. Department Breakdown
+    const deptWorkforce = await User.aggregate([
+      { $match: { role: { $ne: 'SUPER_ADMIN' }, active: true } },
+      { $group: { _id: '$department', count: { $sum: 1 } } }
+    ]);
+
+    // 4. Recruitment Funnel
+    const funnelStages = await Application.aggregate([
+      { $match: { createdAt: { $gte: start, $lte: end } } },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: 1 },
+          shortlisted: { $sum: { $cond: [{ $in: ['$status', ['SHORTLISTED', 'INTERVIEW_ROUND_1', 'SELECTED', 'HIRED']] }, 1, 0] } },
+          interviewed: { $sum: { $cond: [{ $in: ['$status', ['INTERVIEW_ROUND_1', 'INTERVIEW_ROUND_2', 'SELECTED', 'HIRED']] }, 1, 0] } },
+          hired: { $sum: { $cond: [{ $eq: ['$status', 'HIRED'] }, 1, 0] } }
+        }
+      }
+    ]);
+
+    // 5. Payroll Overview
+    const payrollStats = await Payroll.aggregate([
+      { $match: { createdAt: { $gte: start, $lte: end }, status: 'PAID' } },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: '$totalPaid' },
+          base: { $sum: '$baseSalary' },
+          allowance: { $sum: '$otherAllowances' },
+          deductions: { $sum: '$taxDeductions' }
+        }
+      }
+    ]);
+
+    // 6. Probation Alerts
+    const probationAlerts = await User.find({
+      employmentType: 'PROBATION',
+      probationUntil: { $lte: new Date(new Date().getTime() + 15 * 24 * 60 * 60 * 1000) }
+    }).select('name department designation probationUntil').limit(5);
+
+    // 7. Recent HR Activities (Mock or Real Activity Log if exists)
+    // For now using recent hires and status changes
+    const recentActivities = await User.find({ ...baseFilter })
+      .sort('-updatedAt')
+      .limit(8)
+      .select('name department updatedAt employmentStatus');
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: currentKpis,
+        previousSummary: previousKpis,
+        trends: { joining: joiningTrend },
+        departments: deptWorkforce,
+        funnel: funnelStages[0] || { total: 0, shortlisted: 0, interviewed: 0, hired: 0 },
+        payroll: payrollStats[0] || { total: 0, base: 0, allowance: 0, deductions: 0 },
+        probation: probationAlerts,
+        activities: recentActivities
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+};

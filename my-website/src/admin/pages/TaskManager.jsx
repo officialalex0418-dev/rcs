@@ -265,9 +265,9 @@ const TaskManager = () => {
                </div>
 
                <div className="flex items-center gap-2">
-                  {task?.status === 'IN_REVIEW' && (
+                  {(task?.status === 'IN_REVIEW' || task?.status === 'COMPLETED') && (
                     <button onClick={() => setReviewTask(task)} className="p-2 bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-600 hover:text-white transition-all flex items-center gap-1">
-                       <Eye size={14} /> <span className="text-[9px] font-black uppercase">Review</span>
+                       <Eye size={14} /> <span className="text-[9px] font-black uppercase">Review & Control</span>
                     </button>
                   )}
                   {task?.outputScreenshot && (

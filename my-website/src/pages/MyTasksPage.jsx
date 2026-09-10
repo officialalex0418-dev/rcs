@@ -3,7 +3,7 @@ import {
   CheckSquare, Clock, AlertCircle, Timer,
   Play, Pause, CheckCircle2, FileText, Upload,
   MoreVertical, ChevronDown, LayoutGrid, List,
-  Image as ImageIcon, Loader2, Calendar, Target
+  Image as ImageIcon, Loader2, Calendar, Target, X
 } from 'lucide-react';
 import { apiFetch } from '../utils/api';
 import Modal from '../admin/components/Modal';
@@ -20,11 +20,14 @@ const MyTasksPage = () => {
 
   const fetchTasks = async () => {
     try {
-      const user = JSON.parse(localStorage.getItem('rcs_user'));
+      const userStr = localStorage.getItem('rcs_user');
+      if (!userStr) return;
+
+      const user = JSON.parse(userStr);
       const response = await apiFetch(`/api/tasks?assignedTo=${user.id || user._id}`);
       const data = await response.json();
       if (data.success) {
-        setTasks(data.data);
+        setTasks(Array.isArray(data.data) ? data.data : []);
       }
     } catch (err) {
       console.error('Failed to fetch tasks:', err);
@@ -56,8 +59,10 @@ const MyTasksPage = () => {
   };
 
   const handleSubtaskToggle = async (taskId, subtasks, idx) => {
-    const updatedSubtasks = [...subtasks];
-    updatedSubtasks[idx].completed = !updatedSubtasks[idx].completed;
+    const updatedSubtasks = [...(subtasks || [])];
+    if (updatedSubtasks[idx]) {
+      updatedSubtasks[idx].completed = !updatedSubtasks[idx].completed;
+    }
 
     try {
       const response = await apiFetch(`/api/tasks/${taskId}`, {
@@ -76,6 +81,8 @@ const MyTasksPage = () => {
       alert('Proof of work (screenshot) is mandatory for completion.');
       return;
     }
+
+    if (!selectedTask?._id) return;
 
     setIsUpdating(true);
     try {
@@ -98,6 +105,7 @@ const MyTasksPage = () => {
         setShowCompleteModal(false);
         setScreenshot(null);
         setScreenshotPreview(null);
+        setSelectedTask(null);
         fetchTasks();
       }
     } catch (err) {
@@ -136,7 +144,7 @@ const MyTasksPage = () => {
         </div>
       </div>
 
-      {tasks.length === 0 ? (
+      {(tasks || []).length === 0 ? (
         <div className="bg-white rounded-[2.5rem] p-20 text-center border border-slate-100">
            <Target className="w-16 h-16 text-slate-200 mx-auto mb-6" />
            <h3 className="text-xl font-black text-slate-900 mb-2">All Clear!</h3>
@@ -145,30 +153,30 @@ const MyTasksPage = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {tasks.map((task) => (
-            <div key={task._id} className="bg-white rounded-[2.5rem] p-8 border border-slate-200/60 shadow-sm shadow-blue-500/5 hover:shadow-xl transition-all group flex flex-col">
+            <div key={task?._id} className="bg-white rounded-[2.5rem] p-8 border border-slate-200/60 shadow-sm shadow-blue-500/5 hover:shadow-xl transition-all group flex flex-col">
 
                {/* Header */}
                <div className="flex justify-between items-start mb-6">
                   <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
-                    task.priority === 'CRITICAL' ? 'bg-red-50 text-red-600' :
-                    task.priority === 'HIGH' ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-blue-600'
+                    task?.priority === 'CRITICAL' ? 'bg-red-50 text-red-600' :
+                    task?.priority === 'HIGH' ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-blue-600'
                   }`}>
-                    {task.priority} Priority
+                    {task?.priority || 'MEDIUM'} Priority
                   </span>
                   <div className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                    <Calendar size={12} className="text-slate-300" /> {new Date(task.dueDate).toLocaleDateString()}
+                    <Calendar size={12} className="text-slate-300" /> {task?.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'N/A'}
                   </div>
                </div>
 
                <div className="flex-1">
-                  <h3 className="text-xl font-black text-slate-900 mb-2 leading-tight group-hover:text-blue-600 transition-colors">{task.title}</h3>
+                  <h3 className="text-xl font-black text-slate-900 mb-2 leading-tight group-hover:text-blue-600 transition-colors truncate">{task?.title}</h3>
                   <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-6 flex items-center gap-2">
-                     <Target size={12} /> {task.project?.name || 'Administrative'}
+                     <Target size={12} /> {task?.project?.name || 'Administrative'}
                   </p>
-                  <p className="text-xs text-slate-500 line-clamp-3 mb-8 leading-relaxed">{task.description || 'Proceed with standard operational protocol for this task module.'}</p>
+                  <p className="text-xs text-slate-500 line-clamp-3 mb-8 leading-relaxed">{task?.description || 'Proceed with standard operational protocol for this task module.'}</p>
 
                   {/* Subtasks */}
-                  {task.subtasks?.length > 0 && (
+                  {task?.subtasks?.length > 0 && (
                     <div className="mb-8 space-y-3 bg-slate-50/50 p-6 rounded-2xl border border-slate-100/50">
                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Milestones</p>
                        {task.subtasks.map((st, idx) => (
@@ -179,12 +187,12 @@ const MyTasksPage = () => {
                            className="w-full flex items-center gap-3 text-left group/st"
                          >
                             <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all ${
-                              st.completed ? 'bg-emerald-500 border-emerald-500' : 'border-slate-300 bg-white group-hover/st:border-emerald-400'
+                              st?.completed ? 'bg-emerald-500 border-emerald-500' : 'border-slate-300 bg-white group-hover/st:border-emerald-400'
                             }`}>
-                               {st.completed && <CheckCircle2 size={12} className="text-white" />}
+                               {st?.completed && <CheckCircle2 size={12} className="text-white" />}
                             </div>
-                            <span className={`text-xs font-bold transition-all ${st.completed ? 'text-slate-300 line-through' : 'text-slate-600'}`}>
-                               {st.title}
+                            <span className={`text-xs font-bold transition-all ${st?.completed ? 'text-slate-400 line-through' : 'text-slate-600'}`}>
+                               {st?.title}
                             </span>
                          </button>
                        ))}
@@ -195,14 +203,14 @@ const MyTasksPage = () => {
                {/* Footer / Controls */}
                <div className="mt-auto pt-8 border-t border-slate-50 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                     {task.status !== 'COMPLETED' ? (
+                     {task?.status !== 'COMPLETED' ? (
                        <>
-                         {task.status !== 'IN_PROGRESS' ? (
-                           <TaskControlBtn onClick={() => handleStatusChange(task._id, 'IN_PROGRESS')} icon={Play} label="Start" color="blue" />
+                         {task?.status !== 'IN_PROGRESS' ? (
+                           <TaskControlBtn onClick={() => handleStatusChange(task?._id, 'IN_PROGRESS')} icon={Play} label="Start" color="blue" />
                          ) : (
-                           <TaskControlBtn onClick={() => handleStatusChange(task._id, 'PAUSED')} icon={Pause} label="Pause" color="amber" />
+                           <TaskControlBtn onClick={() => handleStatusChange(task?._id, 'PAUSED')} icon={Pause} label="Pause" color="amber" />
                          )}
-                         <TaskControlBtn onClick={() => handleStatusChange(task._id, 'COMPLETED', task)} icon={CheckCircle2} label="Finish" color="emerald" />
+                         <TaskControlBtn onClick={() => handleStatusChange(task?._id, 'COMPLETED', task)} icon={CheckCircle2} label="Finish" color="emerald" />
                        </>
                      ) : (
                        <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-100">
@@ -214,7 +222,7 @@ const MyTasksPage = () => {
 
                   <div className="text-right">
                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Progress</p>
-                     <p className="text-sm font-black text-slate-900">{task.progress}%</p>
+                     <p className="text-sm font-black text-slate-900">{task?.progress || 0}%</p>
                   </div>
                </div>
             </div>
@@ -290,9 +298,9 @@ const TaskControlBtn = ({ onClick, icon: Icon, label, color }) => {
   return (
     <button
       onClick={onClick}
-      className={`px-4 py-2 rounded-xl flex items-center gap-2 transition-all active:scale-95 ${colors[color]}`}
+      className={`px-4 py-2 rounded-xl flex items-center gap-2 transition-all active:scale-95 ${colors[color] || colors.blue}`}
     >
-       <Icon size={14} />
+       {Icon && <Icon size={14} />}
        <span className="text-[10px] font-black uppercase tracking-widest">{label}</span>
     </button>
   );

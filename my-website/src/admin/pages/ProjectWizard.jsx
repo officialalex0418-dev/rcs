@@ -19,6 +19,7 @@ const ProjectWizard = () => {
     name: '',
     code: `PRJ-${Math.floor(1000 + Math.random() * 9000)}`,
     client: '',
+    clientRef: '',
     description: '',
     status: 'PLANNING',
     priority: 'MEDIUM',
@@ -99,15 +100,22 @@ const ProjectWizard = () => {
     try {
       const payload = {
         ...formData,
-        manager: formData.manager === '' ? null : formData.manager,
-        clientRef: formData.clientRef === '' ? null : formData.clientRef,
-        startDate: formData.startDate || null,
-        targetDate: formData.targetDate || null,
-        team: (formData.team || []).filter(m => m.user !== '').map(m => ({
+        manager: formData.manager === '' ? undefined : formData.manager,
+        clientRef: formData.clientRef === '' ? undefined : formData.clientRef,
+        startDate: formData.startDate || undefined,
+        targetDate: formData.targetDate || undefined,
+        team: (formData.team || []).filter(m => m.user && m.user !== '').map(m => ({
           ...m,
-          user: m.user === '' ? null : m.user
+          user: m.user
         }))
       };
+
+      // Ensure budget breakdown values are numbers
+      if (payload.budget?.breakdown) {
+        Object.keys(payload.budget.breakdown).forEach(key => {
+          payload.budget.breakdown[key] = parseFloat(payload.budget.breakdown[key]) || 0;
+        });
+      }
 
       console.log('Submitting Project Data:', payload);
       const url = id ? `/api/projects/${id}` : '/api/projects';
@@ -181,16 +189,23 @@ const ProjectWizard = () => {
                    <InputField label="Project Code" icon={Zap} value={formData.code} readOnly />
                    <div className="space-y-2">
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Client Entity</label>
-                      <select className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none text-sm font-bold" value={formData.client} onChange={e => updateFormData('client', e.target.value)}>
+                      <select
+                        className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none text-sm font-bold"
+                        value={formData.clientRef || ''}
+                        onChange={e => {
+                          const client = clients.find(c => c._id === e.target.value);
+                          setFormData(prev => ({ ...prev, clientRef: e.target.value, client: client ? client.name : '' }));
+                        }}
+                      >
                          <option value="">Select Client</option>
-                         {clients.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
+                         {clients.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
                       </select>
                    </div>
                    <div className="space-y-2">
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Assigned Strategist (PM)</label>
                       <select className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none text-sm font-bold" value={formData.manager} onChange={e => updateFormData('manager', e.target.value)}>
                          <option value="">Select Manager</option>
-                         {employees.filter(e => e.role === 'PROJECT_MANAGER' || e.role === 'ADMIN' || e.role === 'SUPER_ADMIN').map(e => <option key={e._id} value={e._id}>{e.name}</option>)}
+                         {(employees || []).filter(e => e.role === 'PROJECT_MANAGER' || e.role === 'ADMIN' || e.role === 'SUPER_ADMIN').map(e => <option key={e._id} value={e._id}>{e.name}</option>)}
                       </select>
                    </div>
                    <InputField label="Deployment Start" icon={Calendar} type="date" value={formData.startDate} onChange={v => updateFormData('startDate', v)} />
@@ -309,11 +324,11 @@ const ProjectWizard = () => {
                    </button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                   {formData.team.map((mem, idx) => (
+                   {(formData.team || []).map((mem, idx) => (
                      <div key={idx} className="p-6 bg-slate-50 border border-slate-200 rounded-[2.5rem] flex items-center gap-4 relative group">
                         <button onClick={() => updateFormData('team', formData.team.filter((_, i) => i !== idx))} className="absolute -top-2 -right-2 p-2 bg-white border border-slate-200 rounded-full text-slate-300 hover:text-red-500 shadow-sm transition-all"><Trash2 size={14} /></button>
                         <div className="w-12 h-12 rounded-2xl bg-white border border-slate-100 flex items-center justify-center font-black text-slate-400 shadow-sm">
-                           {mem.user ? employees.find(e => e._id === mem.user)?.name.charAt(0) : '?'}
+                           {mem.user ? employees.find(e => e._id === mem.user)?.name?.charAt(0) || '?' : '?'}
                         </div>
                         <div className="flex-1 space-y-2">
                            <select className="w-full bg-transparent border-none text-sm font-black text-slate-900 outline-none p-0 h-auto" value={mem.user} onChange={e => {

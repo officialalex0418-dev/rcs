@@ -29,9 +29,25 @@ const ProjectWorkspace = () => {
     subtasks: []
   });
 
-  const tabs = [
-    'Overview', 'Requirements', 'Scope', 'Tasks', 'Milestones', 'Team', 'Budget', 'Risks', 'Activity'
-  ];
+  const handleAddSubtask = () => {
+    setTaskData({
+      ...taskData,
+      subtasks: [...taskData.subtasks, { title: '', completed: false }]
+    });
+  };
+
+  const updateSubtask = (index, val) => {
+    const newSubtasks = [...taskData.subtasks];
+    newSubtasks[index].title = val;
+    setTaskData({ ...taskData, subtasks: newSubtasks });
+  };
+
+  const removeSubtask = (index) => {
+    setTaskData({
+      ...taskData,
+      subtasks: taskData.subtasks.filter((_, i) => i !== index)
+    });
+  };
 
   const fetchProjectData = async () => {
     try {
@@ -62,9 +78,15 @@ const ProjectWorkspace = () => {
     e.preventDefault();
     setIsSaving(true);
     try {
+      const payload = {
+        ...taskData,
+        assignedTo: taskData.assignedTo || undefined,
+        subtasks: taskData.subtasks.filter(st => st.title.trim() !== '')
+      };
+
       const response = await apiFetch(`/api/projects/${id}/tasks`, {
         method: 'POST',
-        body: JSON.stringify(taskData)
+        body: JSON.stringify(payload)
       });
       if (response.ok) {
         setShowTaskModal(false);
@@ -143,34 +165,47 @@ const ProjectWorkspace = () => {
       </div>
 
       {/* Add Task Modal */}
-      <Modal isOpen={showTaskModal} onClose={() => setShowTaskModal(false)} title="Add Tactical Task">
+      <Modal isOpen={showTaskModal} onClose={() => setShowTaskModal(false)} title="Configure Tactical Mission">
          <form onSubmit={handleAddTask} className="space-y-6">
             <div className="space-y-2">
                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Task Headline</label>
                <input
                  required
                  className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none text-sm font-bold focus:border-blue-500 transition-all"
-                 placeholder="What needs to be done?"
+                 placeholder="Define the specific deliverable..."
                  value={taskData.title}
                  onChange={e => setTaskData({...taskData, title: e.target.value})}
                />
             </div>
 
+            <div className="space-y-2">
+               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Context / Description</label>
+               <textarea
+                 className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none text-sm font-medium focus:border-blue-500 transition-all"
+                 placeholder="Provide technical context or requirements..."
+                 rows="3"
+                 value={taskData.description}
+                 onChange={e => setTaskData({...taskData, description: e.target.value})}
+               />
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Assignee</label>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Personnel Assignment</label>
                   <select
                     required
                     className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none"
                     value={taskData.assignedTo}
                     onChange={e => setTaskData({...taskData, assignedTo: e.target.value})}
                   >
-                     <option value="">Select Personnel</option>
-                     {employees.map(emp => <option key={emp._id} value={emp._id}>{emp.name}</option>)}
+                     <option value="">Select Specialist</option>
+                     {employees.map(emp => (
+                       <option key={emp._id} value={emp._id}>{emp.name} ({emp.designation || emp.role})</option>
+                     ))}
                   </select>
                </div>
                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Due Date</label>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Protocol Deadline</label>
                   <input
                     type="date"
                     required
@@ -182,7 +217,7 @@ const ProjectWorkspace = () => {
             </div>
 
             <div className="space-y-2">
-               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Priority</label>
+               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Strategic Priority</label>
                <div className="flex gap-2">
                   {['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].map(lvl => (
                     <button
@@ -190,7 +225,7 @@ const ProjectWorkspace = () => {
                       type="button"
                       onClick={() => setTaskData({...taskData, priority: lvl})}
                       className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${
-                        taskData.priority === lvl ? 'bg-slate-900 text-white border-slate-900 shadow-lg' : 'bg-white text-slate-400 border-slate-200'
+                        taskData.priority === lvl ? 'bg-slate-900 text-white border-slate-900 shadow-lg' : 'bg-white text-slate-400 border-slate-200 hover:border-blue-400'
                       }`}
                     >
                        {lvl}
@@ -199,10 +234,39 @@ const ProjectWorkspace = () => {
                </div>
             </div>
 
+            <div className="space-y-4 pt-4 border-t border-slate-100">
+               <div className="flex justify-between items-center">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Protocol Breakdown (Steps)</label>
+                  <button type="button" onClick={handleAddSubtask} className="text-[10px] font-black text-blue-600 uppercase flex items-center gap-1 hover:underline">
+                     <Plus size={14} /> Add Segment
+                  </button>
+               </div>
+               <div className="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+                  {taskData.subtasks.map((st, idx) => (
+                    <div key={idx} className="flex gap-2 animate-in slide-in-from-top-2 duration-200">
+                       <input
+                         className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none text-xs font-bold focus:border-blue-500"
+                         placeholder={`Execution Step ${idx+1}...`}
+                         value={st.title}
+                         onChange={e => updateSubtask(idx, e.target.value)}
+                       />
+                       <button type="button" onClick={() => removeSubtask(idx)} className="p-3 text-slate-300 hover:text-red-500 transition-colors">
+                          <Trash2 size={16}/>
+                       </button>
+                    </div>
+                  ))}
+                  {taskData.subtasks.length === 0 && (
+                    <div className="text-center py-6 border-2 border-dashed border-slate-100 rounded-2xl">
+                       <p className="text-[10px] font-bold text-slate-300 uppercase">No segments defined</p>
+                    </div>
+                  )}
+               </div>
+            </div>
+
             <div className="flex gap-4 pt-6">
                <button type="button" onClick={() => setShowTaskModal(false)} className="flex-1 py-4 bg-slate-100 text-slate-500 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all">Abort</button>
                <button type="submit" disabled={isSaving} className="flex-1 py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-blue-500/20 active:scale-95 transition-all">
-                  {isSaving ? 'Deploying...' : 'Deploy Task'}
+                  {isSaving ? 'Initializing...' : 'Deploy Protocol'}
                </button>
             </div>
          </form>

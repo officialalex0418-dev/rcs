@@ -61,7 +61,19 @@ export const getProjectTasks = async (req, res, next) => {
 
 export const createTask = async (req, res, next) => {
   try {
-    const task = await Task.create({ ...req.body, project: req.params.projectId });
+    const { subtasks } = req.body;
+    let progress = 0;
+
+    if (subtasks && subtasks.length > 0) {
+      const completedCount = subtasks.filter(st => st.completed).length;
+      progress = Math.round((completedCount / subtasks.length) * 100);
+    }
+
+    const task = await Task.create({
+      ...req.body,
+      project: req.params.projectId,
+      progress: req.body.progress || progress
+    });
     res.status(201).json({ success: true, data: task });
   } catch (err) {
     next(err);

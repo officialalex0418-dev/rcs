@@ -24,7 +24,9 @@ const MyTasksPage = () => {
       if (!userStr) return;
 
       const user = JSON.parse(userStr);
-      const response = await apiFetch(`/api/tasks?assignedTo=${user.id || user._id}`);
+      const userId = user._id || user.id;
+
+      const response = await apiFetch(`/api/tasks?assignedTo=${userId}`);
       const data = await response.json();
       if (data.success) {
         setTasks(Array.isArray(data.data) ? data.data : []);

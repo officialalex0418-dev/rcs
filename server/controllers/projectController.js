@@ -42,7 +42,15 @@ export const createProject = async (req, res, next) => {
 
 export const updateProject = async (req, res, next) => {
   try {
-    const project = await Project.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    const updateData = { ...req.body };
+
+    // Auto-calculate progress based on milestones if milestones are being updated
+    if (req.body.milestones && req.body.milestones.length > 0) {
+      const completedMilestones = req.body.milestones.filter(ms => ms.status === 'COMPLETED').length;
+      updateData.progress = Math.round((completedMilestones / req.body.milestones.length) * 100);
+    }
+
+    const project = await Project.findByIdAndUpdate(req.params.id, updateData, { new: true, runValidators: true });
     if (!project) return res.status(404).json({ success: false, message: 'Project not found' });
     res.status(200).json({ success: true, data: project });
   } catch (err) {

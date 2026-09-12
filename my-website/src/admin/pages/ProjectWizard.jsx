@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft, ArrowRight, Save, Plus, Trash2, Layout, Briefcase,
   User, Users, Calendar, Target, ShieldCheck, DollarSign,
-  Activity, CheckCircle2, AlertCircle, Clock, Zap
+  Activity, CheckCircle2, AlertCircle, Clock, Zap, AlertTriangle
 } from 'lucide-react';
 import { apiFetch } from '../../utils/api';
 
@@ -13,7 +13,7 @@ const ProjectWizard = () => {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
   const [employees, setEmployees] = useState([]);
-  const [clients, setClients] = useState([]); // Will fetch from inquiries or clients
+  const [clients, setClients] = useState([]);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -46,7 +46,9 @@ const ProjectWizard = () => {
     { id: 3, label: 'Scope', icon: Layout },
     { id: 4, label: 'Budget', icon: DollarSign },
     { id: 5, label: 'Team', icon: Users },
-    { id: 6, label: 'Review', icon: ShieldCheck }
+    { id: 6, label: 'Milestones', icon: Calendar },
+    { id: 7, label: 'Risks', icon: AlertTriangle },
+    { id: 8, label: 'Review', icon: ShieldCheck }
   ];
 
   useEffect(() => {
@@ -54,7 +56,7 @@ const ProjectWizard = () => {
       try {
         const [empRes, clientRes] = await Promise.all([
           apiFetch('/api/employees'),
-          apiFetch('/api/inquiries') // Using inquiries as source for clients
+          apiFetch('/api/inquiries')
         ]);
         const emps = await empRes.json();
         const cls = await clientRes.json();
@@ -64,9 +66,14 @@ const ProjectWizard = () => {
         if (id) {
            const projRes = await apiFetch(`/api/projects/${id}`);
            const proj = await projRes.json();
-           if (proj.success) setFormData({...proj.data,
+           if (proj.success) setFormData({
+              ...proj.data,
               startDate: proj.data.startDate?.split('T')[0] || '',
-              targetDate: proj.data.targetDate?.split('T')[0] || ''
+              targetDate: proj.data.targetDate?.split('T')[0] || '',
+              milestones: (proj.data.milestones || []).map(ms => ({
+                ...ms,
+                dueDate: ms.dueDate?.split('T')[0] || ''
+              }))
            });
         }
       } catch (err) {
@@ -107,17 +114,20 @@ const ProjectWizard = () => {
         team: (formData.team || []).filter(m => m.user && m.user !== '').map(m => ({
           ...m,
           user: m.user
+        })),
+        milestones: formData.milestones.map(ms => ({
+          ...ms,
+          owner: ms.owner === '' ? undefined : ms.owner,
+          dueDate: ms.dueDate || undefined
         }))
       };
 
-      // Ensure budget breakdown values are numbers
       if (payload.budget?.breakdown) {
         Object.keys(payload.budget.breakdown).forEach(key => {
           payload.budget.breakdown[key] = parseFloat(payload.budget.breakdown[key]) || 0;
         });
       }
 
-      console.log('Submitting Project Data:', payload);
       const url = id ? `/api/projects/${id}` : '/api/projects';
       const method = id ? 'PUT' : 'POST';
       const response = await apiFetch(url, {
@@ -125,7 +135,6 @@ const ProjectWizard = () => {
         body: JSON.stringify(payload)
       });
       const result = await response.json();
-      console.log('Submission Result:', result);
       if (response.ok) navigate('/admin/projects');
       else alert(`Error: ${result.message || 'Failed to save project'}`);
     } catch (err) {
@@ -259,7 +268,7 @@ const ProjectWizard = () => {
              </div>
            )}
 
-           {/* Step 3: Scope & Deliverables */}
+           {/* Step 3: Scope */}
            {step === 3 && (
              <div className="space-y-10">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
@@ -355,8 +364,96 @@ const ProjectWizard = () => {
              </div>
            )}
 
-           {/* Step 6: Review */}
+           {/* Step 6: Milestones */}
            {step === 6 && (
+             <div className="space-y-10">
+                <div className="flex justify-between items-center">
+                   <h3 className="text-xl font-black text-slate-900 uppercase">Strategic Milestones</h3>
+                   <button onClick={() => updateFormData('milestones', [...formData.milestones, { title: '', description: '', dueDate: '', owner: '', status: 'UPCOMING', progress: 0 }])} className="flex items-center gap-2 bg-blue-600 px-5 py-3 rounded-xl text-[10px] font-black uppercase text-white shadow-lg">
+                      <Plus size={16} /> Add Milestone
+                   </button>
+                </div>
+                <div className="space-y-6">
+                   {formData.milestones.map((ms, idx) => (
+                     <div key={idx} className="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-200/60 relative group">
+                        <button onClick={() => updateFormData('milestones', formData.milestones.filter((_, i) => i !== idx))} className="absolute top-6 right-6 p-2 text-slate-300 hover:text-red-500 transition-colors"><Trash2 size={18} /></button>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                           <div className="md:col-span-2 space-y-4">
+                              <input className="w-full bg-transparent text-lg font-black text-slate-900 border-b border-slate-200 outline-none pb-2 focus:border-blue-500 transition-all" placeholder="Milestone Objective..." value={ms.title} onChange={e => {
+                                 const nm = [...formData.milestones]; nm[idx].title = e.target.value; updateFormData('milestones', nm);
+                              }} />
+                              <textarea className="w-full bg-white border border-slate-200 rounded-2xl p-4 text-xs font-medium outline-none" rows="2" placeholder="Success criteria or description..." value={ms.description} onChange={e => {
+                                 const nm = [...formData.milestones]; nm[idx].description = e.target.value; updateFormData('milestones', nm);
+                              }} />
+                           </div>
+                           <div className="space-y-4">
+                              <div className="space-y-1">
+                                 <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Assigned Owner</label>
+                                 <select className="w-full p-3 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase outline-none" value={ms.owner} onChange={e => {
+                                    const nm = [...formData.milestones]; nm[idx].owner = e.target.value; updateFormData('milestones', nm);
+                                 }}>
+                                    <option value="">Select Owner</option>
+                                    {formData.team.filter(m => m.user).map(m => {
+                                       const emp = employees.find(e => e._id === (m.user?._id || m.user));
+                                       return <option key={emp?._id} value={emp?._id}>{emp?.name}</option>
+                                    })}
+                                 </select>
+                              </div>
+                              <div className="space-y-1">
+                                 <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Deadline</label>
+                                 <input type="date" className="w-full p-3 bg-white border border-slate-200 rounded-xl text-[10px] font-black outline-none" value={ms.dueDate} onChange={e => {
+                                    const nm = [...formData.milestones]; nm[idx].dueDate = e.target.value; updateFormData('milestones', nm);
+                                 }} />
+                              </div>
+                           </div>
+                        </div>
+                     </div>
+                   ))}
+                </div>
+             </div>
+           )}
+
+           {/* Step 7: Risks */}
+           {step === 7 && (
+             <div className="space-y-10">
+                <div className="flex justify-between items-center">
+                   <h3 className="text-xl font-black text-slate-900 uppercase">Risk Assessment</h3>
+                   <button onClick={() => updateFormData('risks', [...formData.risks, { title: '', category: 'TECHNICAL', probability: 'LOW', impact: 'LOW', mitigationPlan: '', status: 'OPEN' }])} className="flex items-center gap-2 bg-slate-900 px-5 py-3 rounded-xl text-[10px] font-black uppercase text-white shadow-lg">
+                      <Plus size={16} /> Log Risk
+                   </button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                   {formData.risks.map((risk, idx) => (
+                     <div key={idx} className="p-8 bg-slate-50 border border-slate-200 rounded-[2.5rem] relative group">
+                        <button onClick={() => updateFormData('risks', formData.risks.filter((_, i) => i !== idx))} className="absolute top-6 right-6 p-2 text-slate-300 hover:text-red-500 transition-colors"><Trash2 size={18} /></button>
+                        <div className="space-y-6">
+                           <input className="w-full bg-transparent text-sm font-black text-slate-900 border-b border-slate-200 outline-none pb-2" placeholder="Potential Hazard..." value={risk.title} onChange={e => {
+                              const nr = [...formData.risks]; nr[idx].title = e.target.value; updateFormData('risks', nr);
+                           }} />
+                           <div className="grid grid-cols-2 gap-4">
+                              <select className="p-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase" value={risk.impact} onChange={e => {
+                                 const nr = [...formData.risks]; nr[idx].impact = e.target.value; updateFormData('risks', nr);
+                              }}>
+                                 {['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].map(lvl => <option key={lvl} value={lvl}>{lvl} Impact</option>)}
+                              </select>
+                              <select className="p-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase" value={risk.category} onChange={e => {
+                                 const nr = [...formData.risks]; nr[idx].category = e.target.value; updateFormData('risks', nr);
+                              }}>
+                                 {['TECHNICAL', 'FINANCIAL', 'RESOURCE', 'TIMELINE', 'CLIENT', 'OPERATIONAL'].map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                              </select>
+                           </div>
+                           <textarea className="w-full bg-white border border-slate-200 rounded-2xl p-4 text-xs font-medium outline-none" rows="2" placeholder="Mitigation Strategy..." value={risk.mitigationPlan} onChange={e => {
+                              const nr = [...formData.risks]; nr[idx].mitigationPlan = e.target.value; updateFormData('risks', nr);
+                           }} />
+                        </div>
+                     </div>
+                   ))}
+                </div>
+             </div>
+           )}
+
+           {/* Step 8: Review */}
+           {step === 8 && (
              <div className="space-y-12">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
                    <div className="space-y-8">
@@ -367,10 +464,10 @@ const ProjectWizard = () => {
                          <p className="text-xs font-medium text-slate-500 mt-4 leading-relaxed line-clamp-3">{formData.description}</p>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
-                         <SummaryCard label="Objectives" val={`${formData.requirements.length} Clauses`} icon={Target} color="blue" />
+                         <SummaryCard label="Milestones" val={`${formData.milestones.length} Strategic`} icon={Calendar} color="blue" />
                          <SummaryCard label="Resources" val={`${formData.team.length} Members`} icon={Users} color="indigo" />
-                         <SummaryCard label="Timeframe" val={`${formData.startDate} → ${formData.targetDate}`} icon={Calendar} color="purple" />
                          <SummaryCard label="Budget" val={`Rs. ${Object.values(formData.budget.breakdown).reduce((a,b)=>a+b,0).toLocaleString()}`} icon={DollarSign} color="emerald" />
+                         <SummaryCard label="Priority" val={formData.priority} icon={Target} color="purple" />
                       </div>
                    </div>
                    <div className="p-10 bg-slate-50 rounded-[3rem] border border-slate-200/60 flex flex-col justify-center">
@@ -378,15 +475,15 @@ const ProjectWizard = () => {
                       <div className="relative w-40 h-40 mx-auto flex items-center justify-center mb-10">
                          <svg className="w-full h-full transform -rotate-90">
                             <circle cx="80" cy="80" r="70" stroke="#e2e8f0" strokeWidth="12" fill="transparent" />
-                            <circle cx="80" cy="80" r="70" stroke="#2563eb" strokeWidth="12" fill="transparent" strokeDasharray="440" strokeDashoffset={440 * (1 - 0.92)} strokeLinecap="round" />
+                            <circle cx="80" cy="80" r="70" stroke="#2563eb" strokeWidth="12" fill="transparent" strokeDasharray="440" strokeDashoffset={440 * (1 - 0.95)} strokeLinecap="round" />
                          </svg>
-                         <span className="absolute text-4xl font-black text-slate-900">92%</span>
+                         <span className="absolute text-4xl font-black text-slate-900">95%</span>
                       </div>
                       <div className="space-y-3">
-                         <ReadinessCheck label="Structural Definition" status="PASSED" />
-                         <ReadinessCheck label="Financial Allocation" status="PASSED" />
-                         <ReadinessCheck label="Personnel Assignment" status="PASSED" />
-                         <ReadinessCheck label="Risk Mitigation" status="WARNING" />
+                         <ReadinessCheck label="Milestone Framework" status={formData.milestones.length > 0 ? "PASSED" : "WARNING"} />
+                         <ReadinessCheck label="Personnel Sourcing" status={formData.team.length > 0 ? "PASSED" : "WARNING"} />
+                         <ReadinessCheck label="Financial Strategy" status="PASSED" />
+                         <ReadinessCheck label="Risk Mapping" status={formData.risks.length > 0 ? "PASSED" : "WARNING"} />
                       </div>
                    </div>
                 </div>

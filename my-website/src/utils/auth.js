@@ -1,4 +1,17 @@
 /**
+ * Gets the authenticated user from local storage safely
+ */
+export const getAuthUser = () => {
+  try {
+    const userStr = localStorage.getItem('rcs_user');
+    return userStr ? JSON.parse(userStr) : null;
+  } catch (e) {
+    console.error("Auth User Parse Error:", e);
+    return null;
+  }
+};
+
+/**
  * Synchronizes user data across the application by triggering a custom event
  * whenever the profile is updated.
  */

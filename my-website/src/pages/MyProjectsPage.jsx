@@ -1,39 +1,41 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Briefcase, Clock, ChevronRight, Zap
+  Briefcase, Users, Target, Layout, CheckCircle2, Clock,
+  AlertTriangle, Activity, FileText, ChevronRight,
+  Zap, Calendar, TrendingUp, Search, Filter, ShieldCheck, User
 } from 'lucide-react';
 import { apiFetch } from '../utils/api';
-import Modal from '../admin/components/Modal';
+import { getAuthUser } from '../utils/auth';
 
 const MyProjectsPage = () => {
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const userStr = localStorage.getItem('rcs_user');
-        if (!userStr) {
-          setLoading(false);
-          return;
-        }
-        const user = JSON.parse(userStr);
-        const userId = user._id || user.id;
-
-        const response = await apiFetch(`/api/projects?employeeId=${userId}`);
-        const data = await response.json();
-        if (data.success) {
-          setProjects(Array.isArray(data.data) ? data.data : []);
-        }
-      } catch (err) {
-        console.error('Fetch projects error:', err);
-      } finally {
+  const fetchMyProjects = async () => {
+    try {
+      const user = getAuthUser();
+      if (!user) {
         setLoading(false);
+        return;
       }
-    };
-    fetchProjects();
+
+      const userId = user._id || user.id;
+      const response = await apiFetch(`/api/projects?employeeId=${userId}`);
+      const data = await response.json();
+      if (data.success) {
+        setProjects(Array.isArray(data.data) ? data.data : []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch projects:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMyProjects();
   }, []);
 
   const getStatusColor = (status) => {
@@ -46,7 +48,14 @@ const MyProjectsPage = () => {
     }
   };
 
-  if (loading) return <div className="p-20 text-center font-black text-slate-300 uppercase tracking-widest animate-pulse">Syncing Mission Hub...</div>;
+  if (loading) return (
+    <div className="p-20 text-center space-y-4 font-sans">
+      <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+      <p className="text-xs font-black text-slate-300 uppercase tracking-widest">Syncing Project Hub...</p>
+    </div>
+  );
+
+  const currentUser = getAuthUser();
 
   return (
     <div className="p-8 bg-slate-50 min-h-screen font-sans space-y-10 animate-in fade-in duration-700">
@@ -57,51 +66,64 @@ const MyProjectsPage = () => {
             <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white shadow-lg">
                <Briefcase size={22} />
             </div>
-            <h1 className="text-3xl font-black text-slate-900 tracking-tight">Mission Hub</h1>
+            <h1 className="text-3xl font-black text-slate-900 tracking-tight">Collaboration Hub</h1>
          </div>
-         <p className="text-slate-500 font-medium ml-1">Your associated tactical projects and contributions.</p>
+         <p className="text-slate-500 font-medium ml-1">View and contribute to your assigned company missions.</p>
       </div>
 
-      {/* Grid */}
+      {/* Projects Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
-         {projects?.length === 0 ? (
+         {projects.length === 0 ? (
            <div className="col-span-full py-20 text-center bg-white rounded-[3rem] border border-dashed border-slate-200">
               <Zap size={48} className="mx-auto mb-4 text-slate-200" />
-              <h3 className="text-lg font-black text-slate-400 uppercase tracking-widest">No Missions Logged</h3>
+              <h3 className="text-lg font-black text-slate-400 uppercase tracking-widest">No Active Missions</h3>
+              <p className="text-sm font-medium text-slate-400 mt-2">You aren't associated with any tactical projects yet.</p>
            </div>
-         ) : projects?.map((p) => (
-           <div key={p?._id} className="bg-white rounded-[2.5rem] border border-slate-200/60 shadow-sm hover:shadow-xl hover:border-blue-500/30 transition-all p-8 flex flex-col group">
-              <div className="flex justify-between items-start mb-6">
-                 <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${getStatusColor(p?.status)}`}>
-                    {p?.status?.replace('_', ' ') || 'PLANNING'}
-                 </span>
-                 <div className="flex items-center gap-1.5 text-slate-400">
-                    <Clock size={14} />
-                    <span className="text-[10px] font-black uppercase tracking-widest">{p?.progress || 0}%</span>
+         ) : projects.map((p) => {
+            const userId = currentUser?._id || currentUser?.id;
+            const myContribution = (p.team || []).find(m => (m.user?._id || m.user) === userId);
+
+            return (
+              <div key={p._id} className="bg-white rounded-[2.5rem] border border-slate-200/60 shadow-sm hover:shadow-xl hover:border-blue-500/30 transition-all group p-8 flex flex-col">
+                 <div className="flex justify-between items-start mb-6">
+                    <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${getStatusColor(p.status)}`}>
+                       {p.status?.replace('_', ' ') || 'PLANNING'}
+                    </span>
+                    <div className="flex items-center gap-1.5 text-slate-400">
+                       <Clock size={14} />
+                       <span className="text-[10px] font-black uppercase tracking-widest">{p.progress || 0}%</span>
+                    </div>
                  </div>
+
+                 <h3 className="text-xl font-black text-slate-900 mb-1 group-hover:text-blue-600 transition-colors">{p.name}</h3>
+                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6">{p.client} • {p.code}</p>
+
+                 {/* My Role Section */}
+                 <div className="bg-blue-50 rounded-2xl p-4 mb-6 border border-blue-100/50">
+                    <p className="text-[9px] font-black text-blue-600 uppercase tracking-widest mb-1">Your Tactical Role</p>
+                    <p className="text-sm font-black text-blue-900">{myContribution?.role || (p.manager === userId || p.manager?._id === userId ? 'Project Strategist' : 'Specialist')}</p>
+                    <p className="text-[9px] font-bold text-blue-400 mt-1 uppercase tracking-tighter italic">{myContribution?.allocation || 100}% Mission Allocation</p>
+                 </div>
+
+                 <div className="space-y-4 flex-1">
+                    <div className="flex justify-between items-end">
+                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Global Progress</p>
+                       <p className="text-[10px] font-black text-slate-900">{p.progress || 0}%</p>
+                    </div>
+                    <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                       <div className="h-full bg-blue-600" style={{ width: `${p.progress || 0}%` }}></div>
+                    </div>
+                 </div>
+
+                 <button
+                   onClick={() => navigate(`/my-projects/${p._id}`)}
+                   className="mt-8 w-full py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all shadow-lg flex items-center justify-center gap-2"
+                 >
+                    Examine Mission <ChevronRight size={14} />
+                 </button>
               </div>
-
-              <h3 className="text-xl font-black text-slate-900 mb-1 group-hover:text-blue-600 transition-colors">{p?.name || 'Unnamed Project'}</h3>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-8">{p?.client || 'Internal'} • {p?.code || 'NO-CODE'}</p>
-
-              <div className="space-y-4 flex-1">
-                 <div className="flex justify-between items-end">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Global Progress</p>
-                    <p className="text-[10px] font-black text-slate-900">{p?.progress || 0}%</p>
-                 </div>
-                 <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-blue-600" style={{ width: `${p?.progress || 0}%` }}></div>
-                 </div>
-              </div>
-
-              <button
-                onClick={() => navigate(`/my-projects/${p?._id}`)}
-                className="mt-8 w-full py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all shadow-lg flex items-center justify-center gap-2"
-              >
-                 Examine Mission <ChevronRight size={14} />
-              </button>
-           </div>
-         ))}
+            );
+         })}
       </div>
     </div>
   );

@@ -56,13 +56,14 @@ const ProjectWorkspace = () => {
         apiFetch(`/api/projects/${id}/tasks`),
         apiFetch('/api/employees')
       ]);
-      const proj = await projRes.json();
-      const tsk = await taskRes.json();
-      const emp = await empRes.json();
+
+      const proj = projRes.ok ? await projRes.json() : { success: false };
+      const tsk = taskRes.ok ? await taskRes.json() : { success: false };
+      const emp = empRes.ok ? await empRes.json() : { success: false };
 
       if (proj.success) setProject(proj.data);
-      if (tsk.success) setTasks(tsk.data);
-      if (emp.success) setEmployees(emp.data);
+      if (tsk.success) setTasks(Array.isArray(tsk.data) ? tsk.data : []);
+      if (emp.success) setEmployees(Array.isArray(emp.data) ? emp.data : []);
     } catch (err) {
       console.error('Fetch error:', err);
     } finally {
@@ -277,17 +278,18 @@ const ProjectWorkspace = () => {
 };
 
 // Tabs Components
-const OverviewTab = ({ project, tasks }) => {
-  const completedTasks = tasks.filter(t => t.status === 'COMPLETED').length;
+const OverviewTab = ({ project, tasks = [] }) => {
+  const safeTasks = Array.isArray(tasks) ? tasks : [];
+  const completedTasks = safeTasks.filter(t => t.status === 'COMPLETED').length;
 
   return (
     <div className="grid grid-cols-12 gap-8">
        <div className="col-span-12 xl:col-span-8 space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-             <KpiCard label="Global Progress" val={`${project.progress}%`} color="blue" />
+             <KpiCard label="Global Progress" val={`${project.progress || 0}%`} color="blue" />
              <KpiCard label="Budget Consumed" val="0%" color="indigo" />
-             <KpiCard label="Tasks Done" val={`${completedTasks} / ${tasks.length}`} color="emerald" />
-             <KpiCard label="Health Status" val={project.health} color="purple" />
+             <KpiCard label="Tasks Done" val={`${completedTasks} / ${safeTasks.length}`} color="emerald" />
+             <KpiCard label="Health Status" val={project.health || 'STABLE'} color="purple" />
           </div>
           <div className="bg-white rounded-[2.5rem] border border-slate-200/60 p-10">
              <h3 className="text-xl font-black text-slate-900 uppercase mb-8">Performance Trajectory</h3>
@@ -295,7 +297,7 @@ const OverviewTab = ({ project, tasks }) => {
                 <ResponsiveContainer width="100%" height="100%">
                    <AreaChart data={[
                       { name: 'Start', progress: 0 },
-                      { name: 'Current', progress: project.progress },
+                      { name: 'Current', progress: project.progress || 0 },
                    ]}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                       <XAxis dataKey="name" hide />
@@ -313,13 +315,13 @@ const OverviewTab = ({ project, tasks }) => {
              <div className="space-y-6">
                 <HealthRow label="Schedule Adherence" val={project.health === 'ON_TRACK' ? '100%' : '75%'} />
                 <HealthRow label="Budget Discipline" val="100%" />
-                <HealthRow label="Task Velocity" val={tasks.length ? `${Math.round((completedTasks/tasks.length)*100)}%` : '0%'} />
+                <HealthRow label="Task Velocity" val={safeTasks.length ? `${Math.round((completedTasks/safeTasks.length)*100)}%` : '0%'} />
              </div>
           </div>
           <div className="bg-white rounded-[2.5rem] border border-slate-200/60 p-8">
              <h3 className="text-lg font-black text-slate-900 uppercase mb-6">Execution Squad</h3>
              <div className="space-y-4">
-                {project.team?.map((mem, i) => (
+                {(project.team || []).map((mem, i) => (
                   <div key={i} className="flex items-center gap-3">
                      <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-400">
                         {mem.user?.name?.charAt(0) || '?'}
@@ -365,70 +367,79 @@ const ScopeTab = ({ project }) => (
      <div className="bg-white rounded-[3rem] border border-slate-200/60 p-10">
         <h3 className="text-lg font-black text-blue-600 uppercase mb-8">In-Scope Deliverables</h3>
         <div className="space-y-4">
-           {project.inScope?.map((s, i) => (
+           {(project.inScope || []).filter(s => s && s.trim() !== '').map((s, i) => (
              <div key={i} className="flex items-center gap-3 p-4 bg-blue-50/50 rounded-2xl border border-blue-100 text-xs font-bold text-blue-900">
                 <CheckCircle2 size={16} className="text-blue-500" /> {s}
              </div>
            ))}
+           {(!project.inScope || project.inScope.filter(s => s && s.trim() !== '').length === 0) && <p className="text-xs text-slate-400 italic">No in-scope items defined</p>}
         </div>
      </div>
      <div className="bg-white rounded-[3rem] border border-slate-200/60 p-10">
         <h3 className="text-lg font-black text-slate-400 uppercase mb-8">Exclusion Boundaries</h3>
         <div className="space-y-4">
-           {project.outOfScope?.map((s, i) => (
+           {(project.outOfScope || []).filter(s => s && s.trim() !== '').map((s, i) => (
              <div key={i} className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 text-xs font-bold text-slate-500">
                 <Zap size={16} className="text-slate-300" /> {s}
              </div>
            ))}
+           {(!project.outOfScope || project.outOfScope.filter(s => s && s.trim() !== '').length === 0) && <p className="text-xs text-slate-400 italic">No exclusions defined</p>}
         </div>
      </div>
   </div>
 );
 
-const TasksTab = ({ tasks }) => (
-  <div className="bg-white rounded-[3rem] border border-slate-200/60 p-10">
-     <div className="flex justify-between items-center mb-10">
-        <h3 className="text-xl font-black text-slate-900 uppercase">Strategic Tasks</h3>
-     </div>
-     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {tasks.map(task => (
-          <div key={task._id} className="p-6 bg-slate-50 border border-slate-100 rounded-[2rem] space-y-4">
-             <div className="flex justify-between items-start">
-                <span className={`px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase ${
-                  task.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'
-                }`}>{task.status}</span>
-                <span className="text-[10px] font-black text-slate-400 uppercase">{task.priority}</span>
-             </div>
-             <h4 className="font-black text-slate-900">{task.title}</h4>
-             <div className="flex justify-between items-center pt-4 border-t border-slate-200">
-                <span className="text-[10px] font-bold text-slate-400 uppercase">{task.assignedTo?.name || 'Unassigned'}</span>
-                <span className="text-[10px] font-black text-slate-900">{task.progress}%</span>
-             </div>
-          </div>
-        ))}
-        {tasks.length === 0 && <div className="col-span-full text-center py-20 opacity-20"><Zap size={48} className="mx-auto mb-2"/><p className="text-xs font-black uppercase">No tasks created yet</p></div>}
-     </div>
-  </div>
-);
+const TasksTab = ({ tasks = [] }) => {
+  const safeTasks = Array.isArray(tasks) ? tasks : [];
 
-const BudgetTab = ({ project }) => (
-   <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <div className="lg:col-span-2 bg-white rounded-[3rem] border border-slate-200/60 p-10">
-         <h3 className="text-xl font-black text-slate-900 uppercase mb-10">Investment Breakdown</h3>
-         <div className="grid grid-cols-2 gap-8">
-            <BudgetItem label="Human Capital" val={project.budget?.breakdown?.employee} color="blue" />
-            <BudgetItem label="Infrastructure" val={project.budget?.breakdown?.infrastructure} color="indigo" />
-            <BudgetItem label="Software" val={project.budget?.breakdown?.software} color="purple" />
-            <BudgetItem label="Contingency" val={project.budget?.breakdown?.contingency} color="rose" />
-         </div>
-      </div>
-      <div className="p-10 bg-slate-900 rounded-[3rem] text-white flex flex-col justify-center text-center relative overflow-hidden shadow-2xl">
-         <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
-         <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-2">Total Strategy Value</p>
-         <h4 className="text-4xl font-black mb-2">Rs. {project.budget?.total?.toLocaleString()}</h4>
-      </div>
-   </div>
-);
+  return (
+    <div className="bg-white rounded-[3rem] border border-slate-200/60 p-10">
+       <div className="flex justify-between items-center mb-10">
+          <h3 className="text-xl font-black text-slate-900 uppercase">Strategic Tasks</h3>
+       </div>
+       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {safeTasks.map(task => (
+            <div key={task._id} className="p-6 bg-slate-50 border border-slate-100 rounded-[2rem] space-y-4">
+               <div className="flex justify-between items-start">
+                  <span className={`px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase ${
+                    task.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'
+                  }`}>{task.status}</span>
+                  <span className="text-[10px] font-black text-slate-400 uppercase">{task.priority}</span>
+               </div>
+               <h4 className="font-black text-slate-900">{task.title}</h4>
+               <div className="flex justify-between items-center pt-4 border-t border-slate-200">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase">{task.assignedTo?.name || 'Unassigned'}</span>
+                  <span className="text-[10px] font-black text-slate-900">{task.progress}%</span>
+               </div>
+            </div>
+          ))}
+          {safeTasks.length === 0 && <div className="col-span-full text-center py-20 opacity-20"><Zap size={48} className="mx-auto mb-2"/><p className="text-xs font-black uppercase">No tasks created yet</p></div>}
+       </div>
+    </div>
+  );
+};
+
+const BudgetTab = ({ project }) => {
+  const breakdown = project.budget?.breakdown || {};
+  return (
+     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 bg-white rounded-[3rem] border border-slate-200/60 p-10">
+           <h3 className="text-xl font-black text-slate-900 uppercase mb-10">Investment Breakdown</h3>
+           <div className="grid grid-cols-2 gap-8">
+              <BudgetItem label="Human Capital" val={breakdown.employee} color="blue" />
+              <BudgetItem label="Infrastructure" val={breakdown.infrastructure} color="indigo" />
+              <BudgetItem label="Software" val={breakdown.software} color="purple" />
+              <BudgetItem label="Contingency" val={breakdown.contingency} color="rose" />
+           </div>
+        </div>
+        <div className="p-10 bg-slate-900 rounded-[3rem] text-white flex flex-col justify-center text-center relative overflow-hidden shadow-2xl">
+           <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
+           <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-2">Total Strategy Value</p>
+           <h4 className="text-4xl font-black mb-2">Rs. {project.budget?.total?.toLocaleString() || 0}</h4>
+        </div>
+     </div>
+  );
+};
 
 const TeamTab = () => <div className="p-20 text-center text-slate-300 font-black uppercase tracking-widest">Team Dynamics View Coming Soon</div>;
 const MilestonesTab = () => <div className="p-20 text-center text-slate-300 font-black uppercase tracking-widest">Milestone Tracker Coming Soon</div>;

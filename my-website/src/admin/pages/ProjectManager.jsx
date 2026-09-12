@@ -15,13 +15,9 @@ const ProjectManager = () => {
 
   const fetchProjects = async () => {
     try {
-      const backendUrl = import.meta.env.VITE_API_URL || 'https://rcs-ajbn.onrender.com';
-      const token = localStorage.getItem('rcs_admin_token');
-      const response = await fetch(`${backendUrl}/api/projects`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const response = await apiFetch('/api/projects');
       const data = await response.json();
-      if (data.success) setProjects(data.data);
+      if (data.success) setProjects(Array.isArray(data.data) ? data.data : []);
     } catch (err) {
       console.error('Failed to fetch projects:', err);
     } finally {
@@ -226,17 +222,24 @@ const ProjectManager = () => {
             <div className="bg-white rounded-[2.5rem] border border-slate-200/60 shadow-sm p-8">
                <h3 className="text-xl font-black text-slate-900 tracking-tight mb-8">Projects by Department</h3>
                <div className="space-y-6">
-                  {['Development', 'Marketing', 'IT', 'Operations', 'Sales'].map((dept, i) => (
+                  {Object.entries(
+                    projects.reduce((acc, p) => {
+                      const dept = p.department || 'General';
+                      acc[dept] = (acc[dept] || 0) + 1;
+                      return acc;
+                    }, {})
+                  ).map(([dept, count], i) => (
                     <div key={i} className="space-y-2">
                        <div className="flex justify-between items-end">
                           <span className="text-xs font-black text-slate-700 uppercase">{dept}</span>
-                          <span className="text-[10px] font-bold text-slate-400">{Math.round(Math.random()*10)} Projects • {Math.round(Math.random()*100)}%</span>
+                          <span className="text-[10px] font-bold text-slate-400">{count} Projects • {projects.length ? Math.round((count/projects.length)*100) : 0}%</span>
                        </div>
                        <div className="h-1.5 w-full bg-slate-50 rounded-full overflow-hidden">
-                          <div className={`h-full rounded-full transition-all duration-1000 ${['bg-blue-500', 'bg-indigo-500', 'bg-emerald-500', 'bg-amber-500', 'bg-rose-500'][i]}`} style={{ width: `${Math.random()*100}%` }}></div>
+                          <div className={`h-full rounded-full transition-all duration-1000 ${['bg-blue-500', 'bg-indigo-500', 'bg-emerald-500', 'bg-amber-500', 'bg-rose-500'][i % 5]}`} style={{ width: `${projects.length ? (count/projects.length)*100 : 0}%` }}></div>
                        </div>
                     </div>
                   ))}
+                  {projects.length === 0 && <div className="text-center py-10 text-slate-300 font-bold text-xs uppercase">No department data</div>}
                </div>
             </div>
 

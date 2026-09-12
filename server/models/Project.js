@@ -54,6 +54,7 @@ const projectSchema = new mongoose.Schema({
     enum: ['ON_TRACK', 'AT_RISK', 'DELAYED', 'BLOCKED'],
     default: 'ON_TRACK'
   },
+  department: String,
   manager: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   team: [{
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Folder, Users, Target, Layout, CheckCircle2, Clock, AlertTriangle,
-  DollarSign, Activity, FileText, ChevronRight, ArrowLeft, MoreVertical,
+  DollarSign as DollarIcon, Activity, FileText, ChevronRight, ArrowLeft, MoreVertical,
   Plus, Search, Filter, Edit2, Zap, Calendar, TrendingUp, Trash2, X
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -28,6 +28,10 @@ const ProjectWorkspace = () => {
     dueDate: '',
     subtasks: []
   });
+
+  const tabs = [
+    'Overview', 'Requirements', 'Scope', 'Tasks', 'Milestones', 'Team', 'Budget', 'Risks', 'Activity'
+  ];
 
   const handleAddSubtask = () => {
     setTaskData({
@@ -82,7 +86,7 @@ const ProjectWorkspace = () => {
       const payload = {
         ...taskData,
         assignedTo: taskData.assignedTo || undefined,
-        subtasks: taskData.subtasks.filter(st => st.title.trim() !== '')
+        subtasks: taskData.subtasks.filter(st => st.title && st.title.trim() !== '')
       };
 
       const response = await apiFetch(`/api/projects/${id}/tasks`, {
@@ -118,7 +122,7 @@ const ProjectWorkspace = () => {
                  <h1 className="text-3xl font-black text-slate-900 tracking-tight">{project.name}</h1>
                  <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${
                     project.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-blue-50 text-blue-600 border-blue-100'
-                 }`}>{project.status}</span>
+                 }`}>{project.status || 'DRAFT'}</span>
               </div>
               <p className="text-sm font-bold text-slate-400 uppercase tracking-tighter">{project.client} • {project.code}</p>
            </div>
@@ -248,7 +252,7 @@ const ProjectWorkspace = () => {
                        <input
                          className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none text-xs font-bold focus:border-blue-500"
                          placeholder={`Execution Step ${idx+1}...`}
-                         value={st?.title || ''}
+                         value={st.title || ''}
                          onChange={e => updateSubtask(idx, e.target.value)}
                        />
                        <button type="button" onClick={() => removeSubtask(idx)} className="p-3 text-slate-300 hover:text-red-500 transition-colors">
@@ -256,7 +260,7 @@ const ProjectWorkspace = () => {
                        </button>
                     </div>
                   ))}
-                  {(taskData.subtasks || []).length === 0 && (
+                  {taskData.subtasks.length === 0 && (
                     <div className="text-center py-6 border-2 border-dashed border-slate-100 rounded-2xl">
                        <p className="text-[10px] font-bold text-slate-300 uppercase">No segments defined</p>
                     </div>
@@ -473,5 +477,7 @@ const BudgetItem = ({ label, val, color }) => (
      <h4 className={`text-lg font-black text-${color}-600`}>Rs. {(Number(val || 0)).toLocaleString()}</h4>
   </div>
 );
+
+const CurrencySign = ({ size, className }) => <span className={className} style={{fontSize: size}}>Rs.</span>;
 
 export default ProjectWorkspace;

@@ -277,7 +277,7 @@ const EmployeeDashboard = () => {
                       </div>
                    ))}
                 </div>
-                <button onClick={() => window.location.href='/projects'} className="w-full mt-10 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-100 transition-all">Go to Project Hub</button>
+                <button onClick={() => window.location.href='/my-projects'} className="w-full mt-10 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-100 transition-all">Go to Project Hub</button>
              </div>
 
              {/* Task Feed */}

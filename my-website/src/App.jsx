@@ -45,6 +45,7 @@ import AttendancePage from "./pages/AttendancePage";
 import MyProjectsPage from "./pages/MyProjectsPage";
 import EmployeeProjectDetail from "./pages/EmployeeProjectDetail";
 import EmployeeSettings from "./pages/EmployeeSettings";
+import MyTasksPage from "./pages/MyTasksPage";
 
 function ScrollToTop() {
   const { pathname } = useLocation();

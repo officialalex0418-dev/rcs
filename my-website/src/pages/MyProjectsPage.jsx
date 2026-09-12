@@ -4,6 +4,7 @@ import {
   Briefcase, Clock, ChevronRight, Zap
 } from 'lucide-react';
 import { apiFetch } from '../utils/api';
+import Modal from '../admin/components/Modal';
 
 const MyProjectsPage = () => {
   const navigate = useNavigate();
@@ -63,38 +64,38 @@ const MyProjectsPage = () => {
 
       {/* Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
-         {projects.length === 0 ? (
+         {projects?.length === 0 ? (
            <div className="col-span-full py-20 text-center bg-white rounded-[3rem] border border-dashed border-slate-200">
               <Zap size={48} className="mx-auto mb-4 text-slate-200" />
               <h3 className="text-lg font-black text-slate-400 uppercase tracking-widest">No Missions Logged</h3>
            </div>
-         ) : projects.map((p) => (
-           <div key={p._id} className="bg-white rounded-[2.5rem] border border-slate-200/60 shadow-sm hover:shadow-xl hover:border-blue-500/30 transition-all p-8 flex flex-col group">
+         ) : projects?.map((p) => (
+           <div key={p?._id} className="bg-white rounded-[2.5rem] border border-slate-200/60 shadow-sm hover:shadow-xl hover:border-blue-500/30 transition-all p-8 flex flex-col group">
               <div className="flex justify-between items-start mb-6">
-                 <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${getStatusColor(p.status)}`}>
-                    {p.status?.replace('_', ' ') || 'PLANNING'}
+                 <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${getStatusColor(p?.status)}`}>
+                    {p?.status?.replace('_', ' ') || 'PLANNING'}
                  </span>
                  <div className="flex items-center gap-1.5 text-slate-400">
                     <Clock size={14} />
-                    <span className="text-[10px] font-black uppercase tracking-widest">{p.progress || 0}%</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest">{p?.progress || 0}%</span>
                  </div>
               </div>
 
-              <h3 className="text-xl font-black text-slate-900 mb-1 group-hover:text-blue-600 transition-colors">{p.name}</h3>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-8">{p.client} • {p.code}</p>
+              <h3 className="text-xl font-black text-slate-900 mb-1 group-hover:text-blue-600 transition-colors">{p?.name || 'Unnamed Project'}</h3>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-8">{p?.client || 'Internal'} • {p?.code || 'NO-CODE'}</p>
 
               <div className="space-y-4 flex-1">
                  <div className="flex justify-between items-end">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Global Progress</p>
-                    <p className="text-[10px] font-black text-slate-900">{p.progress || 0}%</p>
+                    <p className="text-[10px] font-black text-slate-900">{p?.progress || 0}%</p>
                  </div>
                  <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-blue-600" style={{ width: `${p.progress || 0}%` }}></div>
+                    <div className="h-full bg-blue-600" style={{ width: `${p?.progress || 0}%` }}></div>
                  </div>
               </div>
 
               <button
-                onClick={() => navigate(`/my-projects/${p._id}`)}
+                onClick={() => navigate(`/my-projects/${p?._id}`)}
                 className="mt-8 w-full py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all shadow-lg flex items-center justify-center gap-2"
               >
                  Examine Mission <ChevronRight size={14} />

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Briefcase, Users, Target, Layout, CheckCircle2, Clock,
   AlertTriangle, DollarSign, Activity, FileText, ChevronRight,
@@ -8,6 +9,7 @@ import { apiFetch } from '../utils/api';
 import Modal from '../admin/components/Modal';
 
 const MyProjectsPage = () => {
+  const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState(null);
@@ -16,9 +18,30 @@ const MyProjectsPage = () => {
   const fetchMyProjects = async () => {
     try {
       const userStr = localStorage.getItem('rcs_user');
-      if (!userStr) return;
-      const user = JSON.parse(userStr);
+      if (!userStr) {
+        setLoading(false);
+        return;
+      }
+
+      let user;
+      try {
+        user = JSON.parse(userStr);
+      } catch (e) {
+        console.error("User parsing failed", e);
+        setLoading(false);
+        return;
+      }
+
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
       const userId = user._id || user.id;
+      if (!userId) {
+        setLoading(false);
+        return;
+      }
 
       const response = await apiFetch(`/api/projects?employeeId=${userId}`);
       const data = await response.json();
@@ -53,6 +76,9 @@ const MyProjectsPage = () => {
     </div>
   );
 
+  const userStr = localStorage.getItem('rcs_user');
+  const user = userStr ? JSON.parse(userStr) : null;
+
   return (
     <div className="p-8 bg-slate-50 min-h-screen font-sans space-y-10 animate-in fade-in duration-700">
 
@@ -76,9 +102,9 @@ const MyProjectsPage = () => {
               <p className="text-sm font-medium text-slate-400 mt-2">You aren't associated with any tactical projects yet.</p>
            </div>
          ) : projects.map((p) => {
-            const userStr = localStorage.getItem('rcs_user');
-            const user = JSON.parse(userStr);
-            const myContribution = p.team?.find(m => (m.user?._id || m.user) === (user._id || user.id));
+            if (!user) return null;
+            const userId = user._id || user.id;
+            const myContribution = (p.team || []).find(m => (m.user?._id || m.user) === userId);
 
             return (
               <div key={p._id} className="bg-white rounded-[2.5rem] border border-slate-200/60 shadow-sm hover:shadow-xl hover:border-blue-500/30 transition-all group p-8 flex flex-col">
@@ -98,7 +124,7 @@ const MyProjectsPage = () => {
                  {/* My Role Section */}
                  <div className="bg-blue-50 rounded-2xl p-4 mb-6 border border-blue-100/50">
                     <p className="text-[9px] font-black text-blue-600 uppercase tracking-widest mb-1">Your Tactical Role</p>
-                    <p className="text-sm font-black text-blue-900">{myContribution?.role || (p.manager?._id === (user._id || user.id) ? 'Project Strategist' : 'Specialist')}</p>
+                    <p className="text-sm font-black text-blue-900">{myContribution?.role || (p.manager?._id === userId ? 'Project Strategist' : 'Specialist')}</p>
                     <p className="text-[9px] font-bold text-blue-400 mt-1 uppercase tracking-tighter italic">{myContribution?.allocation || 100}% Mission Allocation</p>
                  </div>
 

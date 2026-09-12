@@ -113,7 +113,7 @@ const MyProjectsPage = () => {
                  </div>
 
                  <button
-                   onClick={() => { setSelectedProject(p); setActiveTab('Overview'); }}
+                   onClick={() => navigate(`/projects/${p._id}`)}
                    className="mt-8 w-full py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all shadow-lg shadow-slate-900/10 flex items-center justify-center gap-2"
                  >
                     Examine Mission <ChevronRight size={14} />

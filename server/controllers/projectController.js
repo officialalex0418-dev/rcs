@@ -10,6 +10,16 @@ export const getProjects = async (req, res, next) => {
   }
 };
 
+export const getProject = async (req, res, next) => {
+  try {
+    const project = await Project.findById(req.params.id).populate('manager team.user');
+    if (!project) return res.status(404).json({ success: false, message: 'Project not found' });
+    res.status(200).json({ success: true, data: project });
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const createProject = async (req, res, next) => {
   try {
     const project = await Project.create(req.body);

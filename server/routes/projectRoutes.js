@@ -1,6 +1,6 @@
 import express from 'express';
 import {
-  getProjects, createProject, updateProject, deleteProject,
+  getProjects, getProject, createProject, updateProject, deleteProject,
   getProjectTasks, createTask
 } from '../controllers/projectController.js';
 import { protect, authorize } from '../middleware/auth.js';
@@ -15,6 +15,7 @@ router.route('/')
   .post(createProject);
 
 router.route('/:id')
+  .get(getProject)
   .put(updateProject)
   .delete(deleteProject);
 

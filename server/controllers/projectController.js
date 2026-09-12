@@ -3,7 +3,18 @@ import Task from '../models/Task.js';
 
 export const getProjects = async (req, res, next) => {
   try {
-    const projects = await Project.find().populate('manager').sort('-createdAt');
+    const filters = {};
+    if (req.query.employeeId) {
+      filters.$or = [
+        { manager: req.query.employeeId },
+        { 'team.user': req.query.employeeId }
+      ];
+    }
+
+    const projects = await Project.find(filters)
+      .populate('manager team.user')
+      .sort('-createdAt');
+
     res.status(200).json({ success: true, data: projects });
   } catch (err) {
     next(err);

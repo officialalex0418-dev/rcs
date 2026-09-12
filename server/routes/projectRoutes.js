@@ -8,18 +8,17 @@ import { protect, authorize } from '../middleware/auth.js';
 const router = express.Router();
 
 router.use(protect);
-router.use(authorize('SUPER_ADMIN', 'ADMIN', 'PROJECT_MANAGER'));
 
 router.route('/')
   .get(getProjects)
-  .post(createProject);
+  .post(authorize('SUPER_ADMIN', 'ADMIN', 'PROJECT_MANAGER'), createProject);
 
 router.route('/:id')
   .get(getProject)
-  .put(updateProject)
-  .delete(deleteProject);
+  .put(authorize('SUPER_ADMIN', 'ADMIN', 'PROJECT_MANAGER'), updateProject)
+  .delete(authorize('SUPER_ADMIN', 'ADMIN', 'PROJECT_MANAGER'), deleteProject);
 
 router.get('/:projectId/tasks', getProjectTasks);
-router.post('/:projectId/tasks', createTask);
+router.post('/:projectId/tasks', authorize('SUPER_ADMIN', 'ADMIN', 'PROJECT_MANAGER'), createTask);
 
 export default router;

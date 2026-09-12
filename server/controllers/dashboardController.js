@@ -83,7 +83,12 @@ export const getEmployeeDashboardData = async (req, res, next) => {
     const completedTasksCount = await Task.countDocuments({ assignedTo: userId, status: 'COMPLETED' });
 
     // 4. Project Progress
-    const projects = await Project.find({ team: userId })
+    const projects = await Project.find({
+      $or: [
+        { manager: userId },
+        { 'team.user': userId }
+      ]
+    })
       .select('name progress status')
       .limit(3);
 

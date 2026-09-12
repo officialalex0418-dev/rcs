@@ -451,10 +451,156 @@ const BudgetTab = ({ project }) => {
   );
 };
 
-const TeamTab = () => <div className="p-20 text-center text-slate-300 font-black uppercase tracking-widest">Team Dynamics View Coming Soon</div>;
-const MilestonesTab = () => <div className="p-20 text-center text-slate-300 font-black uppercase tracking-widest">Milestone Tracker Coming Soon</div>;
-const RisksTab = () => <div className="p-20 text-center text-slate-300 font-black uppercase tracking-widest">Risk Management Grid Coming Soon</div>;
-const ActivityTab = () => <div className="p-20 text-center text-slate-300 font-black uppercase tracking-widest">Project Activity Feed Coming Soon</div>;
+const TeamTab = ({ project }) => {
+  const safeTeam = Array.isArray(project?.team) ? project.team : [];
+
+  return (
+    <div className="bg-white rounded-[3rem] border border-slate-200/60 p-10">
+       <div className="flex justify-between items-center mb-10">
+          <h3 className="text-xl font-black text-slate-900 uppercase">Execution Squad</h3>
+       </div>
+       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {safeTeam.filter(m => m).map((mem, i) => (
+            <div key={i} className="p-8 bg-slate-50 border border-slate-100 rounded-[2.5rem] flex items-center gap-6 group hover:bg-white hover:border-blue-200 transition-all hover:shadow-xl hover:shadow-blue-500/5">
+               <div className="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center text-xl font-black text-white shadow-lg">
+                  {mem.user?.name?.charAt(0) || '?'}
+               </div>
+               <div>
+                  <h4 className="text-lg font-black text-slate-900 leading-tight mb-1">{mem.user?.name || 'Unknown Specialist'}</h4>
+                  <p className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-3">{mem.role || 'Project Specialist'}</p>
+                  <div className="flex items-center gap-4">
+                     <div className="flex items-center gap-1.5">
+                        <Activity size={12} className="text-slate-400" />
+                        <span className="text-[10px] font-black text-slate-400 uppercase">{mem.allocation || 100}% Allocation</span>
+                     </div>
+                  </div>
+               </div>
+            </div>
+          ))}
+          {safeTeam.length === 0 && <div className="col-span-full text-center py-20 opacity-20"><Users size={48} className="mx-auto mb-2"/><p className="text-xs font-black uppercase">No squad members assigned</p></div>}
+       </div>
+    </div>
+  );
+};
+
+const MilestonesTab = ({ project }) => {
+  const safeMilestones = Array.isArray(project?.milestones) ? project.milestones : [];
+
+  return (
+    <div className="bg-white rounded-[3rem] border border-slate-200/60 p-10">
+       <h3 className="text-xl font-black text-slate-900 uppercase mb-10">Project Milestones</h3>
+       <div className="space-y-6 relative before:absolute before:left-8 before:top-4 before:bottom-4 before:w-0.5 before:bg-slate-100">
+          {safeMilestones.map((ms, i) => (
+            <div key={i} className="relative pl-20 flex items-center group">
+               <div className={`absolute left-5 w-6 h-6 rounded-full border-4 border-white shadow-sm z-10 transition-colors ${
+                  ms.status === 'COMPLETED' ? 'bg-emerald-500' : 'bg-slate-200 group-hover:bg-blue-500'
+               }`}></div>
+               <div className="flex-1 p-6 bg-slate-50 border border-slate-100 rounded-3xl group-hover:bg-white group-hover:border-blue-200 transition-all group-hover:shadow-lg">
+                  <div className="flex justify-between items-start mb-2">
+                     <h4 className="font-black text-slate-900">{ms.title || 'Strategic Milestone'}</h4>
+                     <span className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest ${
+                        ms.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'
+                     }`}>{ms.status || 'UPCOMING'}</span>
+                  </div>
+                  <p className="text-xs font-medium text-slate-500 line-clamp-2">{ms.description}</p>
+                  <div className="flex items-center gap-4 mt-4 pt-4 border-t border-slate-100">
+                     <div className="flex items-center gap-1.5 text-slate-400">
+                        <Calendar size={12} />
+                        <span className="text-[10px] font-bold uppercase">{ms.dueDate ? new Date(ms.dueDate).toLocaleDateString() : 'TBD'}</span>
+                     </div>
+                     <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-blue-600" style={{ width: `${ms.progress || 0}%` }}></div>
+                     </div>
+                     <span className="text-[10px] font-black text-slate-900">{ms.progress || 0}%</span>
+                  </div>
+               </div>
+            </div>
+          ))}
+          {safeMilestones.length === 0 && <div className="text-center py-20 opacity-20"><Calendar size={48} className="mx-auto mb-2"/><p className="text-xs font-black uppercase">No milestones defined</p></div>}
+       </div>
+    </div>
+  );
+};
+
+const RisksTab = ({ project }) => {
+  const safeRisks = Array.isArray(project?.risks) ? project.risks : [];
+
+  return (
+    <div className="bg-white rounded-[3rem] border border-slate-200/60 p-10">
+       <h3 className="text-xl font-black text-slate-900 uppercase mb-10">Risk Management Matrix</h3>
+       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {safeRisks.map((risk, i) => (
+            <div key={i} className="p-8 bg-slate-50 border border-slate-100 rounded-[2.5rem] space-y-6">
+               <div className="flex justify-between items-start">
+                  <div className={`p-2 rounded-xl ${
+                     risk.impact === 'CRITICAL' ? 'bg-rose-50 text-rose-600' : 'bg-amber-50 text-amber-600'
+                  }`}><AlertTriangle size={20} /></div>
+                  <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${
+                     risk.impact === 'CRITICAL' ? 'bg-rose-50 text-rose-600 border-rose-100' : 'bg-amber-50 text-amber-600 border-amber-100'
+                  }`}>{risk.impact} IMPACT</span>
+               </div>
+               <div>
+                  <h4 className="text-lg font-black text-slate-900 leading-tight mb-2">{risk.title || 'Operational Risk'}</h4>
+                  <p className="text-xs font-medium text-slate-500 leading-relaxed">{risk.mitigationPlan}</p>
+               </div>
+               <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-200">
+                  <div>
+                     <p className="text-[9px] font-black text-slate-400 uppercase mb-1">Probability</p>
+                     <p className="text-xs font-black text-slate-700">{risk.probability || 'MEDIUM'}</p>
+                  </div>
+                  <div>
+                     <p className="text-[9px] font-black text-slate-400 uppercase mb-1">Category</p>
+                     <p className="text-xs font-black text-slate-700">{risk.category || 'TECHNICAL'}</p>
+                  </div>
+               </div>
+            </div>
+          ))}
+          {safeRisks.length === 0 && <div className="col-span-full text-center py-20 opacity-20"><AlertTriangle size={48} className="mx-auto mb-2"/><p className="text-xs font-black uppercase">No active risks identified</p></div>}
+       </div>
+    </div>
+  );
+};
+
+const ActivityTab = ({ project }) => {
+  return (
+    <div className="bg-white rounded-[3rem] border border-slate-200/60 p-10">
+       <h3 className="text-xl font-black text-slate-900 uppercase mb-10">Project Intelligence Feed</h3>
+       <div className="space-y-8">
+          <ActivityItem
+            user={project?.manager?.name || 'System'}
+            action="Protocol Initialized"
+            detail={`Project ${project.name} successfully deployed to RCS ecosystem.`}
+            time={new Date(project.createdAt).toLocaleString()}
+          />
+          <ActivityItem
+            user="RCS Engine"
+            action="Infrastructure Synced"
+            detail="Strategic workspace linked to personnel and financial modules."
+            time={new Date(project.updatedAt).toLocaleString()}
+          />
+       </div>
+    </div>
+  );
+};
+
+const ActivityItem = ({ user, action, detail, time }) => (
+  <div className="flex gap-6 group">
+     <div className="flex flex-col items-center gap-2">
+        <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform">
+           <Zap size={18} />
+        </div>
+        <div className="w-0.5 flex-1 bg-slate-100"></div>
+     </div>
+     <div className="pb-8">
+        <div className="flex items-center gap-3 mb-1">
+           <span className="text-sm font-black text-slate-900">{user}</span>
+           <span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[9px] font-black uppercase">{action}</span>
+        </div>
+        <p className="text-xs font-medium text-slate-500 mb-2 leading-relaxed">{detail}</p>
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter italic">{time}</p>
+     </div>
+  </div>
+);
 
 // Mini Components
 const KpiCard = ({ label, val, color }) => (

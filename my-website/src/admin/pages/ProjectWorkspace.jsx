@@ -200,8 +200,8 @@ const ProjectWorkspace = () => {
                     onChange={e => setTaskData({...taskData, assignedTo: e.target.value})}
                   >
                      <option value="">Select Specialist</option>
-                     {employees.map(emp => (
-                       <option key={emp._id} value={emp._id}>{emp.name} ({emp.designation || emp.role})</option>
+                     {employees.filter(e => e && e._id).map(emp => (
+                       <option key={emp._id} value={emp._id}>{emp.name || 'Unknown'} ({emp.designation || emp.role || 'Personnel'})</option>
                      ))}
                   </select>
                </div>
@@ -243,12 +243,12 @@ const ProjectWorkspace = () => {
                   </button>
                </div>
                <div className="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
-                  {taskData.subtasks.map((st, idx) => (
+                  {(taskData.subtasks || []).map((st, idx) => (
                     <div key={idx} className="flex gap-2 animate-in slide-in-from-top-2 duration-200">
                        <input
                          className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none text-xs font-bold focus:border-blue-500"
                          placeholder={`Execution Step ${idx+1}...`}
-                         value={st.title}
+                         value={st?.title || ''}
                          onChange={e => updateSubtask(idx, e.target.value)}
                        />
                        <button type="button" onClick={() => removeSubtask(idx)} className="p-3 text-slate-300 hover:text-red-500 transition-colors">
@@ -256,7 +256,7 @@ const ProjectWorkspace = () => {
                        </button>
                     </div>
                   ))}
-                  {taskData.subtasks.length === 0 && (
+                  {(taskData.subtasks || []).length === 0 && (
                     <div className="text-center py-6 border-2 border-dashed border-slate-100 rounded-2xl">
                        <p className="text-[10px] font-bold text-slate-300 uppercase">No segments defined</p>
                     </div>
@@ -280,16 +280,17 @@ const ProjectWorkspace = () => {
 // Tabs Components
 const OverviewTab = ({ project, tasks = [] }) => {
   const safeTasks = Array.isArray(tasks) ? tasks : [];
-  const completedTasks = safeTasks.filter(t => t.status === 'COMPLETED').length;
+  const completedTasks = safeTasks.filter(t => t && t.status === 'COMPLETED').length;
+  const safeTeam = Array.isArray(project?.team) ? project.team : [];
 
   return (
     <div className="grid grid-cols-12 gap-8">
        <div className="col-span-12 xl:col-span-8 space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-             <KpiCard label="Global Progress" val={`${project.progress || 0}%`} color="blue" />
+             <KpiCard label="Global Progress" val={`${project?.progress || 0}%`} color="blue" />
              <KpiCard label="Budget Consumed" val="0%" color="indigo" />
              <KpiCard label="Tasks Done" val={`${completedTasks} / ${safeTasks.length}`} color="emerald" />
-             <KpiCard label="Health Status" val={project.health || 'STABLE'} color="purple" />
+             <KpiCard label="Health Status" val={project?.health || 'STABLE'} color="purple" />
           </div>
           <div className="bg-white rounded-[2.5rem] border border-slate-200/60 p-10">
              <h3 className="text-xl font-black text-slate-900 uppercase mb-8">Performance Trajectory</h3>
@@ -297,7 +298,7 @@ const OverviewTab = ({ project, tasks = [] }) => {
                 <ResponsiveContainer width="100%" height="100%">
                    <AreaChart data={[
                       { name: 'Start', progress: 0 },
-                      { name: 'Current', progress: project.progress || 0 },
+                      { name: 'Current', progress: project?.progress || 0 },
                    ]}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                       <XAxis dataKey="name" hide />
@@ -313,7 +314,7 @@ const OverviewTab = ({ project, tasks = [] }) => {
              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
              <h3 className="text-lg font-black uppercase mb-6 flex items-center gap-2"><Activity className="text-emerald-400" /> Strategic Health</h3>
              <div className="space-y-6">
-                <HealthRow label="Schedule Adherence" val={project.health === 'ON_TRACK' ? '100%' : '75%'} />
+                <HealthRow label="Schedule Adherence" val={project?.health === 'ON_TRACK' ? '100%' : '75%'} />
                 <HealthRow label="Budget Discipline" val="100%" />
                 <HealthRow label="Task Velocity" val={safeTasks.length ? `${Math.round((completedTasks/safeTasks.length)*100)}%` : '0%'} />
              </div>
@@ -321,7 +322,7 @@ const OverviewTab = ({ project, tasks = [] }) => {
           <div className="bg-white rounded-[2.5rem] border border-slate-200/60 p-8">
              <h3 className="text-lg font-black text-slate-900 uppercase mb-6">Execution Squad</h3>
              <div className="space-y-4">
-                {(project.team || []).map((mem, i) => (
+                {safeTeam.filter(m => m).map((mem, i) => (
                   <div key={i} className="flex items-center gap-3">
                      <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-400">
                         {mem.user?.name?.charAt(0) || '?'}
@@ -332,6 +333,7 @@ const OverviewTab = ({ project, tasks = [] }) => {
                      </div>
                   </div>
                 ))}
+                {safeTeam.length === 0 && <p className="text-xs text-slate-400 italic py-4">No team members assigned</p>}
              </div>
           </div>
        </div>
@@ -339,28 +341,32 @@ const OverviewTab = ({ project, tasks = [] }) => {
   );
 };
 
-const RequirementsTab = ({ project }) => (
-  <div className="bg-white rounded-[3rem] border border-slate-200/60 p-10">
-     <h3 className="text-xl font-black text-slate-900 uppercase mb-10">Requirement Traceability</h3>
-     <div className="space-y-4">
-        {project.requirements?.map((req, i) => (
-          <div key={i} className="p-6 bg-slate-50 border border-slate-100 rounded-3xl flex items-center justify-between group hover:bg-white hover:border-blue-200 transition-all">
-             <div className="flex items-center gap-4">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black ${
-                   req.priority === 'CRITICAL' ? 'bg-rose-100 text-rose-600' : 'bg-blue-100 text-blue-600'
-                }`}>{i+1}</div>
-                <div>
-                   <h4 className="font-black text-slate-900 leading-none mb-1">{req.title}</h4>
-                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{req.type} • {req.priority} PRIORITY</p>
-                </div>
-             </div>
-             <span className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-[9px] font-black uppercase text-slate-400">{req.status}</span>
-          </div>
-        ))}
-        {(!project.requirements || project.requirements.length === 0) && <div className="text-center py-20 opacity-20"><Target size={48} className="mx-auto mb-2"/><p className="text-xs font-black uppercase">No requirements defined</p></div>}
-     </div>
-  </div>
-);
+const RequirementsTab = ({ project }) => {
+  const safeReqs = Array.isArray(project?.requirements) ? project.requirements : [];
+
+  return (
+    <div className="bg-white rounded-[3rem] border border-slate-200/60 p-10">
+       <h3 className="text-xl font-black text-slate-900 uppercase mb-10">Requirement Traceability</h3>
+       <div className="space-y-4">
+          {safeReqs.filter(r => r).map((req, i) => (
+            <div key={i} className="p-6 bg-slate-50 border border-slate-100 rounded-3xl flex items-center justify-between group hover:bg-white hover:border-blue-200 transition-all">
+               <div className="flex items-center gap-4">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black ${
+                     req.priority === 'CRITICAL' ? 'bg-rose-100 text-rose-600' : 'bg-blue-100 text-blue-600'
+                  }`}>{i+1}</div>
+                  <div>
+                     <h4 className="font-black text-slate-900 leading-none mb-1">{req.title || 'Untitled Requirement'}</h4>
+                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{req.type || 'FUNCTIONAL'} • {req.priority || 'MEDIUM'} PRIORITY</p>
+                  </div>
+               </div>
+               <span className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-[9px] font-black uppercase text-slate-400">{req.status || 'PENDING'}</span>
+            </div>
+          ))}
+          {safeReqs.length === 0 && <div className="text-center py-20 opacity-20"><Target size={48} className="mx-auto mb-2"/><p className="text-xs font-black uppercase">No requirements defined</p></div>}
+       </div>
+    </div>
+  );
+};
 
 const ScopeTab = ({ project }) => (
   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -398,18 +404,18 @@ const TasksTab = ({ tasks = [] }) => {
           <h3 className="text-xl font-black text-slate-900 uppercase">Strategic Tasks</h3>
        </div>
        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {safeTasks.map(task => (
+          {safeTasks.filter(t => t).map(task => (
             <div key={task._id} className="p-6 bg-slate-50 border border-slate-100 rounded-[2rem] space-y-4">
                <div className="flex justify-between items-start">
                   <span className={`px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase ${
                     task.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'
-                  }`}>{task.status}</span>
-                  <span className="text-[10px] font-black text-slate-400 uppercase">{task.priority}</span>
+                  }`}>{task.status || 'TODO'}</span>
+                  <span className="text-[10px] font-black text-slate-400 uppercase">{task.priority || 'MEDIUM'}</span>
                </div>
-               <h4 className="font-black text-slate-900">{task.title}</h4>
+               <h4 className="font-black text-slate-900">{task.title || 'Untitled Task'}</h4>
                <div className="flex justify-between items-center pt-4 border-t border-slate-200">
                   <span className="text-[10px] font-bold text-slate-400 uppercase">{task.assignedTo?.name || 'Unassigned'}</span>
-                  <span className="text-[10px] font-black text-slate-900">{task.progress}%</span>
+                  <span className="text-[10px] font-black text-slate-900">{task.progress || 0}%</span>
                </div>
             </div>
           ))}
@@ -420,7 +426,7 @@ const TasksTab = ({ tasks = [] }) => {
 };
 
 const BudgetTab = ({ project }) => {
-  const breakdown = project.budget?.breakdown || {};
+  const breakdown = project?.budget?.breakdown || {};
   return (
      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 bg-white rounded-[3rem] border border-slate-200/60 p-10">
@@ -435,7 +441,7 @@ const BudgetTab = ({ project }) => {
         <div className="p-10 bg-slate-900 rounded-[3rem] text-white flex flex-col justify-center text-center relative overflow-hidden shadow-2xl">
            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
            <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-2">Total Strategy Value</p>
-           <h4 className="text-4xl font-black mb-2">Rs. {project.budget?.total?.toLocaleString() || 0}</h4>
+           <h4 className="text-4xl font-black mb-2">Rs. {(Number(project?.budget?.total || project?.budget || 0)).toLocaleString()}</h4>
         </div>
      </div>
   );
@@ -464,7 +470,7 @@ const HealthRow = ({ label, val }) => (
 const BudgetItem = ({ label, val, color }) => (
   <div className="space-y-2 p-6 bg-slate-50 rounded-3xl border border-slate-100">
      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{label}</p>
-     <h4 className={`text-lg font-black text-${color}-600`}>Rs. {val?.toLocaleString() || 0}</h4>
+     <h4 className={`text-lg font-black text-${color}-600`}>Rs. {(Number(val || 0)).toLocaleString()}</h4>
   </div>
 );
 

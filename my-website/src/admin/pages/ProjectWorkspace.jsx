@@ -256,7 +256,7 @@ const TeamTab = ({ project }) => {
   );
 };
 
-const MilestonesTab = ({ project }) => {
+const MilestonesTab = ({ project, onUpdateMilestone }) => {
   const safeMilestones = Array.isArray(project?.milestones) ? project.milestones : [];
 
   return (
@@ -271,9 +271,19 @@ const MilestonesTab = ({ project }) => {
                <div className="flex-1 p-6 bg-slate-50 border border-slate-100 rounded-3xl group-hover:bg-white group-hover:border-blue-200 transition-all group-hover:shadow-lg">
                   <div className="flex justify-between items-start mb-2">
                      <h4 className="font-black text-slate-900">{ms.title || 'Strategic Milestone'}</h4>
-                     <span className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest ${
-                        ms.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'
-                     }`}>{ms.status || 'UPCOMING'}</span>
+                     <div className="flex items-center gap-3">
+                        {ms.status !== 'COMPLETED' && (
+                          <button
+                            onClick={() => onUpdateMilestone(i, 'COMPLETED')}
+                            className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-[8px] font-black uppercase tracking-widest text-slate-400 hover:text-emerald-500 hover:border-emerald-200 transition-all"
+                          >
+                             Mark Done
+                          </button>
+                        )}
+                        <span className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest ${
+                           ms.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'
+                        }`}>{ms.status || 'UPCOMING'}</span>
+                     </div>
                   </div>
                   <p className="text-xs font-medium text-slate-500 line-clamp-2">{ms.description}</p>
                   <div className="flex items-center gap-4 mt-4 pt-4 border-t border-slate-100">
@@ -424,6 +434,29 @@ const ProjectWorkspace = () => {
     }
   };
 
+  const handleUpdateMilestone = async (index, newStatus) => {
+     if (!project) return;
+
+     const updatedMilestones = [...project.milestones];
+     updatedMilestones[index] = {
+        ...updatedMilestones[index],
+        status: newStatus,
+        progress: newStatus === 'COMPLETED' ? 100 : updatedMilestones[index].progress
+     };
+
+     try {
+        const response = await apiFetch(`/api/projects/${id}`, {
+           method: 'PUT',
+           body: JSON.stringify({ milestones: updatedMilestones })
+        });
+        if (response.ok) {
+           fetchProjectData(); // Refresh to see updated progress
+        }
+     } catch (err) {
+        console.error('Milestone update error:', err);
+     }
+  };
+
   useEffect(() => {
     fetchProjectData();
   }, [id]);
@@ -511,7 +544,7 @@ const ProjectWorkspace = () => {
          {activeTab === 'Requirements' && <RequirementsTab project={project} />}
          {activeTab === 'Scope' && <ScopeTab project={project} />}
          {activeTab === 'Tasks' && <TasksTab tasks={tasks} />}
-         {activeTab === 'Milestones' && <MilestonesTab project={project} />}
+         {activeTab === 'Milestones' && <MilestonesTab project={project} onUpdateMilestone={handleUpdateMilestone} />}
          {activeTab === 'Team' && <TeamTab project={project} />}
          {activeTab === 'Budget' && <BudgetTab project={project} />}
          {activeTab === 'Risks' && <RisksTab project={project} />}

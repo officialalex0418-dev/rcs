@@ -29,7 +29,7 @@ const EmployeeSidebar = () => {
         <SidebarLink to="/dashboard" icon={LayoutDashboard} label="Dashboard" />
         <SidebarLink to="/attendance" icon={UserCheck} label="Attendance" />
         <SidebarLink to="/tasks" icon={CheckSquare} label="My Tasks" badge="4" />
-        <SidebarLink to="/projects" icon={Layers} label="Projects" />
+        <SidebarLink to="/my-projects" icon={Layers} label="Projects" />
         <SidebarLink to="/time-tracking" icon={Timer} label="Time Tracking" />
         <SidebarLink to="/performance" icon={BarChart3} label="Performance" />
         <SidebarLink to="/payroll" icon={Wallet} label="Payroll" />

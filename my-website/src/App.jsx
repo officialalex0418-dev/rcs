@@ -127,8 +127,8 @@ function Site() {
           <Route path="/attendance" element={<AttendancePage />} />
           <Route path="/tasks" element={<MyTasksPage />} />
           <Route path="/settings" element={<EmployeeSettings />} />
-          <Route path="/projects" element={<MyProjectsPage />} />
-          <Route path="/projects/:id" element={<EmployeeProjectDetail />} />
+          <Route path="/my-projects" element={<MyProjectsPage />} />
+          <Route path="/my-projects/:id" element={<EmployeeProjectDetail />} />
           <Route path="/time-tracking" element={<div className="p-8 text-2xl font-bold">Time Sheets Coming Soon</div>} />
           <Route path="/performance" element={<div className="p-8 text-2xl font-bold">Performance Analytics Coming Soon</div>} />
           <Route path="/payroll" element={<div className="p-8 text-2xl font-bold">Payslips & Tax Records Coming Soon</div>} />

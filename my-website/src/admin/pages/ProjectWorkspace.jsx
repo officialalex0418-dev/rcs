@@ -11,7 +11,7 @@ import { apiFetch } from '../../utils/api';
 import { getAuthUser } from '../../utils/auth';
 import Modal from '../components/Modal';
 
-// --- STABILIZED ATOMIC COMPONENTS ---
+// --- ATOMIC COMPONENTS ---
 
 const KpiCard = ({ label, val, color }) => (
   <div className="bg-white p-6 rounded-3xl border border-slate-200/60 shadow-sm flex flex-col items-center text-center group hover:scale-105 transition-all">
@@ -106,7 +106,11 @@ const TimelineTab = ({ project, tasks = [] }) => {
   const timelineItems = [
     ...safeMilestones.map(m => ({ ...m, type: 'milestone' })),
     ...safeTasks.map(t => ({ ...t, type: 'task' }))
-  ].sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+  ].sort((a, b) => {
+    const dateA = a.dueDate ? new Date(a.dueDate) : new Date(0);
+    const dateB = b.dueDate ? new Date(b.dueDate) : new Date(0);
+    return dateA - dateB;
+  });
 
   return (
     <div className="bg-white rounded-[3rem] border border-slate-200/60 p-10 shadow-sm">
@@ -296,6 +300,21 @@ const MilestonesTab = ({ project, onUpdateMilestone, canManage }) => (
   </div>
 );
 
+const SquadTab = ({ team = [] }) => (
+  <div className="bg-white rounded-[3rem] border border-slate-200/60 p-10 shadow-sm">
+     <h3 className="text-xl font-black text-slate-900 uppercase mb-10">Mission Squad</h3>
+     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        {(team || []).map((mem, i) => (
+          <div key={i} className="p-6 bg-slate-50 border border-slate-100 rounded-[2.5rem] text-center space-y-4">
+             <div className="w-16 h-16 rounded-3xl bg-white border border-slate-200 flex items-center justify-center mx-auto text-xl font-black text-slate-400 shadow-sm">{mem?.user?.name?.charAt(0) || '?'}</div>
+             <h4 className="text-sm font-black text-slate-900">{mem?.user?.name || 'Specialist'}</h4>
+             <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">{mem?.role}</p>
+          </div>
+        ))}
+     </div>
+  </div>
+);
+
 // --- MAIN PROJECT WORKSPACE ---
 
 const ProjectWorkspace = () => {
@@ -346,11 +365,11 @@ const ProjectWorkspace = () => {
   const handleGovSubmit = async (e) => {
     e.preventDefault();
     let update = {};
-    if (modalType === 'STAKEHOLDER') update = { stakeholders: [...(project.stakeholders || []), modalData] };
-    if (modalType === 'DECISION') update = { decisions: [...(project.decisions || []), { ...modalData, date: new Date(), decidedBy: currentUser?.name }] };
-    if (modalType === 'ISSUE') update = { issues: [...(project.issues || []), { ...modalData, status: 'OPEN', owner: currentUser?._id }] };
-    if (modalType === 'QA') update = { testLogs: [...(project.testLogs || []), { ...modalData, tester: currentUser?._id }] };
-    if (modalType === 'CHANGE') update = { changeRequests: [...(project.changeRequests || []), { ...modalData, requestedBy: currentUser?._id }] };
+    if (modalType === 'STAKEHOLDER') update = { stakeholders: [...(project?.stakeholders || []), modalData] };
+    if (modalType === 'DECISION') update = { decisions: [...(project?.decisions || []), { ...modalData, date: new Date(), decidedBy: currentUser?.name }] };
+    if (modalType === 'ISSUE') update = { issues: [...(project?.issues || []), { ...modalData, status: 'OPEN', owner: currentUser?._id }] };
+    if (modalType === 'QA') update = { testLogs: [...(project?.testLogs || []), { ...modalData, tester: currentUser?._id }] };
+    if (modalType === 'CHANGE') update = { changeRequests: [...(project?.changeRequests || []), { ...modalData, requestedBy: currentUser?._id }] };
 
     await handleUpdate(update);
     setModalType(null);
@@ -370,7 +389,9 @@ const ProjectWorkspace = () => {
            <div>
               <div className="flex items-center gap-3 mb-1">
                  <h1 className="text-3xl font-black text-slate-900 tracking-tight">{project.name}</h1>
-                 <span className="px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border bg-blue-50 text-blue-600 border-blue-100">{project.status}</span>
+                 <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${
+                    project.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-blue-50 text-blue-600 border-blue-100'
+                 }`}>{project.status}</span>
               </div>
               <p className="text-sm font-bold text-slate-400 uppercase tracking-tighter">{project.client} • {project.code}</p>
            </div>
@@ -396,7 +417,7 @@ const ProjectWorkspace = () => {
          {activeTab === 'Timeline' && <TimelineTab project={project} tasks={tasks} />}
          {activeTab === 'Tasks' && <TasksTab tasks={tasks} />}
          {activeTab === 'Milestones' && <MilestonesTab project={project} canManage={canManage} onUpdateMilestone={(i, s) => {
-            const ms = [...project.milestones]; ms[i].status = s; ms[i].progress = 100; handleUpdate({ milestones: ms });
+            const ms = [...(project?.milestones || [])]; ms[i].status = s; ms[i].progress = 100; handleUpdate({ milestones: ms });
          }} />}
          {activeTab === 'Squad' && <SquadTab team={project.team} />}
          {activeTab === 'Stakeholders' && <StakeholdersTab project={project} onAdd={() => setModalType('STAKEHOLDER')} />}

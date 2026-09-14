@@ -19,22 +19,22 @@ const ResourceAnalyzer = () => {
       const emps = await empRes.json();
       const projs = await projRes.json();
 
-      if (emps.success && projs.success) {
+      if (emps.success && projs.success && Array.isArray(emps.data)) {
         // Calculate allocation for each employee
         const analyzerData = emps.data.map(emp => {
-          const assignments = projs.data.filter(p =>
-            p.team?.some(m => (m.user?._id || m.user) === emp._id) ||
+          const assignments = (Array.isArray(projs.data) ? projs.data : []).filter(p =>
+            (Array.isArray(p.team) && p.team.some(m => (m.user?._id || m.user) === emp._id)) ||
             (p.manager?._id || p.manager) === emp._id
           ).map(p => {
-             const teamEntry = p.team?.find(m => (m.user?._id || m.user) === emp._id);
+             const teamEntry = (p.team || []).find(m => (m.user?._id || m.user) === emp._id);
              return {
                 projectName: p.name,
                 role: teamEntry?.role || (p.manager?._id === emp._id ? 'Project Strategist' : 'Support'),
-                allocation: teamEntry?.allocation || 100
+                allocation: Number(teamEntry?.allocation || 100)
              };
           });
 
-          const totalAllocation = assignments.reduce((acc, curr) => acc + curr.allocation, 0);
+          const totalAllocation = assignments.reduce((acc, curr) => acc + (Number(curr.allocation) || 0), 0);
 
           return {
             ...emp,
@@ -56,12 +56,12 @@ const ResourceAnalyzer = () => {
     fetchResourceData();
   }, []);
 
-  const filteredData = data.filter(d =>
-    d.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    d.department?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredData = (data || []).filter(d =>
+    (d.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (d.department || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (loading) return <div className="p-20 text-center font-black text-slate-300 uppercase tracking-widest animate-pulse">Analyzing Resource Density...</div>;
+  if (loading) return <div className="p-20 text-center font-black text-slate-300 uppercase tracking-widest animate-pulse font-sans">Analyzing Resource Density...</div>;
 
   return (
     <div className="p-8 bg-slate-50 min-h-screen font-sans space-y-10 animate-in fade-in duration-700">

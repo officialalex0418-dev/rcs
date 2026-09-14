@@ -14,6 +14,7 @@ import {
   TrendingUp,
   Bell,
   Shield,
+  Activity,
   ChevronDown,
   ChevronRight
 } from 'lucide-react';

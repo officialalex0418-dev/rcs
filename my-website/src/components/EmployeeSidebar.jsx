@@ -5,12 +5,30 @@ import {
   Wallet, PieChart, Calendar, FileStack, Settings,
   ChevronDown, Star, UserCheck, LogOut
 } from 'lucide-react';
-import { getProfilePic } from '../utils/auth';
+import { getProfilePic, getAuthUser } from '../utils/auth';
+import { apiFetch } from '../utils/api';
 
 const EmployeeSidebar = () => {
-  const [user, setUser] = useState(JSON.parse(localStorage.getItem('rcs_user')) || {});
+  const [user, setUser] = useState(getAuthUser() || {});
+  const [taskCount, setTaskCount] = useState(0);
+
+  const fetchTaskCount = async () => {
+    try {
+      const currentUser = getAuthUser();
+      if (!currentUser) return;
+      const userId = currentUser._id || currentUser.id;
+      const res = await apiFetch(`/api/tasks?assignedTo=${userId}&status=TODO,IN_PROGRESS`);
+      const data = await res.json();
+      if (data.success) {
+        setTaskCount(Array.isArray(data.data) ? data.data.length : 0);
+      }
+    } catch (err) {
+      console.error("Failed to fetch task count", err);
+    }
+  };
 
   useEffect(() => {
+    fetchTaskCount();
     const handleUpdate = (e) => setUser(e.detail);
     window.addEventListener('rcs_user_update', handleUpdate);
     return () => window.removeEventListener('rcs_user_update', handleUpdate);
@@ -28,7 +46,7 @@ const EmployeeSidebar = () => {
       <nav className="flex-1 space-y-2 text-slate-500">
         <SidebarLink to="/dashboard" icon={LayoutDashboard} label="Dashboard" />
         <SidebarLink to="/attendance" icon={UserCheck} label="Attendance" />
-        <SidebarLink to="/tasks" icon={CheckSquare} label="My Tasks" badge="4" />
+        <SidebarLink to="/tasks" icon={CheckSquare} label="My Tasks" badge={taskCount > 0 ? taskCount.toString() : null} />
         <SidebarLink to="/my-projects" icon={Layers} label="Projects" />
         <SidebarLink to="/time-tracking" icon={Timer} label="Time Tracking" />
         <SidebarLink to="/performance" icon={BarChart3} label="Performance" />

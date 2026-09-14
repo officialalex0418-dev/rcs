@@ -87,13 +87,38 @@ const RequirementsTab = ({ requirements = [] }) => (
   </div>
 );
 
+const ScopeTab = ({ project }) => (
+  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+     <div className="bg-white rounded-[3rem] border border-slate-200/60 p-10 shadow-sm">
+        <h3 className="text-lg font-black text-blue-600 uppercase mb-8">Tactical In-Scope</h3>
+        <div className="space-y-4">
+           {(project?.inScope || []).map((s, i) => (
+             <div key={i} className="flex items-center gap-3 p-4 bg-blue-50/50 rounded-2xl border border-blue-100 text-xs font-bold text-blue-900">
+                <CheckCircle2 size={16} className="text-blue-500" /> {s}
+             </div>
+           ))}
+        </div>
+     </div>
+     <div className="bg-white rounded-[3rem] border border-slate-200/60 p-10 shadow-sm">
+        <h3 className="text-lg font-black text-rose-600 uppercase mb-8">Mission Exclusions</h3>
+        <div className="space-y-4">
+           {(project?.outOfScope || []).map((s, i) => (
+             <div key={i} className="flex items-center gap-3 p-4 bg-rose-50/50 rounded-2xl border border-rose-100 text-xs font-bold text-rose-900">
+                <Zap size={16} className="text-rose-400" /> {s}
+             </div>
+           ))}
+        </div>
+     </div>
+  </div>
+);
+
 const TasksTab = ({ tasks = [] }) => (
   <div className="bg-white rounded-[3rem] border border-slate-200/60 p-10 shadow-sm">
      <h3 className="text-xl font-black text-slate-900 uppercase mb-10">Strategic Tasks</h3>
      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {(tasks || []).map(task => (
           <div key={task?._id} className="p-6 bg-slate-50 border border-slate-100 rounded-[2rem] space-y-4">
-             <span className="px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase bg-blue-50 text-blue-600">{task?.status}</span>
+             <span className="px-2 py-0.5 rounded-full text-[8px] font-black uppercase bg-blue-50 text-blue-600">{task?.status}</span>
              <h4 className="font-black text-slate-900 leading-tight">{task?.title}</h4>
              <div className="pt-4 border-t border-slate-200 flex justify-between items-center">
                 <p className="text-[10px] font-bold text-slate-400 uppercase">{task?.assignedTo?.name || 'Unassigned'}</p>

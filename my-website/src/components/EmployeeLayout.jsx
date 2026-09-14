@@ -8,10 +8,16 @@ const EmployeeLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
 
+  // Simple persistence for read notifications using localStorage IDs
+  const [readIds, setReadIds] = useState(() => {
+    const saved = localStorage.getItem('rcs_read_notifications');
+    return saved ? JSON.parse(saved) : [];
+  });
+
   const [notifications, setNotifications] = useState([
-    { id: 1, title: "Task Assigned", desc: "New task 'FinTech Dashboard' assigned to you.", time: "2m ago", read: false },
-    { id: 2, title: "Project Update", desc: "E-commerce API progress reached 70%.", time: "1h ago", read: false },
-    { id: 3, title: "Salary Credited", desc: "Your basic salary for August has been processed.", time: "5h ago", read: false }
+    { id: 1, title: "Task Assigned", desc: "New task 'FinTech Dashboard' assigned to you.", time: "2m ago" },
+    { id: 2, title: "Project Update", desc: "E-commerce API progress reached 70%.", time: "1h ago" },
+    { id: 3, title: "Salary Credited", desc: "Your basic salary for August has been processed.", time: "5h ago" }
   ]);
 
   useEffect(() => {
@@ -19,12 +25,23 @@ const EmployeeLayout = () => {
     return () => clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    localStorage.setItem('rcs_read_notifications', JSON.stringify(readIds));
+  }, [readIds]);
+
   const markAllRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, read: true })));
+    const allIds = notifications.map(n => n.id);
+    setReadIds(allIds);
     setTimeout(() => setShowNotifications(false), 500);
   };
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const markAsRead = (id) => {
+    if (!readIds.includes(id)) {
+      setReadIds([...readIds, id]);
+    }
+  };
+
+  const unreadCount = notifications.filter(n => !readIds.includes(n.id)).length;
 
   return (
     <div className="flex min-h-screen bg-[#F8FAFC] text-slate-900 font-sans">
@@ -93,14 +110,15 @@ const EmployeeLayout = () => {
                       </button>
                     )}
                   </div>
-                  <div className="space-y-4">
+                  <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                      {notifications.map(n => (
                        <NotificationItem
                          key={n.id}
                          title={n.title}
                          desc={n.desc}
                          time={n.time}
-                         read={n.read}
+                         read={readIds.includes(n.id)}
+                         onClick={() => markAsRead(n.id)}
                        />
                      ))}
                      {notifications.length === 0 && (
@@ -124,8 +142,11 @@ const EmployeeLayout = () => {
   );
 };
 
-const NotificationItem = ({ title, desc, time, read }) => (
-  <div className={`p-4 rounded-2xl transition-colors cursor-pointer border ${read ? 'bg-white border-transparent' : 'bg-blue-50/50 border-blue-100'}`}>
+const NotificationItem = ({ title, desc, time, read, onClick }) => (
+  <div
+    onClick={onClick}
+    className={`p-4 rounded-2xl transition-colors cursor-pointer border ${read ? 'bg-white border-transparent' : 'bg-blue-50/50 border-blue-100'}`}
+  >
     <div className="flex justify-between items-start mb-1">
       <h4 className="text-sm font-black text-slate-900 flex items-center gap-2">
         {!read && <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>}

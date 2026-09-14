@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   UserCheck, Clock, Camera, Calendar,
-  AlertCircle, CheckCircle2, Loader2, X
+  AlertCircle, CheckCircle2, Loader2, X, Eye, Maximize2
 } from 'lucide-react';
 import { apiFetch } from '../utils/api';
 import { getProfilePic } from '../utils/auth';
@@ -20,6 +20,9 @@ const AttendancePage = () => {
   const [attendanceType, setAttendanceType] = useState(null); // 'in' or 'out'
   const [capturedImage, setCapturedImage] = useState(null);
   const [cameraStream, setCameraStream] = useState(null);
+
+  // Full Image View State
+  const [fullImage, setFullImage] = useState(null);
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -156,7 +159,7 @@ const AttendancePage = () => {
              <button
                disabled={!todayLog || !!todayLog.checkOut}
                onClick={() => handleActionClick('out')}
-               className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-slate-900/20 active:scale-95 transition-all disabled:opacity-50"
+               className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-blue-500/20 active:scale-95 transition-all disabled:opacity-50"
              >
                 {todayLog?.checkOut ? `Checked Out: ${new Date(todayLog.checkOut).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}` : 'Capture & Check Out'}
              </button>
@@ -197,8 +200,22 @@ const AttendancePage = () => {
                           </td>
                           <td className="py-5">
                              <div className="flex -space-x-2">
-                                {log.checkInSelfie && <img src={getProfilePic({ profilePicture: log.checkInSelfie })} className="w-8 h-8 rounded-full border-2 border-white object-cover" alt="In" />}
-                                {log.checkOutSelfie && <img src={getProfilePic({ profilePicture: log.checkOutSelfie })} className="w-8 h-8 rounded-full border-2 border-white object-cover" alt="Out" />}
+                                {log.checkInSelfie && (
+                                   <div
+                                      className="relative w-8 h-8 rounded-full border-2 border-white overflow-hidden cursor-pointer hover:z-10 hover:scale-125 transition-all shadow-sm"
+                                      onClick={() => setFullImage(getProfilePic({ profilePicture: log.checkInSelfie }))}
+                                   >
+                                      <img src={getProfilePic({ profilePicture: log.checkInSelfie })} className="w-full h-full object-cover" alt="In" />
+                                   </div>
+                                )}
+                                {log.checkOutSelfie && (
+                                   <div
+                                      className="relative w-8 h-8 rounded-full border-2 border-white overflow-hidden cursor-pointer hover:z-10 hover:scale-125 transition-all shadow-sm"
+                                      onClick={() => setFullImage(getProfilePic({ profilePicture: log.checkOutSelfie }))}
+                                   >
+                                      <img src={getProfilePic({ profilePicture: log.checkOutSelfie })} className="w-full h-full object-cover" alt="Out" />
+                                   </div>
+                                )}
                              </div>
                           </td>
                           <td className="py-5">
@@ -245,6 +262,21 @@ const AttendancePage = () => {
             </div>
             <canvas ref={canvasRef} className="hidden" />
          </div>
+      </Modal>
+
+      {/* Full Image Modal */}
+      <Modal isOpen={!!fullImage} onClose={() => setFullImage(null)} title="Verification Proof">
+          <div className="space-y-6">
+             <div className="rounded-3xl overflow-hidden border-4 border-white shadow-2xl bg-slate-900">
+                <img src={fullImage} className="w-full h-auto max-h-[70vh] object-contain" alt="Full verification" />
+             </div>
+             <button
+                onClick={() => setFullImage(null)}
+                className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest"
+             >
+                Close Protocol
+             </button>
+          </div>
       </Modal>
     </div>
   );

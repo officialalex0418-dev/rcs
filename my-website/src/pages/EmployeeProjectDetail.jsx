@@ -7,7 +7,7 @@ import {
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { apiFetch } from '../utils/api';
 
-// --- SMALL ATOMIC COMPONENTS (Defined first to avoid TDZ) ---
+// --- ATOMIC COMPONENTS ---
 
 const KpiCard = ({ label, val, color }) => (
   <div className="bg-white p-6 rounded-3xl border border-slate-200/60 shadow-sm flex flex-col items-center text-center group hover:scale-105 transition-all">
@@ -19,13 +19,9 @@ const KpiCard = ({ label, val, color }) => (
 const HealthRow = ({ label, val }) => (
   <div className="space-y-2">
      <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-400"><span>{label}</span><span>{val}</span></div>
-     {typeof val === 'string' && val.includes('%') ? (
-       <div className="h-1.5 w-full bg-slate-100/10 rounded-full overflow-hidden">
-         <div className="h-full bg-emerald-500" style={{width: val}}></div>
-       </div>
-     ) : (
-       <p className="text-xs font-black text-emerald-400">{val || 'STABLE'}</p>
-     )}
+     <div className="h-1.5 w-full bg-slate-100/10 rounded-full overflow-hidden">
+        <div className="h-full bg-emerald-500" style={{width: typeof val === 'string' && val.includes('%') ? val : '100%'}}></div>
+     </div>
   </div>
 );
 
@@ -44,25 +40,20 @@ const OverviewTab = ({ project, tasks = [] }) => {
              <KpiCard label="Project Health" val={project?.health || 'STABLE'} color="purple" />
              <KpiCard label="Squad Size" val={project?.team?.length || 0} color="indigo" />
           </div>
-          <div className="bg-white rounded-[2.5rem] border border-slate-200/60 p-10">
+          <div className="bg-white rounded-[2.5rem] border border-slate-200/60 p-10 shadow-sm">
              <h3 className="text-xl font-black text-slate-900 uppercase mb-8">Mission Trajectory</h3>
              <div className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
-                   <AreaChart data={[
-                      { name: 'Start', progress: 0 },
-                      { name: 'Current', progress: project?.progress || 0 },
-                   ]}>
+                   <AreaChart data={[{name: 'A', p: 0}, {name: 'B', p: project?.progress || 0}]}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                      <XAxis dataKey="name" hide />
-                      <Tooltip contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)'}} />
-                      <Area type="monotone" dataKey="progress" stroke="#2563eb" strokeWidth={4} fill="#2563eb" fillOpacity={0.1} />
+                      <Area type="monotone" dataKey="p" stroke="#2563eb" fill="#2563eb" fillOpacity={0.1} />
                    </AreaChart>
                 </ResponsiveContainer>
              </div>
           </div>
        </div>
        <div className="col-span-12 xl:col-span-4 space-y-8">
-          <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-2xl">
+          <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-2xl border border-white/5">
              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
              <h3 className="text-lg font-black uppercase mb-6 flex items-center gap-2"><Activity className="text-emerald-400" /> Tactical Health</h3>
              <div className="space-y-6">
@@ -71,177 +62,105 @@ const OverviewTab = ({ project, tasks = [] }) => {
                 <HealthRow label="Execution Quality" val="STABLE" />
              </div>
           </div>
-          <div className="bg-white rounded-[2.5rem] border border-slate-200/60 p-8">
-             <h3 className="text-lg font-black text-slate-900 uppercase mb-6">Mission Head</h3>
-             <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center text-white font-black">
-                   {project?.manager?.name?.charAt(0) || 'R'}
-                </div>
+       </div>
+    </div>
+  );
+};
+
+const RequirementsTab = ({ requirements = [] }) => (
+  <div className="bg-white rounded-[3rem] border border-slate-200/60 p-10 shadow-sm">
+     <h3 className="text-xl font-black text-slate-900 uppercase mb-10">Mission Requirements</h3>
+     <div className="space-y-4">
+        {(requirements || []).map((req, i) => (
+          <div key={i} className="p-6 bg-slate-50 border border-slate-100 rounded-3xl flex items-center justify-between">
+             <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center font-black">{i+1}</div>
                 <div>
-                   <p className="text-sm font-black text-slate-900">{project?.manager?.name || 'RCS Command'}</p>
-                   <p className="text-[10px] font-bold text-slate-400 uppercase">{project?.manager?.designation || 'Project Strategist'}</p>
+                   <h4 className="font-black text-slate-900 leading-none mb-1">{req?.title || 'Untitled'}</h4>
+                   <p className="text-[10px] font-bold text-slate-400 uppercase">{req?.priority} PRIORITY</p>
                 </div>
              </div>
+             <span className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-[9px] font-black uppercase text-slate-400">{req?.status}</span>
           </div>
-       </div>
-    </div>
-  );
-};
+        ))}
+     </div>
+  </div>
+);
 
-const RequirementsTab = ({ requirements = [] }) => {
-  const safeReqs = Array.isArray(requirements) ? requirements : [];
-  return (
-    <div className="bg-white rounded-[3rem] border border-slate-200/60 p-10">
-       <h3 className="text-xl font-black text-slate-900 uppercase mb-10">Mission Requirements</h3>
-       <div className="space-y-4">
-          {safeReqs.map((req, i) => (
-            <div key={i} className="p-6 bg-slate-50 border border-slate-100 rounded-3xl flex items-center justify-between">
-               <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center font-black">{i+1}</div>
-                  <div>
-                     <h4 className="font-black text-slate-900 leading-none mb-1">{req?.title || 'Untitled'}</h4>
-                     <p className="text-[10px] font-bold text-slate-400 uppercase">{req?.type || 'FUNCTIONAL'} • {req?.priority || 'MEDIUM'} PRIORITY</p>
-                  </div>
-               </div>
-               <span className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-[9px] font-black uppercase text-slate-400">{req?.status || 'PENDING'}</span>
-            </div>
-          ))}
-          {safeReqs.length === 0 && <div className="text-center py-20 opacity-20"><Target size={48} className="mx-auto mb-2"/><p className="text-xs font-black uppercase">No clauses defined</p></div>}
-       </div>
-    </div>
-  );
-};
-
-const ScopeTab = ({ project }) => {
-  const safeInScope = Array.isArray(project?.inScope) ? project.inScope : [];
-  const safeOutScope = Array.isArray(project?.outOfScope) ? project.outOfScope : [];
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-       <div className="bg-white rounded-[3rem] border border-slate-200/60 p-10">
-          <h3 className="text-lg font-black text-blue-600 uppercase mb-8">Tactical In-Scope</h3>
-          <div className="space-y-4">
-             {safeInScope.map((s, i) => (
-               <div key={i} className="flex items-center gap-3 p-4 bg-blue-50/50 rounded-2xl border border-blue-100 text-xs font-bold text-blue-900">
-                  <CheckCircle2 size={16} className="text-blue-500" /> {s}
-               </div>
-             ))}
-             {safeInScope.length === 0 && <p className="text-xs text-slate-400 italic">No in-scope boundaries defined</p>}
+const TasksTab = ({ tasks = [] }) => (
+  <div className="bg-white rounded-[3rem] border border-slate-200/60 p-10 shadow-sm">
+     <h3 className="text-xl font-black text-slate-900 uppercase mb-10">Strategic Tasks</h3>
+     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {(tasks || []).map(task => (
+          <div key={task?._id} className="p-6 bg-slate-50 border border-slate-100 rounded-[2rem] space-y-4">
+             <span className="px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase bg-blue-50 text-blue-600">{task?.status}</span>
+             <h4 className="font-black text-slate-900 leading-tight">{task?.title}</h4>
+             <div className="pt-4 border-t border-slate-200 flex justify-between items-center">
+                <p className="text-[10px] font-bold text-slate-400 uppercase">{task?.assignedTo?.name || 'Unassigned'}</p>
+                <p className="text-[10px] font-black text-slate-900">{task?.progress || 0}%</p>
+             </div>
           </div>
-       </div>
-       <div className="bg-white rounded-[3rem] border border-slate-200/60 p-10">
-          <h3 className="text-lg font-black text-rose-600 uppercase mb-8">Mission Exclusions</h3>
-          <div className="space-y-4">
-             {safeOutScope.map((s, i) => (
-               <div key={i} className="flex items-center gap-3 p-4 bg-rose-50/50 rounded-2xl border border-rose-100 text-xs font-bold text-rose-900">
-                  <Zap size={16} className="text-rose-400" /> {s}
-               </div>
-             ))}
-             {safeOutScope.length === 0 && <p className="text-xs text-slate-400 italic">No exclusions boundaries defined</p>}
+        ))}
+     </div>
+  </div>
+);
+
+const SquadTab = ({ team = [] }) => (
+  <div className="bg-white rounded-[3rem] border border-slate-200/60 p-10 shadow-sm">
+     <h3 className="text-xl font-black text-slate-900 uppercase mb-10">Mission Squad</h3>
+     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        {(team || []).map((mem, i) => (
+          <div key={i} className="p-6 bg-slate-50 border border-slate-100 rounded-[2.5rem] text-center space-y-4">
+             <div className="w-16 h-16 rounded-3xl bg-white border border-slate-200 flex items-center justify-center mx-auto text-xl font-black text-slate-400 shadow-sm">{mem?.user?.name?.charAt(0) || '?'}</div>
+             <h4 className="text-sm font-black text-slate-900">{mem?.user?.name || 'Specialist'}</h4>
+             <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">{mem?.role}</p>
           </div>
-       </div>
-    </div>
-  );
-};
+        ))}
+     </div>
+  </div>
+);
 
-const TasksTab = ({ tasks = [] }) => {
-  const safeTasks = Array.isArray(tasks) ? tasks : [];
-  return (
-    <div className="bg-white rounded-[3rem] border border-slate-200/60 p-10">
-       <h3 className="text-xl font-black text-slate-900 uppercase mb-10">Strategic Tasks</h3>
-       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {safeTasks.map(task => (
-            <div key={task?._id} className="p-6 bg-slate-50 border border-slate-100 rounded-[2rem] space-y-4">
-               <div className="flex justify-between items-start">
-                  <span className={`px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase ${
-                    task?.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'
-                  }`}>{task?.status || 'TODO'}</span>
-                  <span className="text-[10px] font-black text-slate-400 uppercase">{task?.priority || 'MEDIUM'}</span>
-               </div>
-               <h4 className="font-black text-slate-900 leading-tight">{task?.title || 'Untitled'}</h4>
-               <div className="pt-4 border-t border-slate-200 flex justify-between items-center">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase truncate">{task?.assignedTo?.name || 'Unassigned'}</p>
-                  <p className="text-[10px] font-black text-slate-900">{task?.progress || 0}%</p>
-               </div>
-            </div>
-          ))}
-          {safeTasks.length === 0 && <p className="col-span-full text-center py-20 text-slate-300 font-black uppercase">No tasks logs available</p>}
-       </div>
-    </div>
-  );
-};
+const MilestonesTab = ({ milestones = [] }) => (
+  <div className="bg-white rounded-[3rem] border border-slate-200/60 p-10 shadow-sm">
+     <h3 className="text-xl font-black text-slate-900 uppercase mb-10">Strategic Milestones</h3>
+     <div className="space-y-6">
+        {(milestones || []).map((ms, i) => (
+          <div key={i} className="p-6 bg-slate-50 border border-slate-100 rounded-[2rem] flex items-center gap-6">
+             <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black ${
+                ms?.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-100 text-blue-600'
+             }`}><CheckCircle2 size={20} /></div>
+             <div className="flex-1">
+                <h4 className="text-sm font-black text-slate-900 mb-1">{ms?.title}</h4>
+                <div className="h-1.5 w-full bg-white rounded-full overflow-hidden">
+                   <div className="h-full bg-blue-600 transition-all duration-500" style={{width: `${ms?.progress || 0}%`}}></div>
+                </div>
+             </div>
+             <span className="text-xs font-black text-slate-900">{ms?.progress || 0}%</span>
+          </div>
+        ))}
+     </div>
+  </div>
+);
 
-const MilestonesTab = ({ milestones = [] }) => {
-  const safeMilestones = Array.isArray(milestones) ? milestones : [];
-  return (
-    <div className="bg-white rounded-[3rem] border border-slate-200/60 p-10">
-       <h3 className="text-xl font-black text-slate-900 uppercase mb-10">Tactical Milestones</h3>
-       <div className="space-y-6">
-          {safeMilestones.map((ms, i) => (
-            <div key={i} className="p-6 bg-slate-50 border border-slate-100 rounded-[2rem] flex items-center gap-6">
-               <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black ${
-                  ms?.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-100 text-blue-600'
-               }`}><CheckCircle2 size={20} /></div>
-               <div className="flex-1">
-                  <h4 className="text-sm font-black text-slate-900 mb-1">{ms?.title || 'Phase Milestone'}</h4>
-                  <div className="h-1.5 w-full bg-white rounded-full overflow-hidden">
-                     <div className="h-full bg-blue-600 transition-all duration-500" style={{width: `${ms?.progress || 0}%`}}></div>
-                  </div>
-               </div>
-               <span className="text-xs font-black text-slate-900">{ms?.progress || 0}%</span>
-            </div>
-          ))}
-          {safeMilestones.length === 0 && <p className="text-center py-20 text-slate-300 font-black uppercase italic">No tactical milestones logged</p>}
-       </div>
-    </div>
-  );
-};
+const RisksTab = ({ risks = [] }) => (
+  <div className="bg-white rounded-[3rem] border border-slate-200/60 p-10 shadow-sm">
+     <h3 className="text-xl font-black text-slate-900 uppercase mb-10">Operational Risks</h3>
+     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {(risks || []).map((risk, i) => (
+          <div key={i} className="p-8 bg-slate-50 border border-slate-100 rounded-[2.5rem] space-y-4">
+             <div className="flex justify-between items-start">
+                <div className="p-2 bg-rose-50 text-rose-600 rounded-xl"><AlertTriangle size={20} /></div>
+                <span className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-[9px] font-black uppercase text-rose-500">{risk?.impact} IMPACT</span>
+             </div>
+             <h4 className="text-lg font-black text-slate-900 leading-tight">{risk?.title}</h4>
+             <p className="text-xs font-medium text-slate-500 leading-relaxed italic">"{risk?.mitigationPlan}"</p>
+          </div>
+        ))}
+     </div>
+  </div>
+);
 
-const SquadTab = ({ team = [] }) => {
-  const safeTeam = Array.isArray(team) ? team : [];
-  return (
-    <div className="bg-white rounded-[3rem] border border-slate-200/60 p-10">
-       <h3 className="text-xl font-black text-slate-900 uppercase mb-10">Mission Squad</h3>
-       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          {safeTeam.map((mem, i) => (
-            <div key={i} className="p-6 bg-slate-50 border border-slate-100 rounded-[2.5rem] text-center space-y-4">
-               <div className="w-16 h-16 rounded-3xl bg-white border border-slate-200 flex items-center justify-center mx-auto text-xl font-black text-slate-400 shadow-sm">
-                  {mem?.user?.name?.charAt(0) || '?'}
-               </div>
-               <div>
-                  <h4 className="text-sm font-black text-slate-900">{mem?.user?.name || 'Personnel'}</h4>
-                  <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">{mem?.role || 'Mission Specialist'}</p>
-               </div>
-            </div>
-          ))}
-          {safeTeam.length === 0 && <p className="col-span-full text-center py-20 text-slate-300 font-black uppercase">Squad roster empty</p>}
-       </div>
-    </div>
-  );
-};
-
-const RisksTab = ({ risks = [] }) => {
-  const safeRisks = Array.isArray(risks) ? risks : [];
-  return (
-    <div className="bg-white rounded-[3rem] border border-slate-200/60 p-10">
-       <h3 className="text-xl font-black text-slate-900 uppercase mb-10">Operational Risks</h3>
-       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {safeRisks.map((risk, i) => (
-            <div key={i} className="p-8 bg-slate-50 border border-slate-100 rounded-[2.5rem] space-y-4">
-               <div className="flex justify-between items-start">
-                  <div className="p-2 bg-rose-50 text-rose-600 rounded-xl"><AlertTriangle size={20} /></div>
-                  <span className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-[9px] font-black uppercase text-rose-500">{risk?.impact || 'LOW'} IMPACT</span>
-               </div>
-               <h4 className="text-lg font-black text-slate-900 leading-tight">{risk?.title || 'Unknown Risk'}</h4>
-               <p className="text-xs font-medium text-slate-500 leading-relaxed italic">"{risk?.mitigationPlan || 'Protocol under development.'}"</p>
-            </div>
-          ))}
-          {safeRisks.length === 0 && <p className="col-span-full text-center py-20 text-slate-300 font-black uppercase italic">No hazardous risks logged</p>}
-       </div>
-    </div>
-  );
-};
-
-// --- MAIN EMPLOYEE PROJECT DETAIL COMPONENT ---
+// --- MAIN COMPONENT ---
 
 const EmployeeProjectDetail = () => {
   const { id } = useParams();
@@ -251,9 +170,7 @@ const EmployeeProjectDetail = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('Overview');
 
-  const tabs = [
-    'Overview', 'Requirements', 'Scope', 'Tasks', 'Milestones', 'Squad', 'Risks'
-  ];
+  const tabs = ['Overview', 'Requirements', 'Scope', 'Tasks', 'Milestones', 'Squad', 'Risks'];
 
   useEffect(() => {
     const fetchProjectData = async () => {
@@ -262,8 +179,8 @@ const EmployeeProjectDetail = () => {
           apiFetch(`/api/projects/${id}`),
           apiFetch(`/api/projects/${id}/tasks`)
         ]);
-        const proj = projRes.ok ? await projRes.json() : { success: false };
-        const tsk = taskRes.ok ? await taskRes.json() : { success: false };
+        const proj = await projRes.json();
+        const tsk = await taskRes.json();
         if (proj.success) setProject(proj.data);
         if (tsk.success) setTasks(Array.isArray(tsk.data) ? tsk.data : []);
       } catch (err) {
@@ -282,18 +199,10 @@ const EmployeeProjectDetail = () => {
     </div>
   );
 
-  if (!project) return (
-    <div className="p-20 text-center space-y-6 font-sans">
-       <Briefcase size={48} className="mx-auto text-slate-200" />
-       <h1 className="text-2xl font-black text-slate-400 uppercase">Mission Protocol Not Found</h1>
-       <button onClick={() => navigate('/my-projects')} className="px-8 py-3 bg-blue-600 text-white rounded-xl text-xs font-black uppercase">Return to Hub</button>
-    </div>
-  );
+  if (!project) return <div className="p-20 text-center font-black text-slate-400 uppercase font-sans">Mission Protocol Not Found</div>;
 
   return (
     <div className="p-8 bg-slate-50 min-h-screen font-sans space-y-8 animate-in fade-in duration-700">
-
-      {/* Header */}
       <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
         <div className="flex items-center gap-6">
            <button onClick={() => navigate('/my-projects')} className="p-3 bg-white border border-slate-200 rounded-2xl hover:border-blue-500 transition-all text-slate-400 hover:text-blue-600 shadow-sm">
@@ -302,37 +211,19 @@ const EmployeeProjectDetail = () => {
            <div>
               <div className="flex items-center gap-3 mb-1">
                  <h1 className="text-3xl font-black text-slate-900 tracking-tight">{project.name}</h1>
-                 <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${
-                    project.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-blue-50 text-blue-600 border-blue-100'
-                 }`}>{project.status || 'DRAFT'}</span>
+                 <span className="px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border bg-blue-50 text-blue-600 border-blue-100">{project.status}</span>
               </div>
-              <p className="text-sm font-bold text-slate-400 uppercase tracking-tighter">{project.client || 'INTERNAL'} • {project.code}</p>
-           </div>
-        </div>
-        <div className="flex gap-4">
-           <div className="px-6 py-3.5 bg-white border border-slate-200 rounded-2xl">
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Strategist Head</p>
-              <p className="text-xs font-black text-slate-900">{project.manager?.name || 'RCS Command'}</p>
+              <p className="text-sm font-bold text-slate-400 uppercase tracking-tighter">{project.client} • {project.code}</p>
            </div>
         </div>
       </div>
 
-      {/* Tabs */}
       <div className="flex gap-2 p-1.5 bg-white border border-slate-200 rounded-[2rem] shadow-sm overflow-x-auto scrollbar-hide">
          {tabs.map(tab => (
-           <button
-             key={tab}
-             onClick={() => setActiveTab(tab)}
-             className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
-               activeTab === tab ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
-             }`}
-           >
-              {tab}
-           </button>
+           <button key={tab} onClick={() => setActiveTab(tab)} className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}>{tab}</button>
          ))}
       </div>
 
-      {/* Content */}
       <div className="animate-in slide-in-from-bottom-4 duration-500">
          {activeTab === 'Overview' && <OverviewTab project={project} tasks={tasks} />}
          {activeTab === 'Requirements' && <RequirementsTab requirements={project.requirements} />}
@@ -342,7 +233,6 @@ const EmployeeProjectDetail = () => {
          {activeTab === 'Squad' && <SquadTab team={project.team} />}
          {activeTab === 'Risks' && <RisksTab risks={project.risks} />}
       </div>
-
     </div>
   );
 };

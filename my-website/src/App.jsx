@@ -48,6 +48,7 @@ import AttendancePage from "./pages/AttendancePage";
 import MyProjectsPage from "./pages/MyProjectsPage";
 import EmployeeProjectDetail from "./pages/EmployeeProjectDetail";
 import EmployeeSettings from "./pages/EmployeeSettings";
+import SupportPage from "./pages/SupportPage";
 import MyTasksPage from "./pages/MyTasksPage";
 
 function ScrollToTop() {
@@ -132,6 +133,7 @@ function Site() {
           <Route path="/dashboard" element={<EmployeeDashboard />} />
           <Route path="/attendance" element={<AttendancePage />} />
           <Route path="/tasks" element={<MyTasksPage />} />
+          <Route path="/support" element={<SupportPage />} />
           <Route path="/settings" element={<EmployeeSettings />} />
           <Route path="/my-projects" element={<MyProjectsPage />} />
           <Route path="/my-projects/:id" element={<EmployeeProjectDetail />} />

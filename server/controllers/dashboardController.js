@@ -4,13 +4,24 @@ import Project from '../models/Project.js';
 import Attendance from '../models/Attendance.js';
 import Job from '../models/Job.js';
 import Application from '../models/Application.js';
+import Payroll from '../models/Payroll.js';
+import Inquiry from '../models/Inquiry.js';
 
 export const getDashboardStats = async (req, res, next) => {
   try {
     const employeeCount = await User.countDocuments({ role: { $ne: 'SUPER_ADMIN' } });
-    const jobCount = await Job.countDocuments();
+    const jobCount = await Job.countDocuments({ status: 'Active' });
     const applicationCount = await Application.countDocuments();
-    const projectCount = await Project.countDocuments();
+    const activeProjectCount = await Project.countDocuments({ status: { $in: ['IN_PROGRESS', 'PLANNING', 'APPROVED'] } });
+    const activeTaskCount = await Task.countDocuments({ status: { $ne: 'COMPLETED' } });
+    const totalInquiryCount = await Inquiry.countDocuments();
+
+    // Calculate total paid payroll
+    const payrollPaidAgg = await Payroll.aggregate([
+      { $match: { status: 'PAID' } },
+      { $group: { _id: null, total: { $sum: '$totalPaid' } } }
+    ]);
+    const totalPaidPayroll = payrollPaidAgg.length > 0 ? payrollPaidAgg[0].total : 0;
 
     // Get recent applications
     const recentApplications = await Application.find()
@@ -25,7 +36,10 @@ export const getDashboardStats = async (req, res, next) => {
           employees: employeeCount,
           jobs: jobCount,
           applications: applicationCount,
-          projects: projectCount
+          projects: activeProjectCount,
+          tasks: activeTaskCount,
+          inquiries: totalInquiryCount,
+          payroll: totalPaidPayroll
         },
         recentApplications
       }

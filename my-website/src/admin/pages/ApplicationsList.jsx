@@ -77,7 +77,10 @@ const ApplicationsList = () => {
 
   const getResumeUrl = (url) => {
     if (!url) return '#';
-    let base = import.meta.env.VITE_API_URL || '';
+    // If it's already a full URL (R2), return as is
+    if (url.startsWith('http')) return url;
+
+    let base = import.meta.env.VITE_API_URL || 'https://rcs-ajbn.onrender.com';
     if (base.endsWith('/')) {
       base = base.slice(0, -1);
     }

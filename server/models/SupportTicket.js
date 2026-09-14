@@ -5,37 +5,38 @@ const supportTicketSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  topic: String,
   description: {
     type: String,
     required: true
   },
+  attachment: {
+    url: String,
+    fileName: String,
+    storageKey: String
+  },
   sender: {
-    name: String,
-    email: String,
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' } // If internal employee
-  },
-  type: {
-    type: String,
-    enum: ['EMPLOYEE', 'CUSTOMER'],
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
     required: true
-  },
-  priority: {
-    type: String,
-    enum: ['LOW', 'MEDIUM', 'HIGH', 'URGENT'],
-    default: 'MEDIUM'
-  },
-  status: {
-    type: String,
-    enum: ['OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED'],
-    default: 'OPEN'
   },
   assignedTo: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
+    ref: 'User',
+    required: true
+  },
+  status: {
+    type: String,
+    enum: ['OPEN', 'RESOLVED', 'CLOSED'],
+    default: 'OPEN'
   },
   replies: [{
     sender: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     message: String,
+    attachment: {
+      url: String,
+      fileName: String
+    },
     createdAt: { type: Date, default: Date.now }
   }]
 }, {

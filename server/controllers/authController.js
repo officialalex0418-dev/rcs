@@ -90,9 +90,10 @@ export const getMe = async (req, res, next) => {
 
 export const updateMe = async (req, res, next) => {
   try {
-    const { phone, address } = req.body;
+    const { name, phone, address } = req.body;
     const updateData = {};
 
+    if (name) updateData.name = name;
     if (phone) updateData.phone = phone;
     if (address) updateData.address = address;
 

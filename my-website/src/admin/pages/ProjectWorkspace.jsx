@@ -256,7 +256,7 @@ const TeamTab = ({ project }) => {
   );
 };
 
-const MilestonesTab = ({ project, onUpdateMilestone }) => {
+const MilestonesTab = ({ project, onUpdateMilestone, canManage }) => {
   const safeMilestones = Array.isArray(project?.milestones) ? project.milestones : [];
 
   return (
@@ -272,7 +272,7 @@ const MilestonesTab = ({ project, onUpdateMilestone }) => {
                   <div className="flex justify-between items-start mb-2">
                      <h4 className="font-black text-slate-900">{ms.title || 'Strategic Milestone'}</h4>
                      <div className="flex items-center gap-3">
-                        {ms.status !== 'COMPLETED' && (
+                        {ms.status !== 'COMPLETED' && canManage && (
                           <button
                             onClick={() => onUpdateMilestone(i, 'COMPLETED')}
                             className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-[8px] font-black uppercase tracking-widest text-slate-400 hover:text-emerald-500 hover:border-emerald-200 transition-all"
@@ -368,9 +368,12 @@ const ActivityTab = ({ project }) => {
 
 // --- MAIN PROJECT WORKSPACE COMPONENT ---
 
+import { getAuthUser } from '../../utils/auth';
+
 const ProjectWorkspace = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const currentUser = getAuthUser();
   const [project, setProject] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [employees, setEmployees] = useState([]);
@@ -490,6 +493,8 @@ const ProjectWorkspace = () => {
   if (loading) return <div className="p-20 text-center font-black text-slate-300 uppercase tracking-widest animate-pulse">Syncing Workspace...</div>;
   if (!project) return <div className="p-20 text-center font-black text-slate-400 uppercase">Project protocol not found</div>;
 
+  const canManage = currentUser?.role === 'ADMIN' || currentUser?.role === 'SUPER_ADMIN' || (project?.manager?._id || project?.manager) === (currentUser?._id || currentUser?.id);
+
   return (
     <div className="p-8 bg-slate-50 min-h-screen font-sans space-y-8 animate-in fade-in duration-700">
 
@@ -511,15 +516,19 @@ const ProjectWorkspace = () => {
         </div>
 
         <div className="flex items-center gap-3">
-           <button onClick={() => navigate(`/admin/projects/edit/${id}`)} className="flex items-center gap-2 bg-white px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase border border-slate-200 hover:bg-slate-50 transition-all">
-              <Edit2 size={14} /> Refine Strategy
-           </button>
-           <button
-             onClick={() => setShowTaskModal(true)}
-             className="flex items-center gap-2 bg-blue-600 text-white px-8 py-3.5 rounded-2xl text-[10px] font-black uppercase shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition-all"
-           >
-              <Plus size={16} /> Add Task
-           </button>
+           {canManage && (
+             <>
+               <button onClick={() => navigate(`/admin/projects/edit/${id}`)} className="flex items-center gap-2 bg-white px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase border border-slate-200 hover:bg-slate-50 transition-all">
+                  <Edit2 size={14} /> Refine Strategy
+               </button>
+               <button
+                 onClick={() => setShowTaskModal(true)}
+                 className="flex items-center gap-2 bg-blue-600 text-white px-8 py-3.5 rounded-2xl text-[10px] font-black uppercase shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition-all"
+               >
+                  <Plus size={16} /> Add Task
+               </button>
+             </>
+           )}
         </div>
       </div>
 
@@ -544,7 +553,7 @@ const ProjectWorkspace = () => {
          {activeTab === 'Requirements' && <RequirementsTab project={project} />}
          {activeTab === 'Scope' && <ScopeTab project={project} />}
          {activeTab === 'Tasks' && <TasksTab tasks={tasks} />}
-         {activeTab === 'Milestones' && <MilestonesTab project={project} onUpdateMilestone={handleUpdateMilestone} />}
+         {activeTab === 'Milestones' && <MilestonesTab project={project} onUpdateMilestone={handleUpdateMilestone} canManage={canManage} />}
          {activeTab === 'Team' && <TeamTab project={project} />}
          {activeTab === 'Budget' && <BudgetTab project={project} />}
          {activeTab === 'Risks' && <RisksTab project={project} />}

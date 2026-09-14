@@ -33,6 +33,67 @@ const riskSchema = new mongoose.Schema({
   status: { type: String, enum: ['OPEN', 'MITIGATED', 'CLOSED'], default: 'OPEN' }
 });
 
+const stakeholderSchema = new mongoose.Schema({
+  name: String,
+  organization: String,
+  role: String,
+  influence: { type: String, enum: ['LOW', 'MEDIUM', 'HIGH'], default: 'MEDIUM' },
+  interest: { type: String, enum: ['LOW', 'MEDIUM', 'HIGH'], default: 'MEDIUM' },
+  contact: String,
+  preferences: String
+});
+
+const decisionSchema = new mongoose.Schema({
+  title: String,
+  context: String,
+  outcome: String,
+  date: { type: Date, default: Date.now },
+  decidedBy: String,
+  stakeholdersConsulted: [String]
+});
+
+const documentSchema = new mongoose.Schema({
+  name: String,
+  type: { type: String, enum: ['CONTRACT', 'SPECIFICATION', 'DESIGN', 'ASSET', 'OTHER'], default: 'ASSET' },
+  url: String,
+  fileKey: String, // R2 Key
+  uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  version: { type: String, default: '1.0' }
+}, { timestamps: true });
+
+const changeRequestSchema = new mongoose.Schema({
+  title: String,
+  description: String,
+  reason: String,
+  impact: {
+    timeline: String,
+    budget: Number,
+    resources: String
+  },
+  status: { type: String, enum: ['DRAFT', 'SUBMITTED', 'UNDER_REVIEW', 'APPROVED', 'REJECTED', 'IMPLEMENTED'], default: 'DRAFT' },
+  requestedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  reviewComments: String
+}, { timestamps: true });
+
+const issueSchema = new mongoose.Schema({
+  title: String,
+  description: String,
+  severity: { type: String, enum: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'], default: 'MEDIUM' },
+  status: { type: String, enum: ['OPEN', 'INVESTIGATING', 'RESOLVED', 'CLOSED'], default: 'OPEN' },
+  owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  resolution: String
+}, { timestamps: true });
+
+const testLogSchema = new mongoose.Schema({
+  feature: String,
+  criteria: String,
+  status: { type: String, enum: ['PENDING', 'PASSED', 'FAILED', 'BLOCKED'], default: 'PENDING' },
+  tester: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  notes: String,
+  screenshot: String
+}, { timestamps: true });
+
 const projectSchema = new mongoose.Schema({
   name: { type: String, required: true },
   code: { type: String, unique: true },
@@ -89,6 +150,12 @@ const projectSchema = new mongoose.Schema({
   // Planning
   milestones: [milestoneSchema],
   risks: [riskSchema],
+  stakeholders: [stakeholderSchema],
+  decisions: [decisionSchema],
+  documents: [documentSchema],
+  changeRequests: [changeRequestSchema],
+  issues: [issueSchema],
+  testLogs: [testLogSchema],
 
   progress: { type: Number, min: 0, max: 100, default: 0 },
 

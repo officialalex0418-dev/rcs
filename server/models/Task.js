@@ -28,6 +28,10 @@ const taskSchema = new mongoose.Schema({
     default: 'MEDIUM'
   },
   dueDate: Date,
+  dependsOn: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Task'
+  }],
   subtasks: [{
     title: String,
     completed: { type: Boolean, default: false }

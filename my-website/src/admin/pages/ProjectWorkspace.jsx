@@ -11,7 +11,7 @@ import { apiFetch } from '../../utils/api';
 import { getAuthUser } from '../../utils/auth';
 import Modal from '../components/Modal';
 
-// --- ATOMIC COMPONENTS ---
+// --- STABILIZED ATOMIC COMPONENTS ---
 
 const KpiCard = ({ label, val, color }) => (
   <div className="bg-white p-6 rounded-3xl border border-slate-200/60 shadow-sm flex flex-col items-center text-center group hover:scale-105 transition-all">
@@ -34,21 +34,21 @@ const BudgetItem = ({ label, val, color }) => (
   </div>
 );
 
-const Input = ({ label, value, onChange }) => (
+const ProjectInput = ({ label, value, onChange, type = "text" }) => (
   <div className="space-y-1.5">
      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">{label}</label>
-     <input className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none text-sm font-bold focus:border-blue-500" value={value || ''} onChange={e => onChange(e.target.value)} />
+     <input type={type} className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none text-sm font-bold focus:border-blue-500" value={value || ''} onChange={e => onChange(e.target.value)} />
   </div>
 );
 
-const Textarea = ({ label, value, onChange }) => (
+const ProjectTextarea = ({ label, value, onChange }) => (
   <div className="space-y-1.5">
      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">{label}</label>
      <textarea rows="3" className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none text-sm font-medium focus:border-blue-500" value={value || ''} onChange={e => onChange(e.target.value)} />
   </div>
 );
 
-const Select = ({ label, options, value, onChange }) => (
+const ProjectSelect = ({ label, options, value, onChange }) => (
   <div className="space-y-1.5">
      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">{label}</label>
      <select className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none" value={value || ''} onChange={e => onChange(e.target.value)}>
@@ -63,7 +63,6 @@ const Select = ({ label, options, value, onChange }) => (
 const OverviewTab = ({ project, tasks = [] }) => {
   const safeTasks = Array.isArray(tasks) ? tasks : [];
   const completedTasks = safeTasks.filter(t => t && t.status === 'COMPLETED').length;
-  const safeTeam = Array.isArray(project?.team) ? project.team : [];
 
   return (
     <div className="grid grid-cols-12 gap-8">
@@ -241,6 +240,24 @@ const IssuesTab = ({ project, onAdd }) => (
   </div>
 );
 
+const RisksTab = ({ risks = [] }) => (
+  <div className="bg-white rounded-[3rem] border border-slate-200/60 p-10 shadow-sm">
+     <h3 className="text-xl font-black text-slate-900 uppercase mb-10 flex items-center gap-3"><AlertTriangle size={20}/> Risks</h3>
+     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {(risks || []).map((risk, i) => (
+          <div key={i} className="p-8 bg-slate-50 border border-slate-100 rounded-[2.5rem] space-y-4">
+             <div className="flex justify-between items-start">
+                <div className="p-2 bg-rose-50 text-rose-600 rounded-xl"><AlertTriangle size={20} /></div>
+                <span className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-[9px] font-black uppercase text-rose-500">{risk.impact} IMPACT</span>
+             </div>
+             <h4 className="text-lg font-black text-slate-900 leading-tight">{risk.title}</h4>
+             <p className="text-xs font-medium text-slate-500 leading-relaxed italic">"{risk.mitigationPlan}"</p>
+          </div>
+        ))}
+     </div>
+  </div>
+);
+
 const TasksTab = ({ tasks = [] }) => (
   <div className="bg-white rounded-[3rem] border border-slate-200/60 p-10 shadow-sm">
      <h3 className="text-xl font-black text-slate-900 uppercase mb-10">Strategic Tasks</h3>
@@ -395,27 +412,27 @@ const ProjectWorkspace = () => {
          <form onSubmit={handleGovSubmit} className="space-y-6">
             {modalType === 'STAKEHOLDER' && (
                <>
-                  <InputLocal label="Name" value={modalData.name} onChange={v => setModalData({...modalData, name: v})} />
-                  <InputLocal label="Organization" value={modalData.organization} onChange={v => setModalData({...modalData, organization: v})} />
+                  <ProjectInput label="Name" value={modalData.name} onChange={v => setModalData({...modalData, name: v})} />
+                  <ProjectInput label="Organization" value={modalData.organization} onChange={v => setModalData({...modalData, organization: v})} />
                   <div className="grid grid-cols-2 gap-4">
-                     <SelectLocal label="Influence" options={['LOW', 'MEDIUM', 'HIGH']} value={modalData.influence} onChange={v => setModalData({...modalData, influence: v})} />
-                     <SelectLocal label="Interest" options={['LOW', 'MEDIUM', 'HIGH']} value={modalData.interest} onChange={v => setModalData({...modalData, interest: v})} />
+                     <ProjectSelect label="Influence" options={['LOW', 'MEDIUM', 'HIGH']} value={modalData.influence} onChange={v => setModalData({...modalData, influence: v})} />
+                     <ProjectSelect label="Interest" options={['LOW', 'MEDIUM', 'HIGH']} value={modalData.interest} onChange={v => setModalData({...modalData, interest: v})} />
                   </div>
-                  <InputLocal label="Contact / Prefs" value={modalData.preferences} onChange={v => setModalData({...modalData, preferences: v})} />
+                  <ProjectInput label="Contact / Prefs" value={modalData.preferences} onChange={v => setModalData({...modalData, preferences: v})} />
                </>
             )}
             {modalType === 'DECISION' && (
                <>
-                  <InputLocal label="Decision Title" value={modalData.title} onChange={v => setModalData({...modalData, title: v})} />
-                  <TextareaLocal label="Context" value={modalData.context} onChange={v => setModalData({...modalData, context: v})} />
-                  <TextareaLocal label="Final Outcome" value={modalData.outcome} onChange={v => setModalData({...modalData, outcome: v})} />
+                  <ProjectInput label="Decision Title" value={modalData.title} onChange={v => setModalData({...modalData, title: v})} />
+                  <ProjectTextarea label="Context" value={modalData.context} onChange={v => setModalData({...modalData, context: v})} />
+                  <ProjectTextarea label="Final Outcome" value={modalData.outcome} onChange={v => setModalData({...modalData, outcome: v})} />
                </>
             )}
             {modalType === 'ISSUE' && (
                <>
-                  <InputLocal label="Blocker Headline" value={modalData.title} onChange={v => setModalData({...modalData, title: v})} />
-                  <SelectLocal label="Severity" options={['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']} value={modalData.severity} onChange={v => setModalData({...modalData, severity: v})} />
-                  <TextareaLocal label="Description" value={modalData.description} onChange={v => setModalData({...modalData, description: v})} />
+                  <ProjectInput label="Blocker Headline" value={modalData.title} onChange={v => setModalData({...modalData, title: v})} />
+                  <ProjectSelect label="Severity" options={['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']} value={modalData.severity} onChange={v => setModalData({...modalData, severity: v})} />
+                  <ProjectTextarea label="Description" value={modalData.description} onChange={v => setModalData({...modalData, description: v})} />
                </>
             )}
             <button type="submit" className="w-full py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl">Commit to Strategy</button>
@@ -431,8 +448,8 @@ const ProjectWorkspace = () => {
                if (res.ok) { setShowTaskModal(false); setModalData({}); fetchProjectData(); }
             } finally { setIsSaving(false); }
          }} className="space-y-6">
-            <InputLocal label="Task Headline" value={modalData.title} onChange={v => setModalData({...modalData, title: v})} />
-            <TextareaLocal label="Description" value={modalData.description} onChange={v => setModalData({...modalData, description: v})} />
+            <ProjectInput label="Task Headline" value={modalData.title} onChange={v => setModalData({...modalData, title: v})} />
+            <ProjectTextarea label="Description" value={modalData.description} onChange={v => setModalData({...modalData, description: v})} />
             <div className="grid grid-cols-2 gap-4">
                <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Assignee</label>
@@ -441,7 +458,7 @@ const ProjectWorkspace = () => {
                      {employees.map(emp => <option key={emp._id} value={emp._id}>{emp.name}</option>)}
                   </select>
                </div>
-               <InputLocal label="Deadline" type="date" value={modalData.dueDate} onChange={v => setModalData({...modalData, dueDate: v})} />
+               <ProjectInput label="Deadline" type="date" value={modalData.dueDate} onChange={v => setModalData({...modalData, dueDate: v})} />
             </div>
             <button type="submit" disabled={isSaving} className="w-full py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl">Deploy Task</button>
          </form>
@@ -449,47 +466,5 @@ const ProjectWorkspace = () => {
     </div>
   );
 };
-
-const InputLocal = ({ label, value, onChange, type = "text" }) => (
-  <div className="space-y-1.5">
-     <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">{label}</label>
-     <input type={type} className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none text-sm font-bold focus:border-blue-500" value={value || ''} onChange={e => onChange(e.target.value)} />
-  </div>
-);
-
-const TextareaLocal = ({ label, value, onChange }) => (
-  <div className="space-y-1.5">
-     <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">{label}</label>
-     <textarea rows="3" className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none text-sm font-medium focus:border-blue-500" value={value || ''} onChange={e => onChange(e.target.value)} />
-  </div>
-);
-
-const SelectLocal = ({ label, options, value, onChange }) => (
-  <div className="space-y-1.5">
-     <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">{label}</label>
-     <select className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none" value={value || ''} onChange={e => onChange(e.target.value)}>
-        <option value="">Select</option>
-        {options.map(o => <option key={o} value={o}>{o}</option>)}
-     </select>
-  </div>
-);
-
-const RisksTab = ({ risks = [] }) => (
-  <div className="bg-white rounded-[3rem] border border-slate-200/60 p-10 shadow-sm">
-     <h3 className="text-xl font-black text-slate-900 uppercase mb-10 flex items-center gap-3"><AlertTriangle size={20}/> Risks</h3>
-     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {(risks || []).map((risk, i) => (
-          <div key={i} className="p-8 bg-slate-50 border border-slate-100 rounded-[2.5rem] space-y-4">
-             <div className="flex justify-between items-start">
-                <div className="p-2 bg-rose-50 text-rose-600 rounded-xl"><AlertTriangle size={20} /></div>
-                <span className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-[9px] font-black uppercase text-rose-500">{risk.impact} IMPACT</span>
-             </div>
-             <h4 className="text-lg font-black text-slate-900 leading-tight">{risk.title}</h4>
-             <p className="text-xs font-medium text-slate-500 leading-relaxed italic">"{risk.mitigationPlan}"</p>
-          </div>
-        ))}
-     </div>
-  </div>
-);
 
 export default ProjectWorkspace;

@@ -27,6 +27,7 @@ const AdminSidebar = () => {
     { label: 'Projects', icon: Folder, path: '/admin/projects' },
     { label: 'Inquiries', icon: MessageSquare, path: '/admin/inquiries' },
     { label: 'Employees', icon: Users, path: '/admin/employees' },
+    { label: 'Resource Intelligence', icon: Activity, path: '/admin/resources' },
     { label: 'Vacancy', icon: Briefcase, path: '/admin/careers' },
     { label: 'Applications', icon: FileText, path: '/admin/applications' },
     { label: 'Gallery', icon: ImageIcon, path: '/admin/gallery' },

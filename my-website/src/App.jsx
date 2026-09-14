@@ -40,6 +40,7 @@ import PayrollManager from "./admin/pages/PayrollManager";
 import SupportManager from "./admin/pages/SupportManager";
 import SystemConfig from "./admin/pages/SystemConfig";
 import AdminSettings from "./admin/pages/AdminSettings";
+import ResourceAnalyzer from "./admin/pages/ResourceAnalyzer";
 import ChangePassword from "./pages/ChangePassword";
 import EmployeeDashboard from "./pages/EmployeeDashboard";
 import EmployeeLayout from "./components/EmployeeLayout";
@@ -104,6 +105,7 @@ function Site() {
           <Route path="reports/marketing" element={<MarketingReport />} />
           <Route path="support" element={<SupportManager />} />
           <Route path="config" element={<SystemConfig />} />
+          <Route path="resources" element={<ResourceAnalyzer />} />
           <Route path="settings" element={<AdminSettings />} />
           <Route path="careers" element={<JobsList />} />
           <Route path="careers/new" element={<JobForm />} />

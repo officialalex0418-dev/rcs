@@ -39,6 +39,7 @@ import TaskManager from "./admin/pages/TaskManager";
 import PayrollManager from "./admin/pages/PayrollManager";
 import SupportManager from "./admin/pages/SupportManager";
 import SystemConfig from "./admin/pages/SystemConfig";
+import AdminSettings from "./admin/pages/AdminSettings";
 import ChangePassword from "./pages/ChangePassword";
 import EmployeeDashboard from "./pages/EmployeeDashboard";
 import EmployeeLayout from "./components/EmployeeLayout";
@@ -103,7 +104,7 @@ function Site() {
           <Route path="reports/marketing" element={<MarketingReport />} />
           <Route path="support" element={<SupportManager />} />
           <Route path="config" element={<SystemConfig />} />
-          <Route path="settings" element={<div className="p-8 text-2xl font-bold">System Settings Coming Soon</div>} />
+          <Route path="settings" element={<AdminSettings />} />
           <Route path="careers" element={<JobsList />} />
           <Route path="careers/new" element={<JobForm />} />
           <Route path="careers/edit/:id" element={<JobForm />} />

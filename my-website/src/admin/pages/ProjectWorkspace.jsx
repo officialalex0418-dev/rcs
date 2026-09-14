@@ -395,27 +395,27 @@ const ProjectWorkspace = () => {
          <form onSubmit={handleGovSubmit} className="space-y-6">
             {modalType === 'STAKEHOLDER' && (
                <>
-                  <Input label="Name" value={modalData.name} onChange={v => setModalData({...modalData, name: v})} />
-                  <Input label="Organization" value={modalData.organization} onChange={v => setModalData({...modalData, organization: v})} />
+                  <InputLocal label="Name" value={modalData.name} onChange={v => setModalData({...modalData, name: v})} />
+                  <InputLocal label="Organization" value={modalData.organization} onChange={v => setModalData({...modalData, organization: v})} />
                   <div className="grid grid-cols-2 gap-4">
-                     <Select label="Influence" options={['LOW', 'MEDIUM', 'HIGH']} value={modalData.influence} onChange={v => setModalData({...modalData, influence: v})} />
-                     <Select label="Interest" options={['LOW', 'MEDIUM', 'HIGH']} value={modalData.interest} onChange={v => setModalData({...modalData, interest: v})} />
+                     <SelectLocal label="Influence" options={['LOW', 'MEDIUM', 'HIGH']} value={modalData.influence} onChange={v => setModalData({...modalData, influence: v})} />
+                     <SelectLocal label="Interest" options={['LOW', 'MEDIUM', 'HIGH']} value={modalData.interest} onChange={v => setModalData({...modalData, interest: v})} />
                   </div>
-                  <Input label="Contact / Prefs" value={modalData.preferences} onChange={v => setModalData({...modalData, preferences: v})} />
+                  <InputLocal label="Contact / Prefs" value={modalData.preferences} onChange={v => setModalData({...modalData, preferences: v})} />
                </>
             )}
             {modalType === 'DECISION' && (
                <>
-                  <Input label="Decision Title" value={modalData.title} onChange={v => setModalData({...modalData, title: v})} />
-                  <Textarea label="Context" value={modalData.context} onChange={v => setModalData({...modalData, context: v})} />
-                  <Textarea label="Final Outcome" value={modalData.outcome} onChange={v => setModalData({...modalData, outcome: v})} />
+                  <InputLocal label="Decision Title" value={modalData.title} onChange={v => setModalData({...modalData, title: v})} />
+                  <TextareaLocal label="Context" value={modalData.context} onChange={v => setModalData({...modalData, context: v})} />
+                  <TextareaLocal label="Final Outcome" value={modalData.outcome} onChange={v => setModalData({...modalData, outcome: v})} />
                </>
             )}
             {modalType === 'ISSUE' && (
                <>
-                  <Input label="Blocker Headline" value={modalData.title} onChange={v => setModalData({...modalData, title: v})} />
-                  <Select label="Severity" options={['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']} value={modalData.severity} onChange={v => setModalData({...modalData, severity: v})} />
-                  <Textarea label="Description" value={modalData.description} onChange={v => setModalData({...modalData, description: v})} />
+                  <InputLocal label="Blocker Headline" value={modalData.title} onChange={v => setModalData({...modalData, title: v})} />
+                  <SelectLocal label="Severity" options={['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']} value={modalData.severity} onChange={v => setModalData({...modalData, severity: v})} />
+                  <TextareaLocal label="Description" value={modalData.description} onChange={v => setModalData({...modalData, description: v})} />
                </>
             )}
             <button type="submit" className="w-full py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl">Commit to Strategy</button>
@@ -431,8 +431,8 @@ const ProjectWorkspace = () => {
                if (res.ok) { setShowTaskModal(false); setModalData({}); fetchProjectData(); }
             } finally { setIsSaving(false); }
          }} className="space-y-6">
-            <Input label="Task Headline" value={modalData.title} onChange={v => setModalData({...modalData, title: v})} />
-            <Textarea label="Description" value={modalData.description} onChange={v => setModalData({...modalData, description: v})} />
+            <InputLocal label="Task Headline" value={modalData.title} onChange={v => setModalData({...modalData, title: v})} />
+            <TextareaLocal label="Description" value={modalData.description} onChange={v => setModalData({...modalData, description: v})} />
             <div className="grid grid-cols-2 gap-4">
                <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Assignee</label>
@@ -441,7 +441,7 @@ const ProjectWorkspace = () => {
                      {employees.map(emp => <option key={emp._id} value={emp._id}>{emp.name}</option>)}
                   </select>
                </div>
-               <Input label="Deadline" type="date" value={modalData.dueDate} onChange={v => setModalData({...modalData, dueDate: v})} />
+               <InputLocal label="Deadline" type="date" value={modalData.dueDate} onChange={v => setModalData({...modalData, dueDate: v})} />
             </div>
             <button type="submit" disabled={isSaving} className="w-full py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl">Deploy Task</button>
          </form>
@@ -450,21 +450,21 @@ const ProjectWorkspace = () => {
   );
 };
 
-const Input = ({ label, value, onChange, type = "text" }) => (
+const InputLocal = ({ label, value, onChange, type = "text" }) => (
   <div className="space-y-1.5">
      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">{label}</label>
      <input type={type} className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none text-sm font-bold focus:border-blue-500" value={value || ''} onChange={e => onChange(e.target.value)} />
   </div>
 );
 
-const Textarea = ({ label, value, onChange }) => (
+const TextareaLocal = ({ label, value, onChange }) => (
   <div className="space-y-1.5">
      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">{label}</label>
      <textarea rows="3" className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none text-sm font-medium focus:border-blue-500" value={value || ''} onChange={e => onChange(e.target.value)} />
   </div>
 );
 
-const Select = ({ label, options, value, onChange }) => (
+const SelectLocal = ({ label, options, value, onChange }) => (
   <div className="space-y-1.5">
      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">{label}</label>
      <select className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none" value={value || ''} onChange={e => onChange(e.target.value)}>

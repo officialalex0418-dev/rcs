@@ -4,7 +4,9 @@ import { sendOnboardingEmail } from '../utils/emailService.js';
 
 export const getEmployees = async (req, res, next) => {
   try {
-    const employees = await User.find({ role: { $ne: 'SUPER_ADMIN' } }).sort('-createdAt');
+    const employees = await User.find({ role: { $ne: 'SUPER_ADMIN' } })
+      .populate('shift')
+      .sort('-createdAt');
     res.status(200).json({ success: true, data: employees });
   } catch (err) {
     next(err);

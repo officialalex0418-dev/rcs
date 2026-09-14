@@ -26,6 +26,8 @@ import taskRoutes from './routes/taskRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
 import attendanceRoutes from './routes/attendanceRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
+import departmentRoutes from './routes/departmentRoutes.js';
+import shiftRoutes from './routes/shiftRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -100,6 +102,8 @@ app.use('/api/tasks', taskRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/departments', departmentRoutes);
+app.use('/api/shifts', shiftRoutes);
 
 // Basic Route
 app.get('/', (req, res) => {

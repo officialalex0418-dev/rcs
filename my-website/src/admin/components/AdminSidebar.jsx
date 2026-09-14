@@ -46,6 +46,7 @@ const AdminSidebar = () => {
       ]
     },
     { label: 'Support', icon: Bell, path: '/admin/support' },
+    { label: 'Settings', icon: Settings, path: '/admin/config' },
   ];
 
   const toggleSubmenu = (label) => {
@@ -127,14 +128,14 @@ const AdminSidebar = () => {
       {/* Profile Card & Logout */}
       <div className="p-4 border-t border-slate-800/50 bg-[#0B1020] mt-auto">
         <NavLink
-          to="/admin/settings"
+          to="/admin/config"
           className={({ isActive }) => `
             flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 mb-2
             ${isActive ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-800/50 hover:text-white'}
           `}
         >
           <Settings size={20} />
-          <span className="font-medium text-sm">Settings</span>
+          <span className="font-medium text-sm">Config</span>
         </NavLink>
 
         <button

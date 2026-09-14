@@ -41,15 +41,29 @@ const EmployeeManager = () => {
     designation: '',
     basicSalary: '',
     dailyAllowance: '',
+    shift: '',
   });
+
+  const [depts, setDepts] = useState([]);
+  const [shifts, setShifts] = useState([]);
 
   const fetchEmployees = async () => {
     try {
-      const response = await apiFetch('/api/employees');
-      const data = await response.json();
-      if (data.success) setEmployees(data.data);
+      const [empRes, deptRes, shiftRes] = await Promise.all([
+        apiFetch('/api/employees'),
+        apiFetch('/api/departments'),
+        apiFetch('/api/shifts')
+      ]);
+
+      const empData = await empRes.json();
+      const deptData = await deptRes.json();
+      const shiftData = await shiftRes.json();
+
+      if (empData.success) setEmployees(empData.data);
+      if (deptData.success) setDepts(deptData.data);
+      if (shiftData.success) setShifts(shiftData.data);
     } catch (err) {
-      console.error('Failed to fetch employees:', err);
+      console.error('Failed to fetch personnel data:', err);
       setError('Could not load personnel data.');
     } finally {
       setLoading(false);
@@ -120,6 +134,7 @@ const EmployeeManager = () => {
       designation: emp.designation || '',
       basicSalary: emp.basicSalary || '',
       dailyAllowance: emp.dailyAllowance || '',
+      shift: emp.shift?._id || emp.shift || '',
     });
     setEditingId(emp._id);
     setShowModal(true);
@@ -157,6 +172,7 @@ const EmployeeManager = () => {
       designation: '',
       basicSalary: '',
       dailyAllowance: '',
+      shift: '',
     });
     setEditingId(null);
     setError(null);
@@ -302,6 +318,11 @@ const EmployeeManager = () => {
                        <p className="text-xs font-bold text-slate-400 flex items-center gap-1.5">
                          <Building2 size={12} className="text-slate-300" /> {emp.department || 'General'}
                        </p>
+                       {emp.shift && (
+                         <p className="text-[9px] font-bold text-slate-400 flex items-center gap-1.5 uppercase">
+                           <Clock size={10} className="text-slate-300" /> {emp.shift.name || 'Standard'}
+                         </p>
+                       )}
                     </div>
                   </td>
                   <td className="px-8 py-6">
@@ -387,13 +408,28 @@ const EmployeeManager = () => {
                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
               />
             </div>
-            <Input
-              label="Department"
-              icon={Building2}
-              placeholder="e.g. Engineering"
-              value={formData.department}
-              onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-            />
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Department</label>
+              <select
+                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/20 transition-all font-medium h-[46px]"
+                value={formData.department}
+                onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+              >
+                <option value="">Select Department</option>
+                {depts.map(dept => <option key={dept._id} value={dept.name}>{dept.name}</option>)}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Work Shift</label>
+              <select
+                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/20 transition-all font-medium h-[46px]"
+                value={formData.shift}
+                onChange={(e) => setFormData({ ...formData, shift: e.target.value })}
+              >
+                <option value="">Select Shift</option>
+                {shifts.map(shift => <option key={shift._id} value={shift._id}>{shift.name} ({shift.startTime}-{shift.endTime})</option>)}
+              </select>
+            </div>
             <Input
               label="Designation"
               icon={Briefcase}

@@ -31,6 +31,10 @@ const userSchema = new mongoose.Schema({
     default: true
   },
   department: String,
+  shift: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Shift'
+  },
   designation: String,
   phone: String,
   address: String,

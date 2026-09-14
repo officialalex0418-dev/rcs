@@ -3,6 +3,7 @@ import emailjs from "@emailjs/browser";
 import { CheckCircle2, Mail, MapPin, Phone, Send } from "lucide-react";
 import Seo from "../components/Seo";
 import { company, services } from "../data/site";
+import { apiFetch } from "../utils/api";
 
 const initialForm = { name: "", company: "", email: "", phone: "", service: "", budget: "", projectDetails: "" };
 
@@ -14,21 +15,20 @@ export default function Contact() {
 
   async function handleSubmit(event) {
     event.preventDefault();
-    const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
-    const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
-    const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
-    if (!serviceId || !templateId || !publicKey) {
-      setState({ type: "error", message: "The form is not configured yet. Please contact RCS directly by email or phone." });
+
+    // Basic validation
+    if (!form.name || !form.email || !form.projectDetails) {
+      setState({ type: "error", message: "Please fill in all required fields." });
       return;
     }
-    setIsSending(true); setState({ type: "", message: "" });
+
+    setIsSending(true);
+    setState({ type: "", message: "" });
 
     try {
-      // 1. Send to Backend API
-      const backendUrl = import.meta.env.VITE_API_URL || '';
-      const apiResponse = await fetch(`${backendUrl}/api/inquiries`, {
+      // 1. Send to Backend API using standardized apiFetch
+      const apiResponse = await apiFetch('/api/inquiries', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: form.name,
           email: form.email,
@@ -41,19 +41,64 @@ export default function Contact() {
         })
       });
 
-      if (!apiResponse.ok) throw new Error('API submission failed');
-
-      // 2. Send EmailJS (Optional/Secondary)
-      if (serviceId && templateId && publicKey) {
-        const message = [`Company: ${form.company || "Not provided"}`, `Phone: ${form.phone || "Not provided"}`, `Service: ${form.service || "Not selected"}`, `Budget: ${form.budget || "Not provided"}`, "", form.projectDetails].join("\n");
-        await emailjs.send(serviceId, templateId, { from_name: form.name, from_email: form.email, subject: `New RCS inquiry: ${form.service || "General"}`, message, to_email: company.email, company: form.company, phone: form.phone, service: form.service, budget: form.budget, project_details: form.projectDetails }, { publicKey });
+      if (!apiResponse.ok) {
+        const errorData = await apiResponse.json();
+        throw new Error(errorData.message || 'API submission failed');
       }
 
-      setForm(initialForm); setState({ type: "success", message: "Thank you—your message has been sent. RCS will be in touch soon." });
+      // 2. Send EmailJS (Secondary/Notification)
+      const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+      const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+      const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+
+      if (serviceId && templateId && publicKey) {
+        try {
+          const message = [
+            `Company: ${form.company || "Not provided"}`,
+            `Phone: ${form.phone || "Not provided"}`,
+            `Service: ${form.service || "Not selected"}`,
+            `Budget: ${form.budget || "Not provided"}`,
+            "",
+            form.projectDetails
+          ].join("\n");
+
+          await emailjs.send(
+            serviceId,
+            templateId,
+            {
+              from_name: form.name,
+              from_email: form.email,
+              subject: `New RCS inquiry: ${form.service || "General"}`,
+              message,
+              to_email: company.email,
+              company: form.company,
+              phone: form.phone,
+              service: form.service,
+              budget: form.budget,
+              project_details: form.projectDetails
+            },
+            { publicKey }
+          );
+        } catch (emailError) {
+          console.error('EmailJS error:', emailError);
+          // We don't fail the whole process if just EmailJS fails,
+          // as the inquiry is already saved in the database.
+        }
+      }
+
+      setForm(initialForm);
+      setState({ type: "success", message: "Thank you—your message has been sent. RCS will be in touch soon." });
     } catch (error) {
       console.error('Form submission error:', error);
-      setState({ type: "error", message: "Your message could not be sent. Please try again or contact RCS directly by email or phone." });
-    } finally { setIsSending(false); }
+      setState({
+        type: "error",
+        message: error.message === 'API submission failed'
+          ? "Your message could not be sent. Please try again or contact RCS directly by email or phone."
+          : `Error: ${error.message}. Please try again later.`
+      });
+    } finally {
+      setIsSending(false);
+    }
   }
 
   return <>

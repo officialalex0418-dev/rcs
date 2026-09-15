@@ -5,6 +5,11 @@ import crypto from 'crypto';
 import { sendThankYouEmail, sendOnboardingEmail } from '../utils/emailService.js';
 import { uploadToR2 } from '../utils/r2Storage.js';
 import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Jobs
 export const getJobs = async (req, res, next) => {
@@ -67,25 +72,37 @@ export const applyForJob = async (req, res, next) => {
     const applicationData = { ...req.body };
 
     if (req.file) {
-      const fileName = `resumes/resume-${Date.now()}${path.extname(req.file.originalname)}`;
-      const publicUrl = await uploadToR2(req.file.buffer, fileName, req.file.mimetype);
+      const fileName = `resume-${Date.now()}${path.extname(req.file.originalname)}`;
+      const r2FileName = `resumes/${fileName}`;
+
+      // Try R2 First
+      let publicUrl = await uploadToR2(req.file.buffer, r2FileName, req.file.mimetype);
 
       if (publicUrl) {
         applicationData.resume = {
           url: publicUrl,
           fileName: req.file.originalname,
-          storageKey: fileName
+          storageKey: r2FileName
+        };
+      } else {
+        // Fallback to local storage
+        const localPath = path.join(__dirname, '../uploads/resumes', fileName);
+        fs.writeFileSync(localPath, req.file.buffer);
+        applicationData.resume = {
+          url: `/uploads/resumes/${fileName}`,
+          fileName: req.file.originalname,
+          storageKey: `local:${fileName}`
         };
       }
     }
 
     const application = await Application.create(applicationData);
 
-    // Fetch job details to get the title for the email
+    // Fetch job details for email
     const job = await Job.findById(application.job);
     const jobTitle = job ? job.title : 'Position';
 
-    // Send Thank You Email in background
+    // Send Thank You Email
     sendThankYouEmail(application.email, `${application.firstName} ${application.lastName}`, jobTitle)
       .catch(err => console.error('Error sending application thank you email:', err));
 
@@ -119,12 +136,10 @@ export const updateApplicationStatus = async (req, res, next) => {
 
     let generatedPassword = null;
 
-    // Handle Hired Status: Create User Account
     if (status === 'HIRED') {
       const existingUser = await User.findOne({ email: application.email });
 
       if (!existingUser) {
-        // Generate RCS ID
         const lastUser = await User.findOne({ employeeId: /^RCS/ }).sort({ employeeId: -1 });
         let newId = 'RCS001';
         if (lastUser && lastUser.employeeId) {
@@ -132,7 +147,6 @@ export const updateApplicationStatus = async (req, res, next) => {
           newId = `RCS${(currentNum + 1).toString().padStart(3, '0')}`;
         }
 
-        // Generate secure 12-char password
         generatedPassword = crypto.randomBytes(9).toString('base64').replace(/\+/g, '0').replace(/\//g, '1');
         const designation = application.job?.title || 'Team Member';
 
@@ -147,7 +161,6 @@ export const updateApplicationStatus = async (req, res, next) => {
           mustChangePassword: true
         });
 
-        // Send Onboarding Email from HR
         sendOnboardingEmail(application.email, `${application.firstName} ${application.lastName}`, generatedPassword, designation)
           .catch(err => console.error('Error sending hiring onboarding email:', err));
       }

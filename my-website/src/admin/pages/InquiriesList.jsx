@@ -13,8 +13,10 @@ import {
   ArrowRight,
   ShieldCheck,
   Zap,
-  MoreVertical
+  MoreVertical,
+  Loader2
 } from 'lucide-react';
+import { apiFetch } from '../../utils/api';
 
 const InquiriesList = () => {
   const [inquiries, setInquiries] = useState([]);
@@ -22,16 +24,15 @@ const InquiriesList = () => {
   const [selectedInquiry, setSelectedInquiry] = useState(null);
   const [replyMessage, setReplyMessage] = useState('');
   const [sendingReply, setSendingReply] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const fetchInquiries = async () => {
     try {
-      const backendUrl = import.meta.env.VITE_API_URL || '';
-      const token = localStorage.getItem('rcs_admin_token');
-      const response = await fetch(`${backendUrl}/api/inquiries`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const response = await apiFetch('/api/inquiries');
       const data = await response.json();
-      if (data.success) setInquiries(data.data);
+      if (data.success) {
+        setInquiries(Array.isArray(data.data) ? data.data : []);
+      }
     } catch (err) {
       console.error('Failed to fetch inquiries:', err);
     } finally {
@@ -45,11 +46,7 @@ const InquiriesList = () => {
 
   const openThread = async (id) => {
     try {
-      const backendUrl = import.meta.env.VITE_API_URL || '';
-      const token = localStorage.getItem('rcs_admin_token');
-      const response = await fetch(`${backendUrl}/api/inquiries/${id}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const response = await apiFetch(`/api/inquiries/${id}`);
       const data = await response.json();
       if (data.success) setSelectedInquiry(data.data);
     } catch (err) {
@@ -63,14 +60,8 @@ const InquiriesList = () => {
 
     setSendingReply(true);
     try {
-      const backendUrl = import.meta.env.VITE_API_URL || '';
-      const token = localStorage.getItem('rcs_admin_token');
-      const response = await fetch(`${backendUrl}/api/inquiries/${selectedInquiry._id}/reply`, {
+      const response = await apiFetch(`/api/inquiries/${selectedInquiry._id}/reply`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify({ message: replyMessage })
       });
 
@@ -96,8 +87,14 @@ const InquiriesList = () => {
     }
   };
 
+  const filteredInquiries = inquiries.filter(lead =>
+    (lead.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (lead.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (lead.subject || '').toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
-    <div className="p-8 bg-slate-50 min-h-screen font-sans relative">
+    <div className="p-8 bg-slate-50 min-h-screen font-sans relative animate-in fade-in duration-700">
       {/* Thread Modal */}
       {selectedInquiry && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[1000] flex items-center justify-end">
@@ -116,7 +113,7 @@ const InquiriesList = () => {
             </div>
 
             <div className="flex-1 overflow-y-auto p-8 space-y-8 bg-white custom-scrollbar">
-               {selectedInquiry.thread.map((msg, idx) => (
+               {(selectedInquiry.thread || []).map((msg, idx) => (
                  <div key={idx} className={`flex flex-col ${msg.sender === 'ADMIN' ? 'items-end' : 'items-start'}`}>
                    <div className="flex items-center gap-2 mb-2">
                      <span className={`text-[10px] font-black uppercase tracking-widest ${msg.sender === 'ADMIN' ? 'text-blue-600' : 'text-emerald-600'}`}>
@@ -168,21 +165,22 @@ const InquiriesList = () => {
           <p className="text-slate-500 font-medium">Manage project and contact inquiries with threaded history.</p>
         </div>
         <div className="flex gap-2">
-          <button className="flex items-center gap-2 bg-white border border-slate-200 px-4 py-2.5 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 transition-all shadow-sm">
-            <Filter size={18} />
-            Advanced Filter
+          <button onClick={fetchInquiries} className="flex items-center gap-2 bg-white border border-slate-200 px-4 py-2.5 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 transition-all shadow-sm uppercase tracking-widest">
+            Refresh Hub
           </button>
         </div>
       </div>
 
       <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
         <div className="p-5 border-b border-slate-100 bg-slate-50/30 flex items-center gap-4">
-          <div className="relative flex-1 max-w-xl">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+          <div className="relative flex-1 max-w-xl group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors" size={18} />
             <input
               type="text"
               placeholder="Search leads by name, email, or intent..."
-              className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm focus:ring-4 focus:ring-blue-500/10 outline-none transition-all"
+              className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm focus:ring-4 focus:ring-blue-500/10 outline-none transition-all font-medium"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
         </div>
@@ -199,19 +197,22 @@ const InquiriesList = () => {
             </thead>
             <tbody className="divide-y divide-slate-50">
               {loading ? (
-                <tr><td colSpan="4" className="px-8 py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">Scanning Inquiry Channels...</td></tr>
-              ) : inquiries.length === 0 ? (
-                <tr><td colSpan="4" className="px-8 py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">No active leads detected</td></tr>
-              ) : inquiries.map((lead) => (
+                <tr><td colSpan="4" className="px-8 py-20 text-center">
+                   <Loader2 className="w-8 h-8 text-blue-600 animate-spin mx-auto mb-3" />
+                   <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Scanning Inquiry Channels...</p>
+                </td></tr>
+              ) : filteredInquiries.length === 0 ? (
+                <tr><td colSpan="4" className="px-8 py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-[10px]">No active leads detected</td></tr>
+              ) : filteredInquiries.map((lead) => (
                 <tr key={lead._id} className="hover:bg-slate-50/50 transition-all group">
                   <td className="px-8 py-6">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 text-slate-600 flex items-center justify-center font-black text-lg">
-                        {lead.name.charAt(0)}
+                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 text-slate-600 flex items-center justify-center font-black text-lg shadow-sm border border-white">
+                        {(lead.name || '?').charAt(0)}
                       </div>
                       <div>
                         <p className="text-sm font-black text-slate-900 leading-tight mb-1">{lead.name}</p>
-                        <span className="text-xs text-slate-400 font-bold flex items-center gap-1.5"><Mail size={12} /> {lead.email}</span>
+                        <span className="text-xs text-slate-400 font-bold flex items-center gap-1.5 leading-none"><Mail size={12} className="text-slate-300" /> {lead.email}</span>
                       </div>
                     </div>
                   </td>
@@ -229,7 +230,7 @@ const InquiriesList = () => {
                   <td className="px-8 py-6 text-right">
                     <button
                       onClick={() => openThread(lead._id)}
-                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-50 text-blue-600 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all shadow-sm active:scale-95"
                     >
                       <MessageSquare size={16} /> View Thread
                     </button>
@@ -240,6 +241,11 @@ const InquiriesList = () => {
           </table>
         </div>
       </div>
+      <style dangerouslySetInnerHTML={{ __html: `
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+      `}} />
     </div>
   );
 };

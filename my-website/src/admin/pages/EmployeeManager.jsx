@@ -13,7 +13,10 @@ import {
   Building2,
   Loader2,
   AlertCircle,
-  CheckCircle2
+  CheckCircle2,
+  Clock,
+  Layers,
+  X
 } from 'lucide-react';
 import Button from '../components/Button';
 import Input from '../components/Input';
@@ -59,9 +62,9 @@ const EmployeeManager = () => {
       const deptData = await deptRes.json();
       const shiftData = await shiftRes.json();
 
-      if (empData.success) setEmployees(empData.data);
-      if (deptData.success) setDepts(deptData.data);
-      if (shiftData.success) setShifts(shiftData.data);
+      if (empData.success) setEmployees(Array.isArray(empData.data) ? empData.data : []);
+      if (deptData.success) setDepts(Array.isArray(deptData.data) ? deptData.data : []);
+      if (shiftData.success) setShifts(Array.isArray(shiftData.data) ? shiftData.data : []);
     } catch (err) {
       console.error('Failed to fetch personnel data:', err);
       setError('Could not load personnel data.');
@@ -124,6 +127,7 @@ const EmployeeManager = () => {
   };
 
   const handleEdit = (emp) => {
+    if (!emp) return;
     setFormData({
       name: emp.name || '',
       email: emp.email || '',
@@ -178,10 +182,11 @@ const EmployeeManager = () => {
     setError(null);
   };
 
-  const filteredEmployees = employees.filter(emp =>
-    emp.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    emp.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    emp.designation?.toLowerCase().includes(searchTerm.toLowerCase())
+  const safeEmployees = Array.isArray(employees) ? employees : [];
+  const filteredEmployees = safeEmployees.filter(emp =>
+    (emp?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (emp?.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (emp?.designation || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -197,7 +202,7 @@ const EmployeeManager = () => {
             <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
               <CheckCircle2 size={40} />
             </div>
-            <p className="text-slate-500 font-medium mb-8">
+            <p className="text-slate-500 font-medium mb-8 text-sm">
               {successData.emailSent
                 ? `An onboarding email has been sent to ${successData.email}.`
                 : `Employee created, but email delivery failed. Please provide these credentials manually:`}
@@ -231,9 +236,9 @@ const EmployeeManager = () => {
 
             <Button
               onClick={() => { setSuccessData(null); setShowConfidential(false); }}
-              className="w-full py-4 rounded-2xl font-black uppercase tracking-widest"
+              className="w-full py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-slate-900/10"
             >
-              Done
+              Finish Protocol
             </Button>
           </div>
         </Modal>
@@ -248,22 +253,22 @@ const EmployeeManager = () => {
         <Button
           onClick={() => { resetForm(); setShowModal(true); }}
           icon={Plus}
-          className="rounded-2xl px-6 py-3 shadow-blue-500/20"
+          className="rounded-2xl px-8 py-3.5 shadow-xl shadow-blue-500/20 active:scale-95"
         >
-          Add New Employee
+          Add New Personnel
         </Button>
       </div>
 
       {/* Main Table Container */}
-      <div className="bg-white rounded-[2rem] shadow-sm border border-slate-200/60 overflow-hidden">
-        {/* Search & Filter Bar */}
+      <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200/60 overflow-hidden">
+        {/* Search Bar */}
         <div className="p-6 border-b border-slate-100 bg-slate-50/30 flex items-center gap-4">
           <div className="relative flex-1 max-w-md group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors" size={18} />
             <input
               type="text"
               placeholder="Search by name, email, or role..."
-              className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/20 transition-all font-medium"
+              className="w-full pl-12 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl text-sm outline-none focus:ring-4 focus:ring-blue-500/10 transition-all font-medium"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -271,63 +276,63 @@ const EmployeeManager = () => {
         </div>
 
         {/* Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+        <div className="overflow-x-auto text-left">
+          <table className="w-full border-collapse">
             <thead>
-              <tr className="bg-slate-50/50 border-b border-slate-100">
+              <tr className="bg-slate-50 border-b border-slate-100">
                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Employee</th>
                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Position & Unit</th>
                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Compensation</th>
                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50">
+            <tbody className="divide-y divide-slate-50 font-sans">
               {loading ? (
                 <tr>
                   <td colSpan="4" className="px-8 py-20 text-center">
                     <Loader2 className="w-8 h-8 text-blue-600 animate-spin mx-auto mb-3" />
-                    <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Accessing Database...</p>
+                    <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Accessing Database...</p>
                   </td>
                 </tr>
               ) : filteredEmployees.length === 0 ? (
                 <tr>
-                  <td colSpan="4" className="px-8 py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">
-                    No personnel records match your search
+                  <td colSpan="4" className="px-8 py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-[10px]">
+                    No personnel records detected
                   </td>
                 </tr>
               ) : filteredEmployees.map((emp) => (
-                <tr key={emp._id} className="hover:bg-slate-50/80 transition-all group">
+                <tr key={emp?._id} className="hover:bg-slate-50/80 transition-all group">
                   <td className="px-8 py-6">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 text-blue-600 flex items-center justify-center font-black text-lg shadow-sm border border-white">
-                        {emp.name.charAt(0)}
+                        {(emp?.name || '?').charAt(0)}
                       </div>
                       <div>
-                        <p className="text-sm font-black text-slate-900 leading-tight mb-1">{emp.name}</p>
+                        <p className="text-sm font-black text-slate-900 leading-tight mb-1">{emp?.name}</p>
                         <span className="text-xs text-slate-400 font-bold flex items-center gap-1.5 leading-none">
-                          <Mail size={12} className="text-slate-300" /> {emp.email}
+                          <Mail size={12} className="text-slate-300" /> {emp?.email}
                         </span>
                       </div>
                     </div>
                   </td>
                   <td className="px-8 py-6">
                     <div className="space-y-1.5">
-                       <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-100/50">
-                         {emp.designation || 'Staff'}
+                       <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-100/50">
+                         {emp?.designation || 'Staff'}
                        </span>
                        <p className="text-xs font-bold text-slate-400 flex items-center gap-1.5">
-                         <Building2 size={12} className="text-slate-300" /> {emp.department || 'General'}
+                         <Building2 size={12} className="text-slate-300" /> {emp?.department || 'General'}
                        </p>
-                       {emp.shift && (
+                       {emp?.shift && (
                          <p className="text-[9px] font-bold text-slate-400 flex items-center gap-1.5 uppercase">
-                           <Clock size={10} className="text-slate-300" /> {emp.shift.name || 'Standard'}
+                           <Clock size={10} className="text-slate-300" /> {emp?.shift?.name || 'Standard'}
                          </p>
                        )}
                     </div>
                   </td>
                   <td className="px-8 py-6">
                     <div className="flex flex-col">
-                       <span className="text-sm font-black text-slate-900">Rs. {Number(emp.basicSalary || 0).toLocaleString()}</span>
+                       <span className="text-sm font-black text-slate-900">Rs. {Number(emp?.basicSalary || 0).toLocaleString()}</span>
                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Base Monthly</span>
                     </div>
                   </td>
@@ -335,13 +340,13 @@ const EmployeeManager = () => {
                     <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200">
                       <button
                         onClick={() => handleEdit(emp)}
-                        className="p-2.5 bg-white text-slate-500 rounded-xl hover:bg-slate-900 hover:text-white transition-all shadow-sm border border-slate-100"
+                        className="p-2.5 bg-white text-slate-500 rounded-xl hover:bg-slate-900 hover:text-white transition-all shadow-sm border border-slate-100 active:scale-90"
                       >
                         <Edit2 size={16} />
                       </button>
                       <button
-                        onClick={() => handleDelete(emp._id)}
-                        className="p-2.5 bg-white text-red-500 rounded-xl hover:bg-red-600 hover:text-white transition-all shadow-sm border border-slate-100"
+                        onClick={() => handleDelete(emp?._id)}
+                        className="p-2.5 bg-white text-red-500 rounded-xl hover:bg-red-600 hover:text-white transition-all shadow-sm border border-slate-100 active:scale-90"
                       >
                         <Trash2 size={16} />
                       </button>
@@ -411,7 +416,7 @@ const EmployeeManager = () => {
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Department</label>
               <select
-                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/20 transition-all font-medium h-[46px]"
+                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-medium h-[46px]"
                 value={formData.department}
                 onChange={(e) => setFormData({ ...formData, department: e.target.value })}
               >
@@ -422,7 +427,7 @@ const EmployeeManager = () => {
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Work Shift</label>
               <select
-                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/20 transition-all font-medium h-[46px]"
+                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-medium h-[46px]"
                 value={formData.shift}
                 onChange={(e) => setFormData({ ...formData, shift: e.target.value })}
               >
@@ -455,21 +460,21 @@ const EmployeeManager = () => {
             />
           </div>
 
-          <div className="flex gap-3 pt-4 border-t border-slate-100 mt-6">
+          <div className="flex gap-3 pt-6 border-t border-slate-100 mt-6">
             <Button
               type="button"
               variant="secondary"
               onClick={() => setShowModal(false)}
-              className="flex-1 rounded-xl"
+              className="flex-1 rounded-2xl"
             >
               Discard
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="flex-2 min-w-[160px] rounded-xl"
+              className="flex-2 min-w-[200px] rounded-2xl shadow-xl shadow-blue-500/20 active:scale-95"
             >
-              {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : editingId ? 'Update Profile' : 'Save Employee'}
+              {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : editingId ? 'Update Profile' : 'Save Personnel'}
             </Button>
           </div>
         </form>
